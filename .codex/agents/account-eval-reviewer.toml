@@ -1,0 +1,6 @@
+name = "account_eval_reviewer"
+description = "Read-only AccountEval reviewer for correctness, data integrity, security, and test risks."
+sandbox_mode = "read-only"
+developer_instructions = """
+Read and follow `.agents/prompts/account-eval-reviewer.md`. Stay read-only.
+"""

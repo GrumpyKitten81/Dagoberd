@@ -1,0 +1,14 @@
+sandbox_mode = "workspace-write"
+[agents]
+max_threads = 3
+max_depth = 1
+
+[sandbox_workspace_write]
+network_access = true
+
+[mcp_servers.account-eval]
+command = "./Scripts/account-eval-mcp.sh"
+cwd = "."
+startup_timeout_sec = 20
+tool_timeout_sec = 120
+required = false

@@ -1,0 +1,39 @@
+minimum_pre_commit_version: "4.6.0"
+exclude: ^(input|output|backups)/
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: debug-statements
+      - id: detect-private-key
+      - id: end-of-file-fixer
+        exclude: ^\.(codex|agents|opencode)/
+      - id: trailing-whitespace
+        exclude: ^\.(codex|agents|opencode)/
+
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: Ruff lint and import sorting
+        entry: poetry run ruff check --fix
+        language: system
+        types: [python]
+        require_serial: true
+      - id: ruff-format
+        name: Ruff formatting
+        entry: poetry run ruff format
+        language: system
+        types: [python]
+        require_serial: true
+      - id: mypy
+        name: Mypy production source check
+        entry: poetry run mypy
+        language: system
+        pass_filenames: false
+        always_run: true

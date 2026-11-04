@@ -1,0 +1,44 @@
+name: Security report
+description: Report a security concern through a public issue.
+body:
+- type: markdown
+  attributes:
+    value: All issues are public. Do not post credentials, PINs, TANs, tokens, account identifiers, real
+      bank exports, receipts, databases or reports. Use synthetic examples and sanitized diagnostics.
+- type: textarea
+  id: version
+  attributes:
+    label: Affected AccountEval versions
+    description: List affected versions and the relevant component.
+  validations:
+    required: true
+- type: textarea
+  id: summary
+  attributes:
+    label: Security concern
+    description: This issue is public. Describe the concern without secrets, personal data or financial
+      records.
+  validations:
+    required: true
+- type: textarea
+  id: impact
+  attributes:
+    label: Potential impact
+    description: Describe which boundary or operation may be affected.
+  validations:
+    required: true
+- type: textarea
+  id: reproduction
+  attributes:
+    label: Safe reproduction
+    description: Use a minimal synthetic reproduction or a high-level description if details would expose
+      sensitive data. Never attach real credentials, databases, reports or receipts.
+  validations:
+    required: true
+- type: checkboxes
+  id: privacy
+  attributes:
+    label: Privacy check
+    options:
+    - label: I checked this report and included no credentials, personal data or real financial files.
+      required: true

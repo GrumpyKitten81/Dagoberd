@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "account-eval": {
+      "command": "poetry",
+      "args": ["run", "account-eval-mcp"]
+    }
+  }
+}
