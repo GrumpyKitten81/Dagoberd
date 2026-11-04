@@ -1,0 +1,6 @@
+name = "dagoberd_explorer"
+description = "Read-only explorer for Dagoberd code search, execution tracing, data flow, and SQLite effects."
+sandbox_mode = "read-only"
+developer_instructions = """
+Read and follow `.agents/prompts/dagoberd-explorer.md`. Stay read-only unless the parent agent requests otherwise.
+"""

@@ -5,7 +5,7 @@ umask 077
 
 script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 project_root="$(CDPATH= cd -- "$script_dir/.." && pwd)"
-runtime_root="${TMPDIR:-/tmp}/account-eval-gui-${UID:-local}"
+runtime_root="${TMPDIR:-/tmp}/dagoberd-gui-${UID:-local}"
 pid_file="$runtime_root/server.pid"
 port_file="$runtime_root/server.port"
 url_file="$runtime_root/server.url"
@@ -41,7 +41,7 @@ process_is_managed() {
   local command
   command="$(ps -p "$pid" -o command= 2>/dev/null || true)"
   case "$command" in
-    *"account-eval gui"*|*"account_eval.cli gui"*) return 0 ;;
+    *"dagoberd gui"*|*"dagoberd.cli gui"*) return 0 ;;
   esac
   return 1
 }
@@ -119,7 +119,7 @@ stop_managed() {
   if ! pid="$(read_pid)"; then
     cleanup_state false
     if [ "$quiet" != "true" ]; then
-      echo "AccountEval GUI is not running."
+      echo "Dagoberd GUI is not running."
     fi
     return 0
   fi
@@ -131,7 +131,7 @@ stop_managed() {
     return 0
   fi
   if ! process_is_managed "$pid"; then
-    echo "PID $pid is not a managed AccountEval GUI; leaving it unchanged." >&2
+    echo "PID $pid is not a managed Dagoberd GUI; leaving it unchanged." >&2
     return 1
   fi
   if [ -r "$port_file" ]; then
@@ -168,7 +168,7 @@ stop_managed() {
     fi
   fi
   if [ "$quiet" != "true" ]; then
-    echo "AccountEval GUI stopped; port ${port:-unknown} is free."
+    echo "Dagoberd GUI stopped; port ${port:-unknown} is free."
   fi
 }
 
@@ -218,17 +218,17 @@ start_gui() {
 
   if pid="$(read_pid)" && process_is_running "$pid"; then
     if ! process_is_managed "$pid"; then
-      echo "Stored PID $pid does not belong to AccountEval; refusing to start." >&2
+      echo "Stored PID $pid does not belong to Dagoberd; refusing to start." >&2
       return 1
     fi
-    echo "Restarting the existing AccountEval GUI gracefully."
+    echo "Restarting the existing Dagoberd GUI gracefully."
     stop_managed true
   else
     cleanup_state false
   fi
   if ! port_is_available "$port"; then
     if adopt_legacy_process "$port"; then
-      echo "Adopting and gracefully stopping an older AccountEval GUI from this checkout."
+      echo "Adopting and gracefully stopping an older Dagoberd GUI from this checkout."
       stop_managed true
     else
       echo "Port $port belongs to an unmanaged process; leaving it unchanged." >&2
@@ -239,7 +239,7 @@ start_gui() {
   : > "$log_file"
   pid="$(
     cd "$project_root"
-    poetry run python -m account_eval.gui.daemon "$log_file" gui \
+    poetry run python -m dagoberd.gui.daemon "$log_file" gui \
       ${launch_args[@]+"${launch_args[@]}"} --no-browser
   )"
   case "$pid" in
@@ -254,7 +254,7 @@ start_gui() {
 
   while [ "$attempt" -lt 150 ]; do
     if ! process_is_running "$pid"; then
-      echo "Could not start AccountEval GUI:" >&2
+      echo "Could not start Dagoberd GUI:" >&2
       sed -n '1,20p' "$log_file" >&2
       cleanup_state true
       return 1
@@ -267,7 +267,7 @@ start_gui() {
     attempt=$((attempt + 1))
   done
   if [ -z "$url" ]; then
-    echo "AccountEval GUI did not return its address within 15 seconds." >&2
+    echo "Dagoberd GUI did not return its address within 15 seconds." >&2
     stop_managed true
     return 1
   fi
@@ -311,14 +311,14 @@ stop_gui() {
   fi
   if port_is_available "$port"; then
     cleanup_state false
-    echo "AccountEval GUI is not running."
+    echo "Dagoberd GUI is not running."
     return
   fi
   if ! adopt_legacy_process "$port"; then
-    echo "Port $port cannot be identified as this AccountEval checkout; leaving the process unchanged." >&2
+    echo "Port $port cannot be identified as this Dagoberd checkout; leaving the process unchanged." >&2
     return 1
   fi
-  echo "Detected an older AccountEval GUI from this checkout."
+  echo "Detected an older Dagoberd GUI from this checkout."
   stop_managed false
 }
 
@@ -327,17 +327,17 @@ show_status() {
   local port="unbekannt"
   if ! pid="$(read_pid)" || ! process_is_running "$pid"; then
     cleanup_state true
-    echo "AccountEval GUI is not running."
+    echo "Dagoberd GUI is not running."
     return 1
   fi
   if ! process_is_managed "$pid"; then
-    echo "Stored PID $pid does not belong to a managed AccountEval GUI." >&2
+    echo "Stored PID $pid does not belong to a managed Dagoberd GUI." >&2
     return 1
   fi
   if [ -r "$port_file" ]; then
     IFS= read -r port < "$port_file"
   fi
-  echo "AccountEval GUI is running (PID $pid, port $port)."
+  echo "Dagoberd GUI is running (PID $pid, port $port)."
 }
 
 action="${1:-}"

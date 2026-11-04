@@ -1,16 +1,16 @@
 # Cursor harness
 
-Cursor-specific notes for AccountEval development.
+Cursor-specific notes for Dagoberd development.
 
 ## Configuration
 
-Cursor reads the root `AGENTS.md` automatically. No separate MCP project file is required; use the AccountEval CLI directly or configure MCP through your Cursor MCP settings if needed.
+Cursor reads the root `AGENTS.md` automatically. No separate MCP project file is required; use the Dagoberd CLI directly or configure MCP through your Cursor MCP settings if needed.
 
 Generate the optional stdio launcher for MCP clients:
 
 ```bash
-poetry run account-eval agents configure
-poetry run account-eval agents doctor
+poetry run dagoberd agents configure
+poetry run dagoberd agents doctor
 ```
 
 ## Subagents and review
@@ -21,12 +21,12 @@ Use Cursor subagents for specialized work when available:
 - **bugbot** for defect-first review of local changes
 - **security-review** for security-focused review of local changes
 
-For AccountEval explorer and reviewer behavior, read and follow:
+For Dagoberd explorer and reviewer behavior, read and follow:
 
-- `.agents/prompts/account-eval-explorer.md`
-- `.agents/prompts/account-eval-reviewer.md`
+- `.agents/prompts/dagoberd-explorer.md`
+- `.agents/prompts/dagoberd-reviewer.md`
 
-For AccountEval financial data workflows, follow `.agents/skills/account-eval/SKILL.md`.
+For Dagoberd financial data workflows, follow `.agents/skills/dagoberd/SKILL.md`.
 
 ## Cursor precedence
 

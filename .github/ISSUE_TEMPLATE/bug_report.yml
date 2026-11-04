@@ -8,7 +8,7 @@ body:
 - type: textarea
   id: version
   attributes:
-    label: AccountEval version and installation method
+    label: Dagoberd version and installation method
     description: Include the version and whether you installed a wheel, sdist or source checkout.
   validations:
     required: true

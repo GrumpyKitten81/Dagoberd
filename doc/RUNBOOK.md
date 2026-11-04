@@ -1,6 +1,6 @@
-# AccountEval Runbook
+# Dagoberd Runbook
 
-This is the operational, architecture, integration and verification reference for V1/V2. Product scope and acceptance criteria are defined in the [PRD](PRD.md). Examples use synthetic identifiers. Prefix commands with `poetry run` in a checkout; an installed package exposes `account-eval` directly. Global `--config`, `--db` and `--output human|json|legacy-json` options precede the command.
+This is the operational, architecture, integration and verification reference for V1/V2. Product scope and acceptance criteria are defined in the [PRD](PRD.md). Examples use synthetic identifiers. Prefix commands with `poetry run` in a checkout; an installed package exposes `dagoberd` directly. Global `--config`, `--db` and `--output human|json|legacy-json` options precede the command.
 
 ## 1. Architecture and security model
 
@@ -21,7 +21,7 @@ CLI, GUI and MCP share services. Bulk changes require a persistent version-bound
 
 File imports are recommended. Comdirect is experimental, strictly read-only and incomplete; savings-account coverage is not verified and Visa credit-card transactions are unavailable. Other bank APIs are future work. Never infer financial completeness from a successful API request.
 
-MCP accepts no PINs, TANs or secrets. Authentication is local through CLI or the token-protected loopback GUI. Cloud classification and SMTP require exact previews and deliberate authorization. Agent-owned data transfers remain outside AccountEval's controls.
+MCP accepts no PINs, TANs or secrets. Authentication is local through CLI or the token-protected loopback GUI. Cloud classification and SMTP require exact previews and deliberate authorization. Agent-owned data transfers remain outside Dagoberd's controls.
 
 ## 2. Installation and initialization
 
@@ -30,9 +30,9 @@ Use Python 3.12+ and Poetry 2.2+. Keep the tracked lockfile synchronized:
 ```bash
 poetry sync
 poetry run pre-commit install
-poetry run account-eval setup --yes
-poetry run account-eval config validate
-poetry run account-eval self-test
+poetry run dagoberd setup --yes
+poetry run dagoberd config validate
+poetry run dagoberd self-test
 ```
 
 Install the hook once per checkout. Setup creates project configuration, restrictive local overrides, database and built-in profiles as needed. Repeated setup preserves TOML structure and changes only `comdirect.connections.primary.enabled`, managed LLM endpoint/model/mode/opt-in fields and `reporting.base_currency`. It preserves data paths, extensions, formats, other connections, session parameters, model limits and SMTP targets. Validate the complete candidate before atomic replacement; invalid configuration must neither replace the original nor initialize a database.
@@ -40,9 +40,9 @@ Install the hook once per checkout. Setup creates project configuration, restric
 Self-test uses synthetic data, starts a real local stdio MCP and checks reporting and portability without external networking:
 
 ```bash
-poetry run account-eval demo create
-poetry run account-eval --config .account-eval/demo/account-eval.toml gui
-poetry run account-eval demo reset --yes
+poetry run dagoberd demo create
+poetry run dagoberd --config .account-eval/demo/account-eval.toml gui
+poetry run dagoberd demo reset --yes
 ```
 
 A built wheel can be installed with pipx. Before upgrades or uninstalling, create and verify a backup. Uninstalling the program does not delete workspace files or keyring secrets.
@@ -56,17 +56,17 @@ See `account-eval.toml.example`. Personal choices belong in ignored `account-eva
 General resolution is OS keyring → environment → ignored local `.env`, where supported. Interactive entry avoids shell-history exposure:
 
 ```bash
-poetry run account-eval config set-secret comdirect.private.username
-poetry run account-eval config set-secret comdirect.private.client-id
-poetry run account-eval config set-secret comdirect.private.client-secret
-poetry run account-eval config set-secret llm.api-key
+poetry run dagoberd config set-secret comdirect.private.username
+poetry run dagoberd config set-secret comdirect.private.client-id
+poetry run dagoberd config set-secret comdirect.private.client-secret
+poetry run dagoberd config set-secret llm.api-key
 ```
 
 Comdirect credentials use the keyring exclusively. PIN entry is local and interactive, never an environment variable, `.env` value or saved secret. GUI PIN/TAN input is held only in process memory and never returned by endpoints. Timed sessions may explicitly retain tokens in the keyring; they never persist the PIN.
 
 ### Optional classifier
 
-The calling coding agent and AccountEval classifier are independent. AccountEval does not launch an agent or inherit its model/login. The classifier has no research, file or agent tools. See [Agent and LLM integration](AGENT_LLM_INTEGRATION.md).
+The calling coding agent and Dagoberd classifier are independent. Dagoberd does not launch an agent or inherit its model/login. The classifier has no research, file or agent tools. See [Agent and LLM integration](AGENT_LLM_INTEGRATION.md).
 
 ```toml
 [llm]
@@ -83,18 +83,18 @@ Local targets must be IPv4/IPv6 loopback or `localhost` resolving exclusively to
 Cloud use requires `enabled=true`, `mode="cloud"` and `allow_cloud=true`, plus the chosen endpoint/model and secret reference. The exact redacted payload, endpoint, non-secret configuration snapshot, expiry and fingerprint are preview-bound:
 
 ```bash
-poetry run account-eval llm show
-poetry run account-eval llm test
-poetry run account-eval classifications preview freelance --transaction <transaction-id>
-poetry run account-eval classifications run freelance --preview <preview-id> --fingerprint <sha256>
-poetry run account-eval classifications review --profile freelance --status suggested
+poetry run dagoberd llm show
+poetry run dagoberd llm test
+poetry run dagoberd classifications preview freelance --transaction <transaction-id>
+poetry run dagoberd classifications run freelance --preview <preview-id> --fingerprint <sha256>
+poetry run dagoberd classifications review --profile freelance --status suggested
 ```
 
 Preview creation can already apply deterministic classifications and requires authorization to mutate. Changed transactions or request settings require a new preview. Preview v2 preserves historical results while invalidating legacy unbound open previews.
 
 ### Data roots and base currency
 
-Without overrides, AccountEval uses its own `output/`; it never selects an adjacent repository automatically. Optional private data and synchronized file storage are independent:
+Without overrides, Dagoberd uses its own `output/`; it never selects an adjacent repository automatically. Optional private data and synchronized file storage are independent:
 
 ```toml
 [data]
@@ -114,8 +114,8 @@ Close GUI/MCP and database writers before versioning a private ledger. Never wri
 ### Local GUI
 
 ```bash
-poetry run account-eval gui
-poetry run account-eval gui --port 8766 --no-browser
+poetry run dagoberd gui
+poetry run dagoberd gui --port 8766 --no-browser
 Scripts/start-gui.sh --port 8766
 Scripts/gui-control.sh status
 Scripts/stop-gui.sh
@@ -130,13 +130,13 @@ The language picker offers English, German and Spanish. First use is English; se
 ### Preferred file workflow
 
 ```bash
-poetry run account-eval accounts register file BankExport ACCOUNT-EXAMPLE "Import account"
-poetry run account-eval accounts register file VisaExample VISA-1234 "Visa example" --type credit_card
-poetry run account-eval accounts list
-poetry run account-eval import preview --source tabular --account <account-id> export.xlsx
-poetry run account-eval import preview --source camt053 statement.xml
-poetry run account-eval import preview --source tabular --profile bank_export export.csv
-poetry run account-eval import run <preview-id>
+poetry run dagoberd accounts register file BankExport ACCOUNT-EXAMPLE "Import account"
+poetry run dagoberd accounts register file VisaExample VISA-1234 "Visa example" --type credit_card
+poetry run dagoberd accounts list
+poetry run dagoberd import preview --source tabular --account <account-id> export.xlsx
+poetry run dagoberd import preview --source camt053 statement.xml
+poetry run dagoberd import preview --source tabular --profile bank_export export.csv
+poetry run dagoberd import run <preview-id>
 ```
 
 Preview shows target routing, mapper version, rows, valid transactions, period, totals, structured errors and duplicate identities. Execution requires the same unchanged file/mapper with no errors. `imports.max_file_size_mib` limits files. CAMT derives identity from IBAN/proprietary ID and rejects DTD/entities.
@@ -146,8 +146,8 @@ Profiles under `[imports.profiles.<name>]` configure source, mapping, delimiter,
 The `wiso365` adapter supports generic multi-account sheets with stable `BuchungID`, source attributes and opening/month-end/closing balances. Personal mappings stay local. Unknown/ambiguous account routing blocks execution. Opening balances are observations, not cashflow. Tabular imports target file/manual accounts; API bank accounts remain sync-only.
 
 ```bash
-poetry run account-eval source-reconciliation preview --source-account <source-id> --target-account <target-id>
-poetry run account-eval source-reconciliation run --source-account <source-id> --target-account <target-id> --fingerprint <sha256>
+poetry run dagoberd source-reconciliation preview --source-account <source-id> --target-account <target-id>
+poetry run dagoberd source-reconciliation run --source-account <source-id> --target-account <target-id> --fingerprint <sha256>
 ```
 
 Use fingerprint-bound reconciliation to connect an existing history to an additional source. For cash, create a manual account, import controlled history and use `manual add` afterward. Opening balances belong to the account, not the transaction list.
@@ -157,8 +157,8 @@ Use fingerprint-bound reconciliation to connect an existing history to an additi
 Category/tax trees need no personal mapping. Each supplied `--free-1`, `--free-2` or `--free-3` tree needs complete source-field/root-section mapping:
 
 ```bash
-poetry run account-eval wiso-trees preview --categories categories.Tre --tax tax.Tre
-poetry run account-eval wiso-trees run --categories categories.Tre --tax tax.Tre --fingerprint <sha256>
+poetry run dagoberd wiso-trees preview --categories categories.Tre --tax tax.Tre
+poetry run dagoberd wiso-trees run --categories categories.Tre --tax tax.Tre --fingerprint <sha256>
 ```
 
 Select the file with `imports.wiso_trees.mapping_file`. It contains `version=1`, `free_fields` assigning each source field/root to dimension `code`/`name`, and optional `value_codes` assigning source labels to stable codes. Actual German source-field names remain unchanged. Direct children become values; deeper trees, unknown attributes, missing mappings and collisions fail before writes. Existing labels are preserved. Use identical free-field arguments for preview/run; hashes, source identities and normalized mapping bind the fingerprint. Formatting-only TOML changes do not invalidate it.
@@ -190,11 +190,11 @@ allow_mcp_sync = true
 Credentials are `comdirect.<name>.username`, `.client-id` and `.client-secret`; old unscoped entries are not used. Default ephemeral sync requests local authentication and revokes the session afterward. Timed mode retains a separate session for at most twelve hours. MCP additionally requires `allow_mcp_sync=true`; it uses only a valid access token and cannot authenticate or renew it.
 
 ```bash
-poetry run account-eval auth comdirect shared
-poetry run account-eval sync comdirect shared --accounts <account-id> --from 2026-01-01 --to 2026-01-31
-poetry run account-eval comdirect diagnose shared
-poetry run account-eval comdirect recover shared --resume <failed-sync-id>
-poetry run account-eval comdirect logout shared
+poetry run dagoberd auth comdirect shared
+poetry run dagoberd sync comdirect shared --accounts <account-id> --from 2026-01-01 --to 2026-01-31
+poetry run dagoberd comdirect diagnose shared
+poetry run dagoberd comdirect recover shared --resume <failed-sync-id>
+poetry run dagoberd comdirect logout shared
 ```
 
 CLI uses masked PIN/TAN input; PushTAN is confirmed in the bank app. The GUI supplies an in-process bridge. Neither persists PIN/TAN or exposes them to agents. Paging, refresh, rate limits, timeouts and resumable errors have fake-provider coverage, not a guarantee of complete live support.
@@ -210,17 +210,17 @@ Import documents locally with `documents import`; `documents register` records m
 ### Document commands
 
 ```bash
-poetry run account-eval documents import documents/
-poetry run account-eval documents import invoice.pdf --amount 42.00 --date 2026-07-01 --merchant ACME --reference INV-1
-poetry run account-eval documents preview documents/
-poetry run account-eval documents run <preview-id> --fingerprint <sha256>
-poetry run account-eval documents list --status open
-poetry run account-eval documents preview-matches <document-id>
-poetry run account-eval documents apply-matches <document-id> \
+poetry run dagoberd documents import documents/
+poetry run dagoberd documents import invoice.pdf --amount 42.00 --date 2026-07-01 --merchant ACME --reference INV-1
+poetry run dagoberd documents preview documents/
+poetry run dagoberd documents run <preview-id> --fingerprint <sha256>
+poetry run dagoberd documents list --status open
+poetry run dagoberd documents preview-matches <document-id>
+poetry run dagoberd documents apply-matches <document-id> \
   --transaction <transaction-id> --fingerprint <sha256> --document-version <version>
-poetry run account-eval documents accept <match-id> --version <version>
-poetry run account-eval documents reject <match-id> --version <version>
-poetry run account-eval documents unmatch <match-id> --version <version>
+poetry run dagoberd documents accept <match-id> --version <version>
+poetry run dagoberd documents reject <match-id> --version <version>
+poetry run dagoberd documents unmatch <match-id> --version <version>
 ```
 
 ## 6. Classification and splits
@@ -228,10 +228,10 @@ poetry run account-eval documents unmatch <match-id> --version <version>
 The order is rules → confirmed history → hints → optional model. Rules inspect purpose in priority order; history requires an exact confirmed previous counterparty/purpose match. Hints provide deterministic patterns or model context. Account-specific profiles/stages restrict decisions.
 
 ```bash
-poetry run account-eval classifications deterministic <transaction-id> <profile>
-poetry run account-eval classifications apply-rules <transaction-id> <profile>
-poetry run account-eval classifications review --profile <profile> --status suggested
-poetry run account-eval classifications accept <classification-id> --version <transaction-version>
+poetry run dagoberd classifications deterministic <transaction-id> <profile>
+poetry run dagoberd classifications apply-rules <transaction-id> <profile>
+poetry run dagoberd classifications review --profile <profile> --status suggested
+poetry run dagoberd classifications accept <classification-id> --version <transaction-version>
 ```
 
 `explain` follows execution; deterministic commands never call a model. Invalid/truncated model responses fail without synthesized rationale or reconstructed fields. Category must be allowed or null; confidence and rationale remain required. Suggestions need explicit version-protected acceptance/rejection.
@@ -241,23 +241,23 @@ Splits use `splits create|replace|revert`, require the parent version and must s
 ### Classification and split examples
 
 ```bash
-poetry run account-eval rules add rental "Rent" "(?i)miete|alquiler" income.rent --priority 10
-poetry run account-eval hints add freelance "ACME is business-related" --pattern "(?i)ACME" --category expense.business
-poetry run account-eval profiles create custom "Custom profile"
-poetry run account-eval classifications set <transaction-id> freelance expense.business --version <version>
-poetry run account-eval classifications apply-rules <transaction-id> freelance
-poetry run account-eval classifications deterministic <transaction-id> freelance
-poetry run account-eval classifications run freelance --limit 100
-poetry run account-eval classifications review --profile freelance --status suggested
-poetry run account-eval classifications accept <classification-id> --version <transaction-version>
-poetry run account-eval classifications reject <classification-id> --version <transaction-version>
+poetry run dagoberd rules add rental "Rent" "(?i)miete|alquiler" income.rent --priority 10
+poetry run dagoberd hints add freelance "ACME is business-related" --pattern "(?i)ACME" --category expense.business
+poetry run dagoberd profiles create custom "Custom profile"
+poetry run dagoberd classifications set <transaction-id> freelance expense.business --version <version>
+poetry run dagoberd classifications apply-rules <transaction-id> freelance
+poetry run dagoberd classifications deterministic <transaction-id> freelance
+poetry run dagoberd classifications run freelance --limit 100
+poetry run dagoberd classifications review --profile freelance --status suggested
+poetry run dagoberd classifications accept <classification-id> --version <transaction-version>
+poetry run dagoberd classifications reject <classification-id> --version <transaction-version>
 ```
 
 ```bash
-poetry run account-eval splits create <transaction-id> rental \
+poetry run dagoberd splits create <transaction-id> rental \
   --part '70.00:income.rent:Rent' \
   --part '30.00:income.utilities:Utilities' --version <version>
-poetry run account-eval splits revert <transaction-id> --version <version>
+poetry run dagoberd splits revert <transaction-id> --version <version>
 ```
 
 ## 7. Transaction semantics and organization
@@ -273,71 +273,71 @@ Bulk changes require `bulk preview` then the exact `bulk run` with fingerprint, 
 ### Organization examples
 
 ```bash
-poetry run account-eval transactions --status pending booked
-poetry run account-eval transactions --all-statuses
-poetry run account-eval transaction-history <transaction-id>
-poetry run account-eval transaction-status <transaction-id> booked \
+poetry run dagoberd transactions --status pending booked
+poetry run dagoberd transactions --all-statuses
+poetry run dagoberd transaction-history <transaction-id>
+poetry run dagoberd transaction-status <transaction-id> booked \
   --version <version> --reason "Bank booked the transaction"
 ```
 
 ```bash
-poetry run account-eval relations suggest transfer --accounts <account-1> <account-2>
-poetry run account-eval relations suggest refund --transaction <transaction-id>
-poetry run account-eval relations list --status suggested
-poetry run account-eval relations confirm <relation-id> --version <version>
-poetry run account-eval relations reject <relation-id> --version <version>
-poetry run account-eval relations resolve <relation-id> --version <version>
+poetry run dagoberd relations suggest transfer --accounts <account-1> <account-2>
+poetry run dagoberd relations suggest refund --transaction <transaction-id>
+poetry run dagoberd relations list --status suggested
+poetry run dagoberd relations confirm <relation-id> --version <version>
+poetry run dagoberd relations reject <relation-id> --version <version>
+poetry run dagoberd relations resolve <relation-id> --version <version>
 ```
 
 ```bash
-poetry run account-eval relations create transfer <debit-id> <credit-id> \
+poetry run dagoberd relations create transfer <debit-id> <credit-id> \
   --source-version <version> --target-version <version> --fee 1.00 \
   --reason "Own accounts"
 ```
 
 ```bash
-poetry run account-eval accounts show <account-id>
-poetry run account-eval balances add <account-id> 1234.56 \
+poetry run dagoberd accounts show <account-id>
+poetry run dagoberd balances add <account-id> 1234.56 \
   --date 2026-07-31 --version <account-version>
-poetry run account-eval balances list --account <account-id>
-poetry run account-eval balances reconciliations --account <account-id>
-poetry run account-eval balances reconcile <snapshot-id>
+poetry run dagoberd balances list --account <account-id>
+poetry run dagoberd balances reconciliations --account <account-id>
+poetry run dagoberd balances reconcile <snapshot-id>
 ```
 
 ```bash
-poetry run account-eval tags create Food
-poetry run account-eval tags add <transaction-id> Food --version <version>
-poetry run account-eval dimensions value-add household family "Family"
-poetry run account-eval dimensions set <transaction-id> household family --version <version>
-poetry run account-eval merchants create Supermarket
-poetry run account-eval merchants alias-add Supermarket "Example Market Ltd"
-poetry run account-eval merchants set <transaction-id> Supermarket --version <version>
+poetry run dagoberd tags create Food
+poetry run dagoberd tags add <transaction-id> Food --version <version>
+poetry run dagoberd dimensions value-add household family "Family"
+poetry run dagoberd dimensions set <transaction-id> household family --version <version>
+poetry run dagoberd merchants create Supermarket
+poetry run dagoberd merchants alias-add Supermarket "Example Market Ltd"
+poetry run dagoberd merchants set <transaction-id> Supermarket --version <version>
 ```
 
 ```bash
-poetry run account-eval search --text supermarket --accounts <account-id> \
+poetry run dagoberd search --text supermarket --accounts <account-id> \
   --from 2026-01-01 --amount-max -1 --tag Food \
   --dimension household=family --document-status unmatched --unreviewed
-poetry run account-eval review list --status open --accounts <account-id>
-poetry run account-eval review resolve <review-id> --version <version>
+poetry run dagoberd review list --status open --accounts <account-id>
+poetry run dagoberd review resolve <review-id> --version <version>
 ```
 
 ```bash
-poetry run account-eval bulk preview categorize <transaction-id-1> <transaction-id-2> \
+poetry run dagoberd bulk preview categorize <transaction-id-1> <transaction-id-2> \
   --profile freelance --category expense.business
-poetry run account-eval bulk run <bulk-preview-id>
-poetry run account-eval bulk preview tag_add <transaction-id-1> <transaction-id-2> \
+poetry run dagoberd bulk run <bulk-preview-id>
+poetry run dagoberd bulk preview tag_add <transaction-id-1> <transaction-id-2> \
   --tag Food
-poetry run account-eval bulk preview edit_fields <transaction-id-1> <transaction-id-2> \
+poetry run dagoberd bulk preview edit_fields <transaction-id-1> <transaction-id-2> \
   --patch-json '{"note":{"mode":"append","text":"Reviewed together"}}'
-poetry run account-eval bulk run <bulk-preview-id> --fingerprint <fingerprint>
+poetry run dagoberd bulk run <bulk-preview-id> --fingerprint <fingerprint>
 ```
 
 ## 8. Reports and saved analyses
 
 ```bash
-poetry run account-eval report --profile rental --accounts <account-id> --from 2026-01-01 --to 2026-01-31
-poetry run account-eval reports list
+poetry run dagoberd report --profile rental --accounts <account-id> --from 2026-01-01 --to 2026-01-31
+poetry run dagoberd reports list
 ```
 
 Generic profiles produce JSON/XLSX/HTML transactions, category/month/account/currency totals and open items. Explicit IDs, groups and all-enabled scope share semantics. Reports and CLI are English; user/source labels remain unchanged. Results are not tax or investment advice.
@@ -358,23 +358,23 @@ include_history = true
 ```
 
 ```bash
-poetry run account-eval report --extension custom-rental --accounts <account-1> \
+poetry run dagoberd report --extension custom-rental --accounts <account-1> \
   --from 2026-01-01 --to 2026-12-31 --currency EUR --formats json xlsx html
 ```
 
 ```bash
-poetry run account-eval rates add USD EUR 0.92 --date 2026-07-01 \
+poetry run dagoberd rates add USD EUR 0.92 --date 2026-07-01 \
   --source ECB-manual --source-version 2026-07-01 \
   --idempotency-key usd-eur-2026-07-01
-poetry run account-eval rates list --source-currency USD --target-currency EUR
+poetry run dagoberd rates list --source-currency USD --target-currency EUR
 
-poetry run account-eval analyses create personal-month "Personal monthly analysis" \
+poetry run dagoberd analyses create personal-month "Personal monthly analysis" \
   --relative-months 1 --accounts <account-1> <account-2> \
   --tag personal --base-currency EUR \
   --sections cashflow income_expense fixed_costs trends net_worth \
   --formats json xlsx html
-poetry run account-eval analyses show personal-month
-poetry run account-eval analyses run personal-month --as-of 2026-07-31
+poetry run dagoberd analyses show personal-month
+poetry run dagoberd analyses run personal-month --as-of 2026-07-31
 ```
 
 ## 9. Coding agents, MCP and optional delivery
@@ -399,10 +399,10 @@ subject_prefix = "My finances"
 ```
 
 ```bash
-poetry run account-eval config set-secret smtp.username
-poetry run account-eval config set-secret smtp.password
-poetry run account-eval deliveries preview personal --report-run latest
-poetry run account-eval deliveries send <preview-id> --fingerprint <sha256> --idempotency-key report-example-2026 --yes
+poetry run dagoberd config set-secret smtp.username
+poetry run dagoberd config set-secret smtp.password
+poetry run dagoberd deliveries preview personal --report-run latest
+poetry run dagoberd deliveries send <preview-id> --fingerprint <sha256> --idempotency-key report-example-2026 --yes
 ```
 
 Previews expire after 30 minutes, retain full recipients locally but mask output, and bind each artifact's path/size/hash. Changes block sending. Repeated idempotency keys return stored results without another email. MCP may preview but cannot send.
@@ -410,15 +410,15 @@ Previews expire after 30 minutes, retain full recipients locally but mask output
 ## 10. Maintenance, backup, export and recovery
 
 ```bash
-poetry run account-eval database backup --output output/backups/example.sqlite3
-poetry run account-eval database restore output/backups/example.sqlite3 --yes
-poetry run account-eval database export --output output/ledger.json
-poetry run account-eval portability integrity
-poetry run account-eval portability export --output output/example.aex
-poetry run account-eval config set-secret backup.password
-poetry run account-eval portability backup --output output/backups/example.aebak
-poetry run account-eval portability verify output/backups/example.aebak --password-secret ACCOUNT_EVAL_BACKUP_PASSWORD
-poetry run account-eval audit --limit 100
+poetry run dagoberd database backup --output output/backups/example.sqlite3
+poetry run dagoberd database restore output/backups/example.sqlite3 --yes
+poetry run dagoberd database export --output output/ledger.json
+poetry run dagoberd portability integrity
+poetry run dagoberd portability export --output output/example.aex
+poetry run dagoberd config set-secret backup.password
+poetry run dagoberd portability backup --output output/backups/example.aebak
+poetry run dagoberd portability verify output/backups/example.aebak --password-secret ACCOUNT_EVAL_BACKUP_PASSWORD
+poetry run dagoberd audit --limit 100
 ```
 
 `database` is ledger-only. Portable exports include database, documents, registered reports, non-secret config, product/schema version and SHA-256 manifest. `.aex` is unencrypted; `.aebak` wraps it in AES-256-GCM/Scrypt. Never pass passwords directly as arguments.
@@ -456,10 +456,10 @@ Hard kills/power loss can leave mixed state even without a CLI result. Preserve 
 2. Prefer restoring the rollback export into a fresh separate workspace without private overrides/partner linkage. Set `RECOVERY_CONFIG` to its absolute config path and `ROLLBACK_EXPORT` to the specific saved archive:
 
    ```bash
-   poetry run account-eval --config "$RECOVERY_CONFIG" setup --yes
-   poetry run account-eval --config "$RECOVERY_CONFIG" portability verify "$ROLLBACK_EXPORT"
-   poetry run account-eval --config "$RECOVERY_CONFIG" portability restore "$ROLLBACK_EXPORT" --yes
-   poetry run account-eval --config "$RECOVERY_CONFIG" portability integrity
+   poetry run dagoberd --config "$RECOVERY_CONFIG" setup --yes
+   poetry run dagoberd --config "$RECOVERY_CONFIG" portability verify "$ROLLBACK_EXPORT"
+   poetry run dagoberd --config "$RECOVERY_CONFIG" portability restore "$ROLLBACK_EXPORT" --yes
+   poetry run dagoberd --config "$RECOVERY_CONFIG" portability integrity
    ```
 
 3. Compare transactions, documents, reports and paths with the saved state before deliberately repointing production configuration. Database-only restore does not recover files.
@@ -469,8 +469,8 @@ Hard kills/power loss can leave mixed state even without a CLI result. Preserve 
 ### Controlled deletion
 
 ```bash
-poetry run account-eval portability delete-preview --scope documents --scope reports
-poetry run account-eval portability delete-run <preview-id> --fingerprint <sha256> --yes
+poetry run dagoberd portability delete-preview --scope documents --scope reports
+poetry run dagoberd portability delete-run <preview-id> --fingerprint <sha256> --yes
 ```
 
 Scopes are database/documents/reports/backups/exports. Preview binds absolute path, size and hash. Any change aborts before the first deletion. Restrictive receipts remain in `.account-eval/deletion-receipts/`; config and keyring secrets are not automatically deleted. Never substitute free paths or recursive shell deletion.

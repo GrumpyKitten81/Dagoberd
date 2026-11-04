@@ -1,4 +1,0 @@
-interface:
-  display_name: "AccountEval"
-  short_description: "Manage local financial data safely with an agent"
-  default_prompt: "Use $account-eval to import, classify, match, and report local financial data safely."

@@ -12,14 +12,14 @@ from pathlib import Path
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-import account_eval
-from account_eval import __version__
-from account_eval.accounts import AccountScope
-from account_eval.ledger.database import LedgerDatabase
-from account_eval.ledger.repository import LedgerRepository
-from account_eval.reporting.ledger_reports import LedgerReportGenerator
-from account_eval.services.import_service import ImportService
-from account_eval.services.portability import PortabilityService
+import dagoberd
+from dagoberd import __version__
+from dagoberd.accounts import AccountScope
+from dagoberd.ledger.database import LedgerDatabase
+from dagoberd.ledger.repository import LedgerRepository
+from dagoberd.reporting.ledger_reports import LedgerReportGenerator
+from dagoberd.services.import_service import ImportService
+from dagoberd.services.portability import PortabilityService
 
 CAMT_STATEMENT = """<?xml version="1.0" encoding="UTF-8"?>
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08">
@@ -56,17 +56,19 @@ def console_script(name: str) -> Path:
 
 
 def test_distribution_metadata_and_console_scripts() -> None:
-    assert version("account-eval") == __version__
+    assert version("dagoberd") == __version__
+    assert console_script("dagoberd").is_file()
+    assert console_script("dagoberd-mcp").is_file()
     assert console_script("account-eval").is_file()
     assert console_script("account-eval-mcp").is_file()
     if os.environ.get("ACCOUNT_EVAL_RELEASE_ARTIFACT") == "1":
-        module_path = Path(account_eval.__file__).resolve()
+        module_path = Path(dagoberd.__file__).resolve()
         assert "site-packages" in module_path.parts or "dist-packages" in module_path.parts
 
 
 def test_cli_initializes_and_diagnoses_local_workspace(tmp_path: Path) -> None:
     initialized = subprocess.run(
-        [str(console_script("account-eval")), "init"],
+        [str(console_script("dagoberd")), "init"],
         cwd=tmp_path,
         check=False,
         capture_output=True,
@@ -76,7 +78,7 @@ def test_cli_initializes_and_diagnoses_local_workspace(tmp_path: Path) -> None:
     assert (tmp_path / "account-eval.toml").is_file()
 
     diagnosed = subprocess.run(
-        [str(console_script("account-eval")), "doctor"],
+        [str(console_script("dagoberd")), "doctor"],
         cwd=tmp_path,
         check=False,
         capture_output=True,
@@ -132,7 +134,7 @@ def test_real_stdio_mcp_process_lists_safe_tools(tmp_path: Path) -> None:
     async def scenario() -> None:
         parameters = StdioServerParameters(
             command=sys.executable,
-            args=["-m", "account_eval.mcp_server"],
+            args=["-m", "dagoberd.mcp_server"],
             env={
                 **os.environ,
                 "ACCOUNT_EVAL_DB": str(tmp_path / "mcp-stdio.db"),

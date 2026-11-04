@@ -1,6 +1,6 @@
 # Support
 
-AccountEval is beta software provided without warranty. Review classifications and report results before relying on them; they are not financial, investment or tax advice.
+Dagoberd is beta software provided without warranty. Review classifications and report results before relying on them; they are not financial, investment or tax advice.
 
 Use GitHub Issues and the matching issue form for reproducible bugs, feature requests and security concerns. Include the version, operating system, sanitized commands and sanitized diagnostics required by the form. All issues are public. Never attach databases, reports, receipts, bank exports, PINs, TANs, credentials or tokens. See [SECURITY.md](SECURITY.md).
 

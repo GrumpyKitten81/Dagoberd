@@ -1,23 +1,23 @@
 # Coding agents and optional LLM classification
 
-AccountEval `0.3.0b1` is operated by a user-started coding agent through the repository skill, CLI or optional local MCP. Its optional OpenAI-compatible classifier is a separate model role with separate configuration.
+Dagoberd `0.3.0b1` is operated by a user-started coding agent through the repository skill, CLI or optional local MCP. Its optional OpenAI-compatible classifier is a separate model role with separate configuration.
 
 ## Roles and capabilities
 
 | Component | Responsibility |
 | --- | --- |
-| Calling agent | Understand the user request, load the skill, choose scope, invoke tools, explain results and optionally research with its own tools. Model/login settings belong outside AccountEval. |
-| AccountEval | Manage transactions, apply rules/history/hints, create previews, check versions and audit changes. |
+| Calling agent | Understand the user request, load the skill, choose scope, invoke tools, explain results and optionally research with its own tools. Model/login settings belong outside Dagoberd. |
+| Dagoberd | Manage transactions, apply rules/history/hints, create previews, check versions and audit changes. |
 | Optional classifier | Evaluate prepared redacted transactions against allowed categories. Endpoint/model/secret are configured separately. |
 | Review | Explicitly accept/reject suggestions with current transaction versions; confidence alone never applies a model suggestion. |
 
-AccountEval launches no agent CLI and inherits no login, API key or model choice. The classifier is disabled by default; deterministic workflows need no model. It is an outgoing client for `chat.completions.create`, not a general proxy or OpenAI server. `llm test` uses `models.list`. The adapter has no research, file, banking or agent tools and no autonomous workflow control.
+Dagoberd launches no agent CLI and inherits no login, API key or model choice. The classifier is disabled by default; deterministic workflows need no model. It is an outgoing client for `chat.completions.create`, not a general proxy or OpenAI server. `llm test` uses `models.list`. The adapter has no research, file, banking or agent tools and no autonomous workflow control.
 
 ## CLI workflow
 
 Repository coding standards live under [`.agents/guidance/`](../.agents/guidance/). Global agent discipline (for example Claude `CLAUDE.md` in the user home) is not duplicated in the repository.
 
-Load the [skill](../.agents/skills/account-eval/SKILL.md), check configuration/scope and act on explicit user instructions. Secrets and PIN/TAN remain local: terminal entry for the CLI or the token-protected local browser GUI, never agent tool arguments. File import is preferred; Comdirect is experimental and incomplete. In a checkout prefix commands with `poetry run`; global `--config <file>` precedes the command.
+Load the [skill](../.agents/skills/dagoberd/SKILL.md), check configuration/scope and act on explicit user instructions. Secrets and PIN/TAN remain local: terminal entry for the CLI or the token-protected local browser GUI, never agent tool arguments. File import is preferred; Comdirect is experimental and incomplete. In a checkout prefix commands with `poetry run`; global `--config <file>` precedes the command.
 
 1. `classifications deterministic <transaction-id> <profile>` checks rules, confirmed history and patterned hints without calling a model.
 2. `classifications preview <profile> --transaction <transaction-id>` persists redacted inputs, endpoint/model/configuration, fingerprint and expiry.
@@ -86,7 +86,7 @@ Category must be allowed or null. Confidence must be 0–1 and rationale nonempt
 
 ## Privacy and agent-owned suggestions
 
-Redaction removes recognized IBANs, long digit sequences and email addresses and limits text. It is not complete anonymization: names, amounts and other information can remain sensitive. Authorized transfers follow provider terms. AccountEval's gates govern its own calls; the calling agent's own file/output transfers depend on its settings and user authorization.
+Redaction removes recognized IBANs, long digit sequences and email addresses and limits text. It is not complete anonymization: names, amounts and other information can remain sensitive. Authorized transfers follow provider terms. Dagoberd's gates govern its own calls; the calling agent's own file/output transfers depend on its settings and user authorization.
 
 A dedicated versioned interface for researched agent suggestions is not implemented. `classifications set ... --suggest --version ...` stores a manual suggestion with CLI rationale; MCP `classify_transaction` directly sets a category with versions. These are not a separate researched-suggestion API. Use existing classifier metadata/review where applicable.
 

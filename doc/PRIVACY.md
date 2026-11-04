@@ -1,14 +1,14 @@
 # Privacy
 
-AccountEval stores its SQLite ledger, documents, reports, backups and audit data in the configured local workspace. It has no telemetry or AccountEval cloud service. A user-configured synchronized workspace is subject to that storage provider's policies.
+Dagoberd stores its SQLite ledger, documents, reports, backups and audit data in the configured local workspace. It has no telemetry or Dagoberd cloud service. A user-configured synchronized workspace is subject to that storage provider's policies.
 
-AccountEval transfers data externally only through explicitly enabled adapters:
+Dagoberd transfers data externally only through explicitly enabled adapters:
 
 - The experimental Comdirect adapter makes read-only banking API calls. File imports are the preferred workflow.
 - A cloud LLM receives exactly the redacted payload shown in an approved preview.
 - SMTP sends exactly the hashed report artifacts to the previewed recipient after local confirmation.
 
-The optional classifier is separate from the calling coding agent. Local model endpoints must be loopback; remote endpoints require cloud mode and opt-in. Previews bind the endpoint and request configuration. Model requests do not follow redirects, and local model calls ignore environment proxies. Redaction is not complete anonymization. AccountEval cannot control what the calling agent transfers from files or CLI/MCP output to its own model or research tools. See [Agent and LLM integration](AGENT_LLM_INTEGRATION.md).
+The optional classifier is separate from the calling coding agent. Local model endpoints must be loopback; remote endpoints require cloud mode and opt-in. Previews bind the endpoint and request configuration. Model requests do not follow redirects, and local model calls ignore environment proxies. Redaction is not complete anonymization. Dagoberd cannot control what the calling agent transfers from files or CLI/MCP output to its own model or research tools. See [Agent and LLM integration](AGENT_LLM_INTEGRATION.md).
 
 Secrets use the OS keyring, with environment variables and an ignored `.env` as fallbacks where supported. Comdirect credentials use the keyring. PIN/TAN entry remains local to the CLI or token-protected browser GUI and is not persisted; explicitly enabled timed sessions may retain session tokens in the keyring. Portable exports are unencrypted; `.aebak` backups are encrypted.
 

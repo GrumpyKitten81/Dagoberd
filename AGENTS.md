@@ -1,4 +1,4 @@
-# AccountEval agent guidance
+# Dagoberd agent guidance
 
 Shared guidance for all coding agents in this repository.
 
@@ -23,15 +23,15 @@ Read these files before editing code. Apply them in order; later files refine ea
 4. `.agents/guidance/testing.md` for test changes or verification
 5. `.agents/guidance/markdown.md` for Markdown changes
 
-## AccountEval data workflows
+## Dagoberd data workflows
 
-Use `.agents/skills/account-eval/` for requested AccountEval data-processing workflows (imports, sync, classification, receipts, reports). Load the skill before mutating ledger data.
+Use `.agents/skills/dagoberd/` for requested Dagoberd data-processing workflows (imports, sync, classification, receipts, reports). Load the skill before mutating ledger data.
 
 Ledger data, original imports, receipts and reports are sensitive personal data. Never commit them to the public code repository. Mutating workflows require an explicit request and the applicable preview and confirmation.
 
 Read `AGENTS.override.md` if present after this guidance; it may add private workspace conventions.
 
-The user starts and configures their coding agent outside AccountEval. The optional OpenAI-compatible classifier uses separate local model and credential settings and has no research tools. See `doc/AGENT_LLM_INTEGRATION.md` for the division of work and the limits of AccountEval's privacy gates.
+The user starts and configures their coding agent outside Dagoberd. The optional OpenAI-compatible classifier uses separate local model and credential settings and has no research tools. See `doc/AGENT_LLM_INTEGRATION.md` for the division of work and the limits of Dagoberd's privacy gates.
 
 ## Development gates
 

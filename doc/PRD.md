@@ -1,14 +1,14 @@
-# PRD: AccountEval local finance ledger
+# PRD: Dagoberd local finance ledger
 
 **Status:** Public-beta candidate `0.3.0b1`. Release gates and local acceptance remain required; results belong in the acceptance record.
 
 ## 1. Product goal
 
-AccountEval is a local, agent-first finance ledger for individuals managing household, rental and self-employment finances. It preserves source records, normalizes transactions, matches documents and produces explainable classifications and reproducible reports. Every transaction belongs to exactly one account and provider. It performs no payments and provides no financial, investment or tax advice.
+Dagoberd is a local, agent-first finance ledger for individuals managing household, rental and self-employment finances. It preserves source records, normalizes transactions, matches documents and produces explainable classifications and reproducible reports. Every transaction belongs to exactly one account and provider. It performs no payments and provides no financial, investment or tax advice.
 
 File imports from CSV, XLS/XLSX and CAMT.053 are the preferred data source. The read-only Comdirect API is experimental, with incomplete product coverage. Savings-account coverage is not verified; Visa credit-card transactions are unavailable. Other bank APIs are not currently offered. Broader API support is future work, not a promise of this beta.
 
-The user starts and configures a coding agent separately. It operates AccountEval through the repository skill, CLI or optional local MCP. AccountEval neither launches the agent nor controls its model, login or data transfers. The optional OpenAI-compatible classifier has separate configuration and no research or agent tools. See [Agent and LLM integration](AGENT_LLM_INTEGRATION.md).
+The user starts and configures a coding agent separately. It operates Dagoberd through the repository skill, CLI or optional local MCP. Dagoberd neither launches the agent nor controls its model, login or data transfers. The optional OpenAI-compatible classifier has separate configuration and no research or agent tools. See [Agent and LLM integration](AGENT_LLM_INTEGRATION.md).
 
 ## 2. Release scope
 

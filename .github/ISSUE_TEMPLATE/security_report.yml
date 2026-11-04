@@ -8,7 +8,7 @@ body:
 - type: textarea
   id: version
   attributes:
-    label: Affected AccountEval versions
+    label: Affected Dagoberd versions
     description: List affected versions and the relevant component.
   validations:
     required: true

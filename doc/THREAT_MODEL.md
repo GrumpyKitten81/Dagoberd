@@ -8,7 +8,7 @@ Bank credentials and sessions, financial transactions, account identities, docum
 
 - The local operating system and workspace are trusted and require appropriate access controls.
 - Banks, optional remote models, SMTP and user-configured synchronized storage have their own security and privacy policies.
-- A coding agent or MCP client can invoke business operations but must not receive PINs, TANs or secrets. Its own data transfers are outside AccountEval's control.
+- A coding agent or MCP client can invoke business operations but must not receive PINs, TANs or secrets. Its own data transfers are outside Dagoberd's control.
 - The GUI binds only to loopback and uses an ephemeral token. It displays unmasked local data. PIN/TAN input exists only in the running authentication process; it is not persisted or returned by endpoints.
 - Import files and PDFs are untrusted input. Size limits, XML restrictions and local extraction limit exposure.
 - Public GitHub Issues are not a confidential channel. Reports must use synthetic examples and sanitized diagnostics.
@@ -33,4 +33,4 @@ A hard process interruption or power failure during restore is not a transaction
 
 ## Multiple workspace isolation
 
-The main additional failure modes are accidental workspace selection, identical bank connection names, stale browser requests, copied ledgers, overlapping storage paths and Git transfers to the wrong repository. Mitigations are explicit request-scoped selection, UUID-scoped secrets and database identity, per-tab navigation, separate job registries, canonical path checks and fingerprint-bound Git previews. Workspace locks coordinate participating local application processes; external Git clients, cloud clients and database tools do not honor these locks. The trusted local OS, repository configuration and operator remain part of the trust boundary. Git conflicts and divergent binary ledgers require manual recovery; AccountEval never merges them automatically.
+The main additional failure modes are accidental workspace selection, identical bank connection names, stale browser requests, copied ledgers, overlapping storage paths and Git transfers to the wrong repository. Mitigations are explicit request-scoped selection, UUID-scoped secrets and database identity, per-tab navigation, separate job registries, canonical path checks and fingerprint-bound Git previews. Workspace locks coordinate participating local application processes; external Git clients, cloud clients and database tools do not honor these locks. The trusted local OS, repository configuration and operator remain part of the trust boundary. Git conflicts and divergent binary ledgers require manual recovery; Dagoberd never merges them automatically.

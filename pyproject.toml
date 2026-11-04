@@ -1,5 +1,5 @@
 [project]
-name = "account-eval"
+name = "dagoberd"
 version = "0.3.0b1"
 description = "Local agentic finance ledger, classification and reporting"
 keywords = ["finance", "ledger", "comdirect", "camt053", "mcp"]
@@ -38,13 +38,15 @@ dependencies = [
 ]
 
 [project.scripts]
-account-eval = "account_eval.cli:main"
-account-eval-mcp = "account_eval.mcp_server:main"
+dagoberd = "dagoberd.cli:main"
+dagoberd-mcp = "dagoberd.mcp_server:main"
+account-eval = "dagoberd.cli:main"
+account-eval-mcp = "dagoberd.mcp_server:main"
 
 [project.urls]
-Homepage = "https://github.com/GrumpyKitten81/AccountEval"
-Issues = "https://github.com/GrumpyKitten81/AccountEval/issues"
-Changelog = "https://github.com/GrumpyKitten81/AccountEval/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/GrumpyKitten81/Dagoberd"
+Issues = "https://github.com/GrumpyKitten81/Dagoberd/issues"
+Changelog = "https://github.com/GrumpyKitten81/Dagoberd/blob/main/CHANGELOG.md"
 
 [dependency-groups]
 dev = [
@@ -61,7 +63,7 @@ dev = [
 [tool.poetry]
 requires-poetry = ">=2.2,<3.0"
 packages = [
-    {include = "account_eval", from = "src"},
+    {include = "dagoberd", from = "src"},
 ]
 
 [tool.ruff]

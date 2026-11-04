@@ -17,7 +17,7 @@ Keep changes focused, typed, migration-safe and covered by meaningful tests. Nev
 
 ## Language
 
-Maintain documentation, CLI output, reports, comments and synthetic examples in English. The GUI supports English, German and Spanish through central catalogs under `src/account_eval/gui/static/locales/`. English is the default and reference catalog. Add matching keys, named placeholders and plural variants to every catalog. A new language also needs a language-registry entry in `i18n.js`. Use `msg`, `date`, `number` and `amount` with the DOM binding helpers; do not embed translated HTML or rerender forms when switching languages.
+Maintain documentation, CLI output, reports, comments and synthetic examples in English. The GUI supports English, German and Spanish through central catalogs under `src/dagoberd/gui/static/locales/`. English is the default and reference catalog. Add matching keys, named placeholders and plural variants to every catalog. A new language also needs a language-registry entry in `i18n.js`. Use `msg`, `date`, `number` and `amount` with the DOM binding helpers; do not embed translated HTML or rerender forms when switching languages.
 
 Preserve external file headers, source-language import fixtures, legal originals and existing user data. Do not translate command names, JSON keys, database identifiers or import mappings.
 

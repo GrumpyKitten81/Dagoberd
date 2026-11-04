@@ -1,0 +1,6 @@
+name = "dagoberd_reviewer"
+description = "Read-only Dagoberd reviewer for correctness, data integrity, security, and test risks."
+sandbox_mode = "read-only"
+developer_instructions = """
+Read and follow `.agents/prompts/dagoberd-reviewer.md`. Stay read-only.
+"""

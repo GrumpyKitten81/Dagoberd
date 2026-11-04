@@ -45,8 +45,8 @@ jobs:
           git ls-files -z |
           xargs -0 detect-secrets-hook --baseline .secrets.baseline
           --exclude-files '(^|/)(tests|doc|dist|poetry.lock)'
-      - run: poetry export --format requirements.txt --without-hashes --output /tmp/account-eval-requirements.txt
-      - run: python -m pip_audit --requirement /tmp/account-eval-requirements.txt
+      - run: poetry export --format requirements.txt --without-hashes --output /tmp/dagoberd-requirements.txt
+      - run: python -m pip_audit --requirement /tmp/dagoberd-requirements.txt
 
   # CodeQL removed: requires GitHub Actions API access and/or Code Scanning.
   # dependency-audit covers secrets scanning and pip-audit for release deps.

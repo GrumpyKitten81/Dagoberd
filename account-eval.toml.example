@@ -1,4 +1,4 @@
-# AccountEval project configuration (no secrets)
+# Dagoberd project configuration (no secrets)
 # Machine-specific overrides: account-eval.local.toml (gitignored; copy patterns from below)
 
 [database]
@@ -10,7 +10,7 @@ path = "output/account_eval.db"
 # root = "/path/to/private-workspace"
 #
 # [cloud]
-# workspace = "/absolute/path/to/sync/AccountEval"
+# workspace = "/absolute/path/to/sync/Dagoberd"
 #
 # Comdirect API sync (experimental and incomplete). File/Excel imports use import profiles only; leave disabled
 # unless you store credentials in the OS keyring (see doc/RUNBOOK.md):
@@ -21,9 +21,9 @@ path = "output/account_eval.db"
 # allow_mcp_sync = false
 #
 # When enabled = true, set secrets interactively (never in TOML):
-#   poetry run account-eval config set-secret comdirect.private.username
-#   poetry run account-eval config set-secret comdirect.private.client-id
-#   poetry run account-eval config set-secret comdirect.private.client-secret
+#   poetry run dagoberd config set-secret comdirect.private.username
+#   poetry run dagoberd config set-secret comdirect.private.client-id
+#   poetry run dagoberd config set-secret comdirect.private.client-secret
 
 [comdirect]
 # Every Comdirect connection has a stable local name and separate Keychain entries.

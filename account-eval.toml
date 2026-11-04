@@ -1,4 +1,4 @@
-# AccountEval project configuration (no secrets)
+# Dagoberd project configuration (no secrets)
 # Personal overrides: account-eval.local.toml (gitignored)
 
 [database]
@@ -67,7 +67,7 @@ timeout_seconds = 30.0
 #
 # Configure synchronized storage (Google Drive, OneDrive, etc.) in account-eval.local.toml:
 # [cloud]
-# workspace = "/absolute/path/to/sync/AccountEval"
+# workspace = "/absolute/path/to/sync/Dagoberd"
 
 [transaction_semantics]
 transfer_max_days = 5
@@ -82,4 +82,4 @@ max_file_size_mib = 50
 [agents]
 allow_manual_transactions_mcp = false
 
-# Tabular exports: poetry run account-eval import preview --source tabular --account <id> <file>
+# Tabular exports: poetry run dagoberd import preview --source tabular --account <id> <file>

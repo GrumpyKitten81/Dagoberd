@@ -18,22 +18,22 @@
     "build": {
       "permission": {
         "task": {
-          "account-eval-*": "allow"
+          "dagoberd-*": "allow"
         }
       }
     },
     "plan": {
       "permission": {
         "task": {
-          "account-eval-*": "allow"
+          "dagoberd-*": "allow"
         }
       }
     }
   },
   "mcp": {
-    "account-eval": {
+    "dagoberd": {
       "type": "local",
-      "command": ["./Scripts/account-eval-mcp.sh"],
+      "command": ["./Scripts/dagoberd-mcp.sh"],
       "cwd": ".",
       "enabled": true,
       "timeout": 120000

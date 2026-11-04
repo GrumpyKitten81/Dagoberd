@@ -9,4 +9,4 @@
 - Preserve existing behavior unless the request explicitly changes it. Do not remove unrelated code, valid comments, or functionality.
 - Add dependencies only when required by the request and report their exact installation command.
 
-For Claude Code, the user's global `CLAUDE.md` defines AI-DO-NOT rules and takes precedence over broader harness defaults about refactoring, logging, documentation, tests, compatibility, or extensibility. Do not duplicate those global rules in repository guidance. The files under `.agents/guidance/` add AccountEval-specific constraints only.
+For Claude Code, the user's global `CLAUDE.md` defines AI-DO-NOT rules and takes precedence over broader harness defaults about refactoring, logging, documentation, tests, compatibility, or extensibility. Do not duplicate those global rules in repository guidance. The files under `.agents/guidance/` add Dagoberd-specific constraints only.

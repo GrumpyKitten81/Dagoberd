@@ -31,11 +31,11 @@ jobs:
           python -m build &&
           python -m twine check dist/* &&
           python -m pip install dist/*.whl &&
-          cyclonedx-py environment --output-file dist/account-eval.cdx.json
+          cyclonedx-py environment --output-file dist/dagoberd.cdx.json
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
         with:
           subject-path: "dist/*.whl"
-          sbom-path: "dist/account-eval.cdx.json"
+          sbom-path: "dist/dagoberd.cdx.json"
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
         with:
           subject-path: "dist/*"

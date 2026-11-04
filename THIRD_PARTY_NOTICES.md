@@ -2,7 +2,7 @@
 
 ## comdirect-api-wrapper
 
-Parts of AccountEval's Comdirect authentication and paging flow are derived
+Parts of Dagoberd's Comdirect authentication and paging flow are derived
 from comdirect-api-wrapper 0.3.1:
 
 https://github.com/mad4ms/comdirect-api-wrapper/

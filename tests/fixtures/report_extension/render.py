@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from account_eval.reporting.extensions import ReportContext
+from dagoberd.reporting.extensions import ReportContext
 
 
 def render(context: ReportContext) -> list[Path]:

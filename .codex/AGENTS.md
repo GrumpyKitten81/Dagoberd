@@ -5,7 +5,7 @@ Read the shared `AGENTS.md` and its routed guidance first.
 ## Integration
 
 The optional local stdio-MCP is configured in `.codex/config.toml` with `required = false`.
-Create its installation-bound launcher with `account-eval agents configure` and inspect it with `account-eval agents doctor`.
+Create its installation-bound launcher with `dagoberd agents configure` and inspect it with `dagoberd agents doctor`.
 A missing MCP must not block CLI development.
 
 ## Project subagents
@@ -16,9 +16,9 @@ Machine-specific model choices and providers belong in local, ignored settings; 
 
 Never delegate real ledger writes, bank state changes, deliveries or secrets. Do not return local configuration, transaction details, document content or account identifiers in summaries.
 
-The calling agent's model and credentials are independent of AccountEval's optional classifier. AccountEval does not launch agents or perform web research through that adapter. Read `doc/AGENT_LLM_INTEGRATION.md` for the division of work and privacy boundaries.
+The calling agent's model and credentials are independent of Dagoberd's optional classifier. Dagoberd does not launch agents or perform web research through that adapter. Read `doc/AGENT_LLM_INTEGRATION.md` for the division of work and privacy boundaries.
 
 ## Financial workflows
 
-Load the account-eval skill before data workflows. Preserve preview, fingerprint, version and local-confirmation gates.
+Load the dagoberd skill before data workflows. Preserve preview, fingerprint, version and local-confirmation gates.
 Read `AGENTS.override.md` if present for private workspace conventions after loading the shared guidance.

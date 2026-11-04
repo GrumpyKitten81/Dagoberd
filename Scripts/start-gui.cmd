@@ -1,5 +1,5 @@
 @echo off
 setlocal
 cd /d "%~dp0.."
-poetry run account-eval gui %*
+poetry run dagoberd gui %*
 exit /b %ERRORLEVEL%

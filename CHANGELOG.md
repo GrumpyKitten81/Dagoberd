@@ -2,6 +2,11 @@
 
 ## 0.3.0b1 — Public-beta candidate
 
+### Project name
+
+- Rename the project, Python package and primary CLI commands to Dagoberd.
+- Retain the former CLI aliases and persisted configuration/data identifiers for compatibility.
+
 ### Features
 
 - English project documentation, CLI and reports; centrally cataloged English/German/Spanish GUI with persistent language choice and live draft-preserving switching.

@@ -9,11 +9,11 @@ import pytest
 import uvicorn
 from playwright.sync_api import sync_playwright
 
-from account_eval.gui.workspaces import create_workspace_app
-from account_eval.ledger.database import LedgerDatabase
-from account_eval.ledger.organization import OrganizationService
-from account_eval.ledger.repository import LedgerRepository
-from account_eval.workspaces import WorkspaceRegistry, workspace_operation
+from dagoberd.gui.workspaces import create_workspace_app
+from dagoberd.ledger.database import LedgerDatabase
+from dagoberd.ledger.organization import OrganizationService
+from dagoberd.ledger.repository import LedgerRepository
+from dagoberd.workspaces import WorkspaceRegistry, workspace_operation
 
 pytestmark = pytest.mark.skipif(
     os.environ.get("ACCOUNT_EVAL_BROWSER_TESTS") != "1",
