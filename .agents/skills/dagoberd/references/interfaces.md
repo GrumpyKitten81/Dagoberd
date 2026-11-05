@@ -6,6 +6,7 @@ The calling agent and optional classifier have independent models/credentials. D
 
 - Setup/diagnosis: `setup --yes`, `self-test`, `agents configure|doctor`; MCP is optional.
 - Preferred intake: `import preview --source tabular --account <id> <file>` then `import run <preview-id>`. CAMT uses `--source camt053`; profiles use `--profile <name>`.
+- Scoped history: `import history --account <id>` or MCP `list_account_import_history`. Preview creation persists a record and may create review items; obtain authorization first.
 - Experimental Comdirect: local authentication, `sync comdirect`, `comdirect diagnose|recover`. Incomplete coverage; use file imports when unsupported.
 - Documents: `documents import|candidates|accept|reject|unmatch`.
 - Classification: `classifications preview`, exact `run --preview ... --fingerprint ...`, then version-protected review/accept/reject. Preview can mutate deterministic results and binds endpoint/configuration. Remote endpoints need cloud mode/opt-in; local endpoints must be loopback. `deterministic` never calls a model. Agent-owned CLI suggestions use `set ... --suggest --version ...` as manual; MCP `classify_transaction` applies directly.

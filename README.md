@@ -20,7 +20,9 @@ The browser opens a separate workspace containing synthetic data. The demo needs
 
 ![Dagoberd transaction overview using synthetic demo data](doc/img/overview.png)
 
-For your own workspace, run `poetry run dagoberd setup --yes`, followed by `poetry run dagoberd self-test`. Setup preserves existing data paths and local extension settings. See the [Runbook](doc/RUNBOOK.md) for configuration and the full workflow; project documentation and CLI/report output are English. The GUI also supports German and Spanish through its language picker; first use is English and the chosen language is stored locally.
+For your own workspace, the preferred setup is to start your coding agent, load the [Dagoberd skill](.agents/skills/dagoberd/SKILL.md), and follow the [agent-guided account setup](doc/AGENT_ACCOUNT_IMPORT.md). The agent helps select the workspace, review exports and configure repeatable imports with your approval. Authentication and secrets stay with you.
+
+For manual setup, run `poetry run dagoberd setup --yes`, followed by `poetry run dagoberd self-test`. Setup preserves existing data paths and local extension settings. See the [Runbook](doc/RUNBOOK.md) for configuration and the full workflow; project documentation and CLI/report output are English. The GUI also supports German and Spanish through its language picker; first use is English and the chosen language is stored locally.
 
 ## Beta boundaries
 

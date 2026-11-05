@@ -307,6 +307,9 @@ def build_parser() -> argparse.ArgumentParser:
     import_preview.add_argument("path")
     import_run = import_commands.add_parser("run")
     import_run.add_argument("preview_id")
+    import_history = import_commands.add_parser("history")
+    import_history.add_argument("--account", required=True)
+    import_history.add_argument("--limit", type=int, default=100)
     sync = commands.add_parser(
         "sync", help="Synchronize read-only account data (experimental Comdirect API)"
     )
@@ -1356,6 +1359,9 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
             return 0
         if args.import_command == "run":
             _print_json(import_service.execute(args.preview_id).as_dict())
+            return 0
+        if args.import_command == "history":
+            _print_json(import_service.history(args.account, args.limit))
             return 0
     if args.command == "comdirect":
         comdirect_connection = _comdirect_connection(loaded, args.connection)

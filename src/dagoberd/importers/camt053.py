@@ -73,12 +73,24 @@ class Camt053Importer(FileImporter):
 
         transactions: list[NormalizedTransaction] = []
         issues: list[ImportIssue] = []
+        unidentified_account = False
         entries = root.findall(".//{*}Stmt/{*}Ntry")
         row_number = 0
         for statement in root.findall(".//{*}Stmt"):
             xml_account = self._text(statement, "./{*}Acct/{*}Id/{*}IBAN") or self._text(
                 statement, "./{*}Acct/{*}Id/{*}Othr/{*}Id"
             )
+            if account_external_id and not xml_account:
+                unidentified_account = True
+            if account_external_id and xml_account and xml_account != account_external_id:
+                issues.append(
+                    ImportIssue(
+                        None,
+                        "account",
+                        "account_mismatch",
+                        "Source account identity differs from the selected account; review the scope.",
+                    )
+                )
             selected_account = account_external_id or xml_account
             statement_entries = statement.findall("./{*}Ntry")
             for entry in statement_entries:
@@ -89,7 +101,12 @@ class Camt053Importer(FileImporter):
                     issues.append(ImportIssue(row_number, None, "invalid_entry", str(error)))
         if not entries and not issues:
             issues.append(ImportIssue(None, None, "no_entries", "No CAMT.053 transactions found."))
-        return ImportBatch(tuple(transactions), tuple(issues), row_number)
+        return ImportBatch(
+            tuple(transactions),
+            tuple(issues),
+            row_number,
+            unidentified_account=unidentified_account,
+        )
 
     def _transaction(
         self,

@@ -129,17 +129,25 @@ The language picker offers English, German and Spanish. First use is English; se
 
 ### Preferred file workflow
 
+For the complete authorized first-run and follow-up agent journey, including a
+synthetic demonstration, see [agent-guided account imports](AGENT_ACCOUNT_IMPORT.md).
+
 ```bash
 poetry run dagoberd accounts register file BankExport ACCOUNT-EXAMPLE "Import account"
 poetry run dagoberd accounts register file VisaExample VISA-1234 "Visa example" --type credit_card
 poetry run dagoberd accounts list
 poetry run dagoberd import preview --source tabular --account <account-id> export.xlsx
 poetry run dagoberd import preview --source camt053 statement.xml
-poetry run dagoberd import preview --source tabular --profile bank_export export.csv
+poetry run dagoberd import preview --source tabular --account <account-id> --profile bank_export export.csv
 poetry run dagoberd import run <preview-id>
+poetry run dagoberd import history --account <account-id>
 ```
 
 Preview shows target routing, mapper version, rows, valid transactions, period, totals, structured errors and duplicate identities. Execution requires the same unchanged file/mapper with no errors. `imports.max_file_size_mib` limits files. CAMT derives identity from IBAN/proprietary ID and rejects DTD/entities.
+
+Tabular rows without an account identity require an explicitly selected account. If a
+source identity conflicts with the selection, the import is blocked. Confirm a missing
+source identity with the user before executing the preview.
 
 Profiles under `[imports.profiles.<name>]` configure source, mapping, delimiter, encoding, sheet, currency, date and decimal format. Legacy `[imports.mappings.*]` remains compatible. Extra-column annotations can set categories, dimensions, tags and additional profiles; unknown values are warnings. `ignore_values` and `skip_purpose_prefixes` filter placeholders/opening rows.
 

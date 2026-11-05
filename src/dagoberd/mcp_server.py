@@ -224,8 +224,19 @@ TOOL_DEFINITIONS = (
         ),
     ),
     (
+        "list_account_import_history",
+        "List bounded import history for one account in the selected workspace.",
+        _schema(
+            {
+                "account_id": {"type": "string"},
+                "limit": {"type": "integer", "minimum": 1, "maximum": 500},
+            },
+            ["account_id"],
+        ),
+    ),
+    (
         "preview_account_import",
-        "Preview a local CAMT.053 or tabular import with structured errors and duplicates; does not modify transactions.",
+        "Persist a local import preview with structured errors and duplicates; does not modify transactions.",
         _schema(
             {
                 "source": {"type": "string", "enum": ["camt053", "tabular", "wiso365"]},
@@ -238,7 +249,7 @@ TOOL_DEFINITIONS = (
     ),
     (
         "import_account_file",
-        "Execute a previously reviewed import preview idempotently.",
+        "Execute a previously reviewed, unconsumed import preview.",
         _schema({"preview_id": {"type": "string"}}, ["preview_id"]),
     ),
     (
@@ -887,6 +898,7 @@ TOOL_DEFINITIONS = (
 )
 
 MUTATING_TOOLS = {
+    "preview_account_import",
     "import_account_file",
     "sync_comdirect",
     "run_classification",
@@ -1417,6 +1429,12 @@ class MCPService:
                 "reconciliations": repo.list_reconciliations(
                     account_id=arguments.get("account_id"),
                     limit=min(int(arguments.get("limit", 100)), 500),
+                )
+            }
+        if name == "list_account_import_history":
+            return {
+                "imports": ImportService(repo).history(
+                    arguments["account_id"], int(arguments.get("limit", 100))
                 )
             }
         if name == "preview_account_import":

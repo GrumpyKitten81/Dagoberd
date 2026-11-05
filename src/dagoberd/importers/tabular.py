@@ -433,13 +433,12 @@ class TabularImporter(FileImporter):
         path: str | Path,
         account_external_id: str | None = None,
     ) -> list[NormalizedTransaction]:
-        transactions = read_tabular_file(path, self.mapping, **self.options)
-        if not account_external_id:
-            return transactions
-        return [
-            replace(transaction, account_external_id=account_external_id)
-            for transaction in transactions
-        ]
+        batch = self.inspect_transactions(path, account_external_id)
+        if batch.issues:
+            from dagoberd.importers.base import ImportValidationError
+
+            raise ImportValidationError(batch.issues)
+        return list(batch.transactions)
 
     def inspect_transactions(
         self,
@@ -447,8 +446,31 @@ class TabularImporter(FileImporter):
         account_external_id: str | None = None,
     ) -> ImportBatch:
         batch = inspect_tabular_file(path, self.mapping, **self.options)
+        rows = [item.raw or {} for item in batch.transactions] + [
+            item.raw or {} for item in batch.balance_observations
+        ]
+        missing_account = any(not _value(row, self.mapping.get("account", ())) for row in rows)
         if not account_external_id:
+            if missing_account:
+                issue = ImportIssue(
+                    None,
+                    "account",
+                    "account_required",
+                    "Source account identity is missing; select and confirm an account.",
+                )
+                return replace(batch, issues=(*batch.issues, issue), unidentified_account=True)
             return batch
+        source_accounts = {
+            value for row in rows if (value := _value(row, self.mapping.get("account", ())))
+        }
+        if source_accounts - {account_external_id}:
+            issue = ImportIssue(
+                None,
+                "account",
+                "account_mismatch",
+                "Source account identity differs from the selected account; review the mapping and scope.",
+            )
+            return replace(batch, issues=(*batch.issues, issue))
         return ImportBatch(
             tuple(
                 replace(item, account_external_id=account_external_id)
@@ -464,6 +486,7 @@ class TabularImporter(FileImporter):
                 replace(item, account_external_id=account_external_id)
                 for item in batch.balance_snapshots
             ),
+            missing_account,
         )
 
 

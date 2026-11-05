@@ -31,6 +31,7 @@ class ImportBatch:
     rows_total: int = 0
     balance_observations: tuple[ImportBalanceObservation, ...] = ()
     balance_snapshots: tuple[ImportBalanceSnapshot, ...] = ()
+    unidentified_account: bool = False
 
 
 def select_balance_snapshots(

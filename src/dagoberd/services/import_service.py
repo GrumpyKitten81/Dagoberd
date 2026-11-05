@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-from collections import defaultdict
+import json
+from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
 from decimal import Decimal
 from itertools import pairwise
@@ -78,6 +79,57 @@ class ImportService:
         self.profiles = profiles or {}
         self.max_file_size = max_file_size_mib * 1024 * 1024
 
+    def history(self, account_id: str, limit: int = 100) -> list[dict]:
+        """Return account-scoped import runs without exposing file paths or source identities."""
+        if not 1 <= limit <= 500:
+            raise ValueError("History limit must be between 1 and 500")
+        account = self.repository.get_account(account_id)
+        with self.repository.database.connect() as connection:
+            rows = connection.execute(
+                """SELECT p.id, p.source, p.account_id, p.file_hash, p.mapper_version,
+                          p.summary_json, p.executed_at, r.id AS run_id,
+                          r.imported_count, r.skipped_count, r.updated_count, r.account_count
+                   FROM ledger_import_previews p JOIN ledger_import_runs r ON r.preview_id=p.id
+                   ORDER BY p.executed_at DESC, r.rowid DESC"""
+            ).fetchall()
+        results = []
+        for row in rows:
+            summary = json.loads(row["summary_json"])
+            actions = summary.get("account_actions", [])
+            matches = row["account_id"] == account_id or (
+                row["account_id"] is None
+                and any(
+                    action.get("account_id") == account_id
+                    or (
+                        action.get("source_account") == account["external_id"]
+                        and action.get("provider") == account["provider_name"]
+                        and get_importer(row["source"]).provider_kind == account["provider_kind"]
+                    )
+                    for action in actions
+                )
+            )
+            if not matches:
+                continue
+            results.append(
+                {
+                    "preview_id": row["id"],
+                    "run_id": row["run_id"],
+                    "source": row["source"],
+                    "file_hash": row["file_hash"],
+                    "mapper_version": row["mapper_version"],
+                    "executed_at": row["executed_at"],
+                    "booking_from": summary.get("booking_from"),
+                    "booking_to": summary.get("booking_to"),
+                    "imported": row["imported_count"],
+                    "skipped": row["skipped_count"],
+                    "updated": row["updated_count"],
+                    "counts_scope": "entire_import" if row["account_id"] is None else "account",
+                }
+            )
+            if len(results) == limit:
+                break
+        return results
+
     def preview(
         self,
         source: str,
@@ -102,6 +154,10 @@ class ImportService:
         batch = importer.inspect_transactions(file_path, account_external_id)
         transactions = list(batch.transactions)
         warnings: list[str] = []
+        if batch.unidentified_account:
+            warnings.append(
+                "Source account identity is missing; confirm the selected account with the user"
+            )
         annotation_config = self._annotation_config(profile)
         annotation_warnings: list[str] = []
         if annotation_config:
@@ -113,6 +169,12 @@ class ImportService:
             (transaction.account_external_id, transaction.external_id)
             for transaction in transactions
         ]
+        repeated = sum(count - 1 for count in Counter(identities).values() if count > 1)
+        if repeated:
+            warnings.append(
+                f"{repeated} repeated source identities in this file require review; "
+                "references and content-derived identities may not distinguish identical transactions"
+            )
         duplicates = self.repository.existing_source_identities(
             provider_kind,
             provider_name,

@@ -34,7 +34,9 @@ def populate(registry, directory):
     with workspace_operation(loaded, registry):
         repo = LedgerRepository(LedgerDatabase(loaded.config.database.path))
         source = directory / "synthetic.csv"
-        source.write_text("fecha;concepto;importe\n01/07/2026;Synthetic invoice;10,00\n")
+        source.write_text(
+            "fecha;concepto;importe;account\n01/07/2026;Synthetic invoice;10,00;SYN-A\n"
+        )
         imports = ImportService(repo)
         preview = imports.preview("tabular", source)
         imports.execute(preview.preview_id)

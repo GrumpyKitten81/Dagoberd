@@ -337,7 +337,7 @@ def test_import_classification_documents_reports_and_exports_stay_in_workspace(r
             repo = LedgerRepository(LedgerDatabase(loaded.config.database.path))
             source = tmp_path / name / "synthetic.csv"
             source.write_text(
-                f"fecha;concepto;importe\n01/07/2026;{name};10,00\n", encoding="utf-8"
+                f"fecha;concepto;importe;account\n01/07/2026;{name};10,00;SYN-A\n", encoding="utf-8"
             )
             imports = ImportService(repo)
             if first_preview_id:
