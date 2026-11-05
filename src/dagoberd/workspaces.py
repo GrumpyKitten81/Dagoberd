@@ -59,6 +59,7 @@ class WorkspaceEntry(StrictModel):
     config_path: Path
     private_remote: str | None = None
     storage_paths: list[Path] = Field(default_factory=list)
+    sync_root: Path | None = None
 
 
 class RegistryData(StrictModel):
@@ -182,6 +183,12 @@ class WorkspaceRegistry:
                 overrides = {"workspace": {"id": str(uuid4()), "name": display_name or name}}
                 document["workspace"] = overrides["workspace"]
             loaded = load_config(path, overrides=overrides, use_environment=False)
+            for existing in data.workspaces:
+                if existing.sync_root and (
+                    loaded.project_path.parent.is_relative_to(existing.sync_root.resolve())
+                    or loaded.config.database.path.is_relative_to(existing.sync_root.resolve())
+                ):
+                    raise ValueError("Keep active workspaces outside synchronized snapshot roots")
             identity = str(loaded.config.workspace.id)
             if any(entry.id == identity for entry in data.workspaces):
                 raise ValueError("Workspace identity is already registered")
@@ -213,6 +220,15 @@ class WorkspaceRegistry:
             for entry in data.workspaces:
                 if entry.id == str(loaded.config.workspace.id):
                     entry.storage_paths = storage_paths(loaded)
+            self._write(data)
+
+    def configure_sync(self, selector: str, root: Path | None) -> None:
+        with file_lock(self.path.with_suffix(".lock"), exclusive=True):
+            identity = self.entry(selector).id
+            data = self.read()
+            for entry in data.workspaces:
+                if entry.id == identity:
+                    entry.sync_root = root
             self._write(data)
 
     def initialize(

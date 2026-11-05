@@ -9,6 +9,8 @@
 
 ### Features
 
+- First-class local workspace management, later optional Git adoption/local commits and independent verified snapshot-folder exchange with explicit conflict checks.
+
 - English project documentation, CLI and reports; centrally cataloged English/German/Spanish GUI with persistent language choice and live draft-preserving switching.
 - File imports are preferred; Comdirect API coverage remains experimental and incomplete.
 

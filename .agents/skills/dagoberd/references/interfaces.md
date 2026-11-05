@@ -29,3 +29,15 @@ The optional stdio server uses the installation-bound launcher from `agents conf
 ## Workspace management
 
 Use `workspaces list|add|create|init|clone|remove|doctor`, then select `--workspace <name>` for every ledger workflow. `--workspace-registry <file>` selects an alternate local registry. Cloud relocation uses `workspaces cloud <name> preview|run`; Git uses `workspaces git <name> status|trust|preview|run`. Both execution flows require the exact fingerprint and local confirmation. MCP supports `list_workspaces`, workspace-scoped domain tools and Git status/previews; it cannot execute Git or cloud relocation.
+
+
+Local folders: `workspaces create|init|add|status` need no Git/GitHub. Add optional Git
+with `workspaces git <name> init --yes`; `remote --url <url>` / `remote --remove`
+configure or disconnect a host-independent origin with local confirmation.
+Snapshot exchange: `workspaces sync <name> status|configure|disconnect|preview|run`;
+configure needs a private `--root`, previews choose `publish` or `restore`, and execution
+requires the fingerprint and `--yes`. New-machine adoption uses `workspaces snapshot-inspect`
+then `snapshot-adopt` into an empty local folder with its inspected fingerprint and
+local confirmation. MCP `workspace_status`, `workspace_sync_status` and
+`workspace_sync_preview` expose inspection/preparation only. No live database is
+replicated and no conflicting branch is merged automatically.

@@ -16,7 +16,8 @@ from dagoberd.gui.app import create_app
 from dagoberd.gui.jobs import JobRegistry
 from dagoberd.gui.security import ensure_loopback, ensure_port_available
 from dagoberd.workspace_cli import adopt_credentials
-from dagoberd.workspace_git import WorkspaceGit, clone_workspace
+from dagoberd.workspace_git import WorkspaceGit, adopt_git, clone_workspace
+from dagoberd.workspace_status import workspace_status
 from dagoberd.workspaces import WorkspaceRegistry, workspace_operation
 
 
@@ -31,9 +32,46 @@ class WorkspaceAction(StrictModel):
     preview_id: str = ""
     fingerprint: str = ""
     confirmed: bool = False
+    snapshot: str = ""
 
 
 def workspace_action(registry: WorkspaceRegistry, payload: WorkspaceAction) -> Any:
+    if payload.action == "status":
+        return workspace_status(registry, payload.name)
+    if payload.action.startswith("sync-") or payload.action in {
+        "snapshot-inspect",
+        "snapshot-adopt",
+    }:
+        from dagoberd.workspace_sync import WorkspaceSync, adopt_snapshot, inspect_snapshot
+
+        if payload.action == "snapshot-inspect":
+            return inspect_snapshot(payload.snapshot)
+        if payload.action == "snapshot-adopt":
+            return adopt_snapshot(
+                registry,
+                payload.name,
+                payload.path,
+                payload.snapshot,
+                payload.fingerprint,
+                yes=payload.confirmed,
+            )
+        sync = WorkspaceSync(registry, payload.name)
+        if payload.action == "sync-status":
+            return sync.status()
+        if payload.action in {"sync-configure", "sync-disconnect"}:
+            if payload.action == "sync-configure" and not payload.cloud_root:
+                raise ValueError("Private snapshot folder is required")
+            return sync.configure(
+                payload.cloud_root if payload.action == "sync-configure" else None,
+                yes=payload.confirmed,
+            )
+        if payload.action == "sync-publish":
+            return sync.preview("publish")
+        if payload.action == "sync-restore":
+            return sync.preview("restore")
+        if payload.action == "sync-run":
+            return sync.run(payload.preview_id, payload.fingerprint, yes=payload.confirmed)
+        raise ValueError("Unknown snapshot action")
     if payload.action == "add":
         return registry.add(payload.name, payload.path)
     if payload.action in {"init", "create"}:
@@ -63,7 +101,15 @@ def workspace_action(registry: WorkspaceRegistry, payload: WorkspaceAction) -> A
                 raise ValueError("Cloud root is required")
             return cloud.preview(payload.cloud_root)
         return cloud.run(payload.preview_id, payload.fingerprint, yes=payload.confirmed)
+    if payload.action == "git-init":
+        return adopt_git(registry, payload.name, yes=payload.confirmed)
     service = WorkspaceGit(registry, payload.name)
+    if payload.action in {"git-remote", "git-disconnect"}:
+        if payload.action == "git-remote" and not payload.remote:
+            raise ValueError("Remote URL is required")
+        return service.configure_remote(
+            payload.remote if payload.action == "git-remote" else None, yes=payload.confirmed
+        )
     if payload.action == "git-status":
         return service.status()
     if payload.action == "git-trust":

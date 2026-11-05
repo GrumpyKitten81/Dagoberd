@@ -93,4 +93,17 @@ Credentials, model endpoints and SMTP destinations are local choices and never r
 
 A single user can maintain independent user circles through registered workspaces. Each workspace owns its accounts, ledger, documents, classifications, rules, analyses, reports, secrets and bank sessions. Multiple workspaces require explicit selection in CLI/MCP and a per-tab GUI selection. There are no cross-workspace reports or automatic Git synchronization.
 
-A provided local or cloned repository can be initialized without overwriting existing configuration or data. Stable repository UUIDs define cloud namespaces and credential scopes. Storage overlap, foreign ledger identities and foreign previews must fail before financial changes. Git commits and pushes require a confirmed private origin, selected files, an unchanged preview and local confirmation. See [workspace behavior and operations](MULTIPLE_WORKSPACES.md).
+An ordinary local folder or an optional cloned repository can be initialized without overwriting existing configuration or data. Stable workspace UUIDs define cloud namespaces and credential scopes. Storage overlap, foreign ledger identities and foreign previews must fail before financial changes. Local Git needs no remote; when a remote is configured, commits and pushes require its private-origin approval. Git writes require an unchanged selected-file preview and local confirmation. See [workspace behavior and operations](MULTIPLE_WORKSPACES.md).
+
+### Local-first storage and optional synchronization
+
+Workspaces are ordinary local folders and do not require Git, GitHub, a remote
+account or network access for file-based workflows. Optional Git adoption preserves
+identity and data, creates no commit/upload and permits local commits without a remote.
+The independent snapshot-folder backend exchanges immutable verified portability
+archives, with explicit preview/confirmation, stable workspace identity and conflict
+checks. The live ledger stays local. A new machine can adopt a reviewed snapshot into
+an empty local folder without importing credentials or enabling private extensions.
+Missing optional services do not block local workflows. Snapshot exchange is an
+explicit single-writer handover; it does not promise concurrent editing or automatic
+merging. See [workspace lifecycle](MULTIPLE_WORKSPACES.md).

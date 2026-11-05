@@ -13,10 +13,28 @@ from urllib.parse import urlsplit, urlunsplit
 from uuid import uuid4
 
 from dagoberd.workspaces import (
+    IGNORE_RULES,
     WorkspaceRegistry,
     atomic_text,
     workspace_operation,
 )
+
+
+def adopt_git(registry: WorkspaceRegistry, selector: str, *, yes: bool) -> dict[str, Any]:
+    if not yes:
+        raise ValueError("Adding local Git requires confirmation with --yes")
+    loaded = registry.load(selector)
+    root = loaded.project_path.parent
+    with workspace_operation(loaded, registry, exclusive=True):
+        if not (root / ".git").exists():
+            git(root, "init", "--initial-branch=main", "--template=")
+        service = WorkspaceGit(registry, selector)
+        ignore = root / ".gitignore"
+        content = ignore.read_text(encoding="utf-8") if ignore.exists() else ""
+        missing = [rule for rule in IGNORE_RULES if rule not in content.splitlines()]
+        if missing:
+            atomic_text(ignore, content.rstrip() + "\n" + "\n".join(missing) + "\n")
+        return service.status()
 
 
 def validate_remote(remote: str) -> str:
@@ -139,12 +157,35 @@ class WorkspaceGit:
             raise ValueError("Workspace configuration must be at the repository root")
 
     def _remote(self) -> str:
-        return validate_remote(git(self.root, "remote", "get-url", "origin"))
+        value = git(self.root, "remote", "get-url", "origin", check=False)
+        return validate_remote(value) if value else ""
+
+    def configure_remote(self, remote: str | None, *, yes: bool) -> dict[str, Any]:
+        if not yes:
+            raise ValueError("Changing the optional remote requires confirmation with --yes")
+        value = validate_remote(remote) if remote else None
+        with workspace_operation(self.loaded, self.registry, exclusive=True):
+            existing = self._remote()
+            if value:
+                git(self.root, "remote", "set-url" if existing else "add", "origin", value)
+            elif existing:
+                git(self.root, "remote", "remove", "origin")
+            from dagoberd.workspace_lock import file_lock
+
+            with file_lock(self.registry.path.with_suffix(".lock"), exclusive=True):
+                data = self.registry.read()
+                for entry in data.workspaces:
+                    if entry.id == self.entry.id:
+                        entry.private_remote = None
+                self.registry._write(data)
+            return self.status()
 
     def trust(self, *, yes: bool) -> dict[str, Any]:
         if not yes:
             raise ValueError("Confirm that origin is a private repository with --yes")
         remote = self._remote()
+        if not remote:
+            raise ValueError("No origin configured; local Git needs no remote")
         from dagoberd.workspace_lock import file_lock
 
         with file_lock(self.registry.path.with_suffix(".lock"), exclusive=True):
@@ -216,8 +257,11 @@ class WorkspaceGit:
 
     def _snapshot(self, action: str, files: list[str], message: str) -> dict[str, Any]:
         remote = self._remote()
+        if action in {"pull", "push"} and not remote:
+            raise ValueError("This Git action requires an origin; local commits do not")
         if (
             action in {"commit", "push"}
+            and remote
             and self.registry.entry(self.entry.id).private_remote
             != hashlib.sha256(remote.encode()).hexdigest()
         ):

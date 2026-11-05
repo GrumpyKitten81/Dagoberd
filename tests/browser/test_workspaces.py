@@ -84,6 +84,20 @@ def test_workspace_selection_parallel_tabs_and_repository_initialization(tmp_pat
             first.keyboard.press("Escape")
             first.get_by_role("button", name="Manage workspaces", exact=True).click()
             dialog = first.locator("dialog")
+            for language, local_init, snapshot_status in (
+                ("de", "Lokalen Ordner initialisieren", "Status der Snapshot-Synchronisierung"),
+                ("es", "Inicializar carpeta local", "Estado de sincronización de instantáneas"),
+                ("en", "Initialize local folder", "Snapshot synchronization status"),
+            ):
+                first.locator("#language").select_option(language)
+                assert dialog.locator('option[value="init"]').text_content() == local_init
+                assert (
+                    dialog.locator('option[value="sync-status"]').text_content() == snapshot_status
+                )
+                assert dialog.locator('option[value="git-init"]').count() == 1
+            dialog.locator("select").select_option("status")
+            dialog.get_by_role("button", name="Apply / preview", exact=True).click()
+            dialog.get_by_text('"storage": "local"', exact=False).wait_for()
             dialog.locator("select").select_option("init")
             dialog.get_by_label("Name", exact=True).fill("association")
             dialog.get_by_label("Configuration file / target directory", exact=True).fill(
@@ -92,6 +106,7 @@ def test_workspace_selection_parallel_tabs_and_repository_initialization(tmp_pat
             dialog.get_by_role("button", name="Apply / preview", exact=True).click()
             first.get_by_role("option", name="association", exact=True).wait_for(state="attached")
             assert (tmp_path / "provided" / "account-eval.toml").is_file()
+            assert not (tmp_path / "provided" / ".git").exists()
             assert not errors
             browser.close()
     finally:

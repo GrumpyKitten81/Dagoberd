@@ -58,4 +58,12 @@ Report bugs, feature requests and security concerns through the matching public 
 
 ## Separate private and business workspaces
 
-Register existing configurations or initialize a provided repository with `dagoberd workspaces init <name> <directory>`. Select it with `dagoberd --workspace <name> ...`. The GUI provides a workspace picker and local management dialogs. See [multiple workspaces](doc/MULTIPLE_WORKSPACES.md) for cloud separation, credential adoption and explicit Git synchronization.
+Create an ordinary local folder with `dagoberd workspaces create <name> <directory>`,
+initialize an existing folder with `workspaces init`, or register its configuration.
+Git, GitHub and an internet connection are not required for local file-based workflows.
+Select a workspace with `dagoberd --workspace <name> ...`; the GUI also provides a picker
+and local management dialogs. Add local Git later with `workspaces git <name> init --yes`,
+without creating a commit or remote. Independently, connect a private synchronized folder
+with `workspaces sync <name> configure --root <folder> --yes` and explicitly exchange
+verified snapshots. The live database stays local. See [multiple workspaces](doc/MULTIPLE_WORKSPACES.md)
+for adoption on another machine, conflict handling, cloud files and optional Git remotes.

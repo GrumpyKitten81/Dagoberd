@@ -1046,6 +1046,21 @@ class MCPService:
                 return service.execute(
                     name, {key: value for key, value in arguments.items() if key != "workspace_id"}
                 )
+        if name == "workspace_status":
+            from dagoberd.workspace_status import workspace_status
+
+            return workspace_status(self.registry, str(self.loaded.config.workspace.id))
+        if name in {"workspace_sync_status", "workspace_sync_preview"}:
+            from dagoberd.workspace_sync import WorkspaceSync
+
+            sync = WorkspaceSync(self.registry, str(self.loaded.config.workspace.id))
+            if name == "workspace_sync_status":
+                return sync.status()
+            if arguments.get("action") == "publish":
+                return sync.preview("publish")
+            if arguments.get("action") == "restore":
+                return sync.preview("restore")
+            raise ValueError("Unknown snapshot action")
         if name in {"workspace_git_status", "workspace_git_preview"}:
             from dagoberd.workspace_git import WorkspaceGit
 
@@ -1806,16 +1821,27 @@ def create_server(
                 inputSchema={"type": "object", "properties": {}},
             )
         )
-        for name in ("workspace_git_status", "workspace_git_preview"):
+        for name in (
+            "workspace_status",
+            "workspace_sync_status",
+            "workspace_sync_preview",
+            "workspace_git_status",
+            "workspace_git_preview",
+        ):
             tools.append(
                 Tool(
                     name=name,
-                    description="Inspect workspace Git without executing changes",
+                    description="Inspect local workspace capabilities or prepare an optional exchange; execution stays in the local CLI/GUI",
                     inputSchema={
                         "type": "object",
                         "properties": {
                             "workspace_id": {"type": "string"},
-                            "action": {"type": "string", "enum": ["pull", "commit", "push"]},
+                            "action": {
+                                "type": "string",
+                                "enum": ["publish", "restore"]
+                                if name == "workspace_sync_preview"
+                                else ["pull", "commit", "push"],
+                            },
                             "files": {"type": "array", "items": {"type": "string"}},
                             "message": {"type": "string"},
                         },

@@ -44,7 +44,7 @@ The user starts and configures their coding agent outside Dagoberd. The optional
 ## Data and local extensions
 
 - Configure an optional private data root, workspace and report extensions locally. Without configuration the application uses its own `output/` directory.
-- Personal rules, scripts, skills and report modules belong in a private partner repository; the core provides generic interfaces.
+- Personal rules, scripts, skills and report modules belong in private workspace folders or an optional private partner repository; the core provides generic interfaces. A workspace does not require Git or GitHub.
 - Never commit local configuration, secrets, real imports, generated reports or machine-specific paths to this repository.
 - Close database write connections before versioning a private ledger. Committing and pushing private data follows the user's explicit workspace policy.
 

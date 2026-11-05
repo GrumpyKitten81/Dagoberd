@@ -12,7 +12,7 @@ function navigateWorkspace(id) {
 function managementDialog(entries) {
   const dialog = el('dialog', { className: 'modal' });
   const action = el('select');
-  for (const code of ['add', 'init', 'create', 'clone', 'remove', 'adopt-credentials', 'cloud-preview', 'cloud-recover', 'git-status', 'git-trust', 'git-pull', 'git-commit', 'git-push']) {
+  for (const code of ['create', 'init', 'add', 'status', 'remove', 'sync-status', 'sync-configure', 'sync-disconnect', 'sync-publish', 'sync-restore', 'snapshot-inspect', 'snapshot-adopt', 'git-init', 'git-status', 'git-remote', 'git-disconnect', 'git-trust', 'git-pull', 'git-commit', 'git-push', 'clone', 'adopt-credentials', 'cloud-preview', 'cloud-recover']) {
     action.append(el('option', { value: code }, msg(`workspace.action.${code}`)));
   }
   const fields = el('div');
@@ -26,16 +26,17 @@ function managementDialog(entries) {
     fields.append(el('label', {}, [msg(label), input]));
   };
   const run = el('button', { type: 'button', onclick: async () => {
-    if (!preview || !window.confirm(String(msg(preview.cloud_root ? 'workspace.confirm_cloud' : 'workspace.confirm_git')))) return;
+    if (!preview || !window.confirm(String(msg(preview.execution === 'sync-run' ? 'workspace.confirm_snapshot' : preview.execution === 'cloud-run' ? 'workspace.confirm_cloud' : 'workspace.confirm_git')))) return;
     try {
+      const execution = preview.execution;
       const result = await api('/workspace-actions', { management: true, method: 'POST', body: JSON.stringify({
-        action: preview.cloud_root ? 'cloud-run' : 'git-run', name: controls.name.value, preview_id: preview.preview_id,
+        action: preview.execution, name: controls.name.value, preview_id: preview.preview_id,
         fingerprint: preview.fingerprint, confirmed: true,
       }) });
       output.textContent = JSON.stringify(result, null, 2);
       preview = null;
       run.hidden = true;
-      if (result.cloud_workspace) location.reload();
+      if (result.cloud_workspace || execution === 'sync-run') location.reload();
     } catch (error) { notify(error.message, 'error'); }
   } }, msg('workspace.execute'));
   run.hidden = true;
@@ -45,21 +46,24 @@ function managementDialog(entries) {
     preview = null;
     run.hidden = true;
     addField('name', 'workspace.name', entries.find((entry) => entry.id === state.workspaceId)?.name || '');
-    if (['add', 'init', 'create', 'clone'].includes(action.value)) addField('path', 'workspace.path');
+    if (['add', 'init', 'create', 'clone', 'snapshot-adopt'].includes(action.value)) addField('path', 'workspace.path');
     if (['init', 'create', 'clone', 'cloud-preview'].includes(action.value)) addField('cloud_root', 'workspace.cloud_root');
-    if (action.value === 'clone') addField('remote', 'workspace.remote');
+    if (action.value === 'sync-configure') addField('cloud_root', 'workspace.snapshot_root');
+    if (['snapshot-inspect', 'snapshot-adopt'].includes(action.value)) addField('snapshot', 'workspace.snapshot');
+    if (action.value === 'snapshot-adopt') addField('fingerprint', 'workspace.fingerprint');
+    if (['clone', 'git-remote'].includes(action.value)) addField('remote', 'workspace.remote');
     if (['git-commit', 'adopt-credentials'].includes(action.value)) addField('files', action.value === 'git-commit' ? 'workspace.files' : 'workspace.credentials');
     if (action.value === 'git-commit') addField('message', 'workspace.message');
   };
   action.addEventListener('change', renderFields);
   const submit = el('button', { type: 'button', onclick: async () => {
     const payload = { action: action.value, name: controls.name.value };
-    for (const key of ['path', 'remote', 'cloud_root', 'message']) {
+    for (const key of ['path', 'remote', 'cloud_root', 'message', 'snapshot', 'fingerprint']) {
       if (controls[key]?.isConnected && controls[key].value) payload[key] = controls[key].value;
     }
     if (controls.files?.isConnected) payload.files = controls.files.value.split('\n').map((value) => value.trim()).filter(Boolean);
-    if (['git-trust', 'adopt-credentials', 'cloud-recover'].includes(action.value)) {
-      const key = action.value === 'git-trust' ? 'workspace.confirm_private' : action.value === 'cloud-recover' ? 'workspace.confirm_recovery' : 'workspace.confirm_credentials';
+    if (['git-trust', 'adopt-credentials', 'cloud-recover', 'git-init', 'git-remote', 'git-disconnect', 'sync-configure', 'sync-disconnect', 'snapshot-adopt'].includes(action.value)) {
+      const key = action.value === 'git-trust' ? 'workspace.confirm_private' : action.value === 'cloud-recover' ? 'workspace.confirm_recovery' : action.value === 'adopt-credentials' ? 'workspace.confirm_credentials' : action.value.startsWith('git-') ? 'workspace.confirm_git' : 'workspace.confirm_snapshot';
       if (!window.confirm(String(msg(key)))) return;
       payload.confirmed = true;
     }
@@ -67,16 +71,16 @@ function managementDialog(entries) {
     try {
       const result = await api('/workspace-actions', { management: true, method: 'POST', body: JSON.stringify(payload) });
       output.textContent = JSON.stringify(result, null, 2);
-      preview = result.preview_id ? result : null;
+      preview = result.preview_id ? { ...result, execution: action.value.startsWith('sync-') ? 'sync-run' : result.cloud_root ? 'cloud-run' : 'git-run' } : null;
       run.hidden = !preview;
-      if (['add', 'init', 'create', 'clone', 'remove', 'cloud-recover'].includes(action.value)) {
+      if (['add', 'init', 'create', 'clone', 'remove', 'cloud-recover', 'snapshot-adopt'].includes(action.value)) {
         dialog.close();
         location.reload();
       }
     } catch (error) { notify(error.message, 'error'); }
     finally { submit.disabled = false; }
   } }, msg('workspace.apply'));
-  dialog.append(el('h2', {}, msg('workspace.manage')), action, fields, submit, run, output,
+  dialog.append(el('h2', {}, msg('workspace.manage')), el('p', {}, msg('workspace.local_first')), action, fields, submit, run, output,
     el('button', { type: 'button', onclick: () => dialog.close() }, msg('workspace.close')));
   dialog.addEventListener('close', () => dialog.remove());
   document.body.append(dialog);

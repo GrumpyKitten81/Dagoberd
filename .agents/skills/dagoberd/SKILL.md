@@ -46,6 +46,22 @@ See [interfaces](references/interfaces.md) for command groups. Repository Issues
 
 ## Multiple workspaces
 
-List registered workspaces before selecting a user circle. Use CLI `--workspace <name>` or MCP `workspace_id`; never combine data from different workspaces. A server binding cannot be overridden by a tool call. Workspace identity, credential scope and cloud namespace must remain separate. Initialize provided repositories through `workspaces init`; registration alone must not mutate ledger data.
+List registered workspaces before selecting a user circle. Use CLI `--workspace <name>` or MCP `workspace_id`; never combine data from different workspaces. A server binding cannot be overridden by a tool call. Workspace identity, credential scope and cloud namespace must remain separate. Create ordinary local folders with `workspaces create` or initialize existing folders with `workspaces init`; Git, GitHub and a network service are not required. Registration alone must not mutate ledger data. Inspect optional capabilities with `workspaces status` / MCP `workspace_status`.
 
 Git status and previews are available through MCP. Git execution, private-origin approval, credential adoption and cloud relocation require local CLI/GUI confirmation. Never automatically commit or push financial data. Cloud relocation requires the exact preview/fingerprint and preserves originals. See [multiple workspaces](../../../doc/MULTIPLE_WORKSPACES.md).
+
+
+Optional versioning and snapshot exchange remain separate from the local workspace.
+Use `workspaces git <name> init --yes` only on an explicit request; it creates no commit
+or remote. Local commits need no remote. Adding a remote, approving its privacy or
+publishing still requires local confirmation. A non-Git private synchronized folder
+can be configured with `workspaces sync <name> configure --root <folder> --yes`.
+MCP may inspect synchronization status and prepare `publish`/`restore` previews;
+actual exchange and snapshot adoption remain local CLI/GUI actions with the exact
+fingerprint and confirmation. Keep the live database local, wait for complete
+replication, and stop on unshared local changes or conflicting snapshot branches.
+Never resolve a conflict by deleting revisions or silently selecting a winner.
+Snapshots contain sensitive financial data; plain snapshot-folder exchange is not
+encrypted. Credentials, local overrides and private extensions are not transferred.
+See the documented inspect/adopt journey for a new machine and preserve backups
+before any explicit conflict resolution.

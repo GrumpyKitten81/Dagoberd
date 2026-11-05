@@ -548,4 +548,4 @@ Public beta requires all applicable steps without critical errors and a document
 
 ## Multiple user circles and partner repositories
 
-Use the [multiple-workspace procedure](MULTIPLE_WORKSPACES.md) to initialize a provided repository, register existing data, configure isolated cloud folders and synchronize private Git repositories. `cloud.root` derives `<root>/workspaces/<workspace-id>/documents` and `reports`; `cloud.workspace` retains its legacy meaning and cannot be combined with `cloud.root`. Never copy an active SQLite database through a cloud synchronization service.
+Use the [multiple-workspace procedure](MULTIPLE_WORKSPACES.md) to create ordinary local folders, register existing data, and optionally add Git or independent snapshot-folder exchange later. Git, GitHub and a remote account are not prerequisites for local file-based workflows. `cloud.root` derives `<root>/workspaces/<workspace-id>/documents` and `reports`; `cloud.workspace` retains its legacy meaning and cannot be combined with `cloud.root`. Never copy an active SQLite database through a cloud synchronization service.
