@@ -48,7 +48,9 @@ The user starts and configures their coding agent outside Dagoberd. The optional
 - Never commit local configuration, secrets, real imports, generated reports or machine-specific paths to this repository.
 - Close database write connections before versioning a private ledger. Committing and pushing private data follows the user's explicit workspace policy.
 
-## Public issue creation
+## GitHub issues
+
+Use the GitHub CLI (`gh`) for issue interactions. If the agent's sandbox prevents access to the existing GitHub authentication, use the agent's approved mechanism to run `gh` outside the sandbox.
 
 Use the matching bug, feature or security form in `.github/ISSUE_TEMPLATE/` for every new GitHub issue. For CLI/API creation, copy all required fields into corresponding body sections and include the completed privacy checklist; those clients do not automatically apply issue forms. All issues are public, including security reports. Never attach real financial data or secrets.
 
