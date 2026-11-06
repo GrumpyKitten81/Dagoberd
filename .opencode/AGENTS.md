@@ -15,11 +15,11 @@ poetry run dagoberd agents configure
 poetry run dagoberd agents doctor
 ```
 
-The launcher lives under `.account-eval/mcp` (gitignored). MCP failure must not block CLI development or an OpenCode session.
+The launcher lives under `.dagoberd/mcp` (gitignored). MCP failure must not block CLI development or an OpenCode session.
 
 ## MCP integration
 
-`opencode.json` starts the local stdio MCP through `./Scripts/dagoberd-mcp.sh`. That wrapper prefers the generated `.account-eval/mcp` launcher and falls back to `poetry run python -m dagoberd.mcp_server` when the launcher is missing.
+`opencode.json` starts the local stdio MCP through `./Scripts/dagoberd-mcp.sh`. That wrapper prefers the generated `.dagoberd/mcp` launcher and falls back to `poetry run python -m dagoberd.mcp_server` when the launcher is missing.
 
 Sensitive actions remain CLI-only: Comdirect 2FA, secret entry, SMTP send, restore, and delete-run.
 

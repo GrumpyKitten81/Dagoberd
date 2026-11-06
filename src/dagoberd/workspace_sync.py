@@ -50,7 +50,9 @@ def validate_snapshot_members(names: list[str]) -> None:
         if any(
             part == ".env"
             or part.startswith(".env.")
-            or part in {"account-eval.local.toml", "workspaces.toml"}
+            or part.startswith(".account-")
+            or ".local.toml" in part
+            or part in {"dagoberd.local.toml", "workspaces.toml"}
             for part in path.parts
         ) or path.suffix in {".pem", ".key", ".pfx", ".p12"}:
             raise ValueError(
@@ -116,7 +118,7 @@ class WorkspaceSync:
             config.reporting.output_dir,
             self.loaded.project_path,
         )
-        self.state_path = self.loaded.project_path.parent / ".account-eval" / "sync-state.json"
+        self.state_path = self.loaded.project_path.parent / ".dagoberd" / "sync-state.json"
 
     def configure(self, root: str | None, *, yes: bool) -> dict[str, Any]:
         with workspace_operation(self.loaded, self.registry, exclusive=True):
@@ -366,7 +368,7 @@ def adopt_snapshot(
         target.mkdir(parents=True, exist_ok=True)
         document = tomlkit.parse(DEFAULT_CONFIG_TOML)
         document["workspace"] = {"id": inspected["workspace_id"], "name": name}
-        atomic_text(target / "account-eval.toml", tomlkit.dumps(document))
+        atomic_text(target / "dagoberd.toml", tomlkit.dumps(document))
         entry = registry.initialize(name, target)
         service = WorkspaceSync(registry, entry["id"])
         service.configure(str(source.parent.parent.parent), yes=True)

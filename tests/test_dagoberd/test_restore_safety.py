@@ -18,7 +18,7 @@ from dagoberd.services.restore_files import RestoreError
 
 def workspace(root: Path, content: bytes = b"not-a-real-pdf") -> PortabilityService:
     output = root / "output"
-    db = LedgerDatabase(output / "account-eval.db")
+    db = LedgerDatabase(output / "dagoberd.db")
     LedgerRepository(db)
     documents = output / "documents"
     documents.mkdir(parents=True)
@@ -38,9 +38,9 @@ def workspace(root: Path, content: bytes = b"not-a-real-pdf") -> PortabilityServ
                VALUES ('report-run', '["json"]', ?, 0)""",
             (json.dumps([str(report)]),),
         )
-    config = root / "account-eval.toml"
+    config = root / "dagoberd.toml"
     config.write_text(
-        "[database]\npath='output/account-eval.db'\n"
+        "[database]\npath='output/dagoberd.db'\n"
         "[documents]\nstorage_dir='output/documents'\n"
         "[reporting]\noutput_dir='output'\n",
         encoding="utf-8",
@@ -55,7 +55,7 @@ def state(service: PortabilityService) -> tuple[list[str], dict[Path, bytes]]:
         path: path.read_bytes()
         for root in (service.documents_dir, service.output_dir / "reports")
         for path in root.rglob("*")
-        if path.is_file() and not any(p.startswith(".account-eval-restore-") for p in path.parts)
+        if path.is_file() and not any(p.startswith(".dagoberd-restore-") for p in path.parts)
     }
     return database, files
 
@@ -77,8 +77,8 @@ def rewrite_bundle(bundle: Path, additions: dict[str, bytes]) -> None:
 
 def assert_clean(service: PortabilityService) -> None:
     assert not list(service.metadata_dir.glob("restore-recovery/restore-*"))
-    assert not list(service.documents_dir.rglob(".account-eval-restore-*"))
-    assert not list(service.output_dir.glob("reports/**/.account-eval-restore-*"))
+    assert not list(service.documents_dir.rglob(".dagoberd-restore-*"))
+    assert not list(service.output_dir.glob("reports/**/.dagoberd-restore-*"))
 
 
 @pytest.mark.parametrize(
@@ -88,7 +88,7 @@ def assert_clean(service: PortabilityService) -> None:
         ({"documents/C:\\invoice.pdf": b"not-a-real-pdf"}, "Unsafe archive path"),
         ({"documents/./invoice.pdf": b"not-a-real-pdf"}, "same destination"),
         ({"reports/documents/invoice.pdf": b"not-a-real-pdf"}, "same destination"),
-        ({"reports/account-eval.db": b"not-a-real-pdf"}, "protected path"),
+        ({"reports/dagoberd.db": b"not-a-real-pdf"}, "protected path"),
         ({"reports/backups/backup.aex": b"not-a-real-pdf"}, "protected path"),
         (
             {
@@ -383,7 +383,7 @@ def test_restore_into_empty_workspace_removes_new_database_on_failure(
     bundle = source.export(tmp_path / "source.aex")["path"]
     root = tmp_path / "empty"
     target = PortabilityService(
-        root / "output/ledger.db", root / "documents", root / "output", root / "account-eval.toml"
+        root / "output/ledger.db", root / "documents", root / "output", root / "dagoberd.toml"
     )
     if existing_document:
         target.documents_dir.mkdir(parents=True)
@@ -440,7 +440,7 @@ def test_cleanup_failure_keeps_record_and_reports_actual_data_state(
     failed = False
 
     def fail_cleanup(path, *args, **kwargs):
-        if Path(path).name.startswith(".account-eval-restore-"):
+        if Path(path).name.startswith(".dagoberd-restore-"):
             raise PermissionError("Cannot remove staging directory")
         return rmtree(path, *args, **kwargs)
 
@@ -470,7 +470,7 @@ def test_cleanup_failure_keeps_record_and_reports_actual_data_state(
 
 
 def test_cli_rejects_invalid_restore_without_initializing_ledger(tmp_path, capsys):
-    config = tmp_path / "account-eval.toml"
+    config = tmp_path / "dagoberd.toml"
     config.write_text("[database]\npath='ledger.db'\n", encoding="utf-8")
     invalid = tmp_path / "invalid.aex"
     with zipfile.ZipFile(invalid, "w") as archive:

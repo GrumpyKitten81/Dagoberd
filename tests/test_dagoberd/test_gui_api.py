@@ -42,7 +42,7 @@ def _wait_for(client: TestClient, headers: dict[str, str], job_id: str, status: 
 def _client(
     tmp_path: object, extra_config: str = ""
 ) -> tuple[TestClient, dict[str, str], OrganizationService, str]:
-    config = tmp_path / "account-eval.toml"
+    config = tmp_path / "dagoberd.toml"
     config.write_text(
         """[database]
 path = "ledger.db"
@@ -60,7 +60,7 @@ storage_dir = "documents"
         "GUI", account_kind="cash", idempotency_key="gui-account-001"
     )
     client = TestClient(create_app(loaded, "test-token"))
-    return client, {"X-AccountEval-Token": "test-token"}, service, account["id"]
+    return client, {"X-Dagoberd-Token": "test-token"}, service, account["id"]
 
 
 def test_gui_exposes_safe_model_failures(tmp_path, monkeypatch):
@@ -90,7 +90,7 @@ def test_gui_requires_token_and_exposes_metadata(tmp_path):
     response = client.get("/api/meta", headers=headers)
 
     assert response.status_code == 200, response.text
-    assert response.json()["contract_version"] == "account-eval-gui-v5"
+    assert response.json()["contract_version"] == "dagoberd-gui-v5"
     assert any(account["id"] == account_id for account in response.json()["data"]["accounts"])
     assert response.json()["data"]["account_groups"] == []
 
@@ -178,7 +178,7 @@ def test_gui_static_assets_are_never_served_from_a_stale_cache(tmp_path):
     assert index.headers["cache-control"] == "no-store, max-age=0"
     assert index.headers["clear-site-data"] == '"cache"'
     assert application.headers["cache-control"] == "public, max-age=31536000, immutable"
-    assert "__ACCOUNT_EVAL_ASSETS__" not in index.text
+    assert "__DAGOBERD_ASSETS__" not in index.text
     assert "The interface could not be started" in index.text
 
 
@@ -676,7 +676,7 @@ def test_classification_configuration_api_validates_and_deletes_entries(tmp_path
     assert invalid.status_code == 400
     llm = client.get("/api/llm", headers=headers).json()["data"]
     assert "api_key" not in llm
-    assert llm["api_key_secret"] == "ACCOUNT_EVAL_LLM_API_KEY"
+    assert llm["api_key_secret"] == "DAGOBERD_LLM_API_KEY"
 
 
 def test_dimension_columns_follow_account_order_and_active_values(tmp_path):

@@ -19,7 +19,7 @@ def _toml_path(path: Path) -> str:
 
 
 def test_project_local_and_cli_configuration_precedence(tmp_path):
-    project = tmp_path / "account-eval.toml"
+    project = tmp_path / "dagoberd.toml"
     project.write_text(
         """[database]
 path = "project.db"
@@ -28,7 +28,7 @@ max_text_length = 200
 """,
         encoding="utf-8",
     )
-    (tmp_path / "account-eval.local.toml").write_text(
+    (tmp_path / "dagoberd.local.toml").write_text(
         """[database]
 path = "local.db"
 """,
@@ -45,7 +45,7 @@ path = "local.db"
 
 
 def test_cloud_llm_requires_explicit_opt_in(tmp_path):
-    project = tmp_path / "account-eval.toml"
+    project = tmp_path / "dagoberd.toml"
     project.write_text(
         """[llm]
 enabled = true
@@ -68,7 +68,7 @@ def test_init_creates_configuration_and_database(tmp_path, monkeypatch, capsys):
     output = json.loads(capsys.readouterr().out)
     assert Path(output["configuration"]).is_file()
     assert Path(output["database"]).is_file()
-    assert (tmp_path / "account-eval.toml").read_text(encoding="utf-8") == DEFAULT_CONFIG_TOML
+    assert (tmp_path / "dagoberd.toml").read_text(encoding="utf-8") == DEFAULT_CONFIG_TOML
     assert main(["doctor"]) == 0
 
 
@@ -127,7 +127,7 @@ def test_cli_registers_and_names_comdirect_and_file_import_accounts(
 
 
 def test_local_config_can_use_absolute_data_workspace_paths(tmp_path):
-    project = tmp_path / "account-eval.toml"
+    project = tmp_path / "dagoberd.toml"
     project.write_text(
         DEFAULT_CONFIG_TOML
         + """
@@ -137,9 +137,9 @@ enabled = true
         encoding="utf-8",
     )
     workspace = tmp_path / "Dagoberd"
-    (tmp_path / "account-eval.local.toml").write_text(
+    (tmp_path / "dagoberd.local.toml").write_text(
         f'''[database]
-path = "{_toml_path(workspace / "data" / "ledger" / "account_eval.db")}"
+path = "{_toml_path(workspace / "data" / "ledger" / "dagoberd.db")}"
 
 [reporting]
 output_dir = "{_toml_path(workspace / "data" / "reports")}"
@@ -152,7 +152,7 @@ storage_dir = "{_toml_path(workspace / "data" / "documents")}"
 
     loaded = load_config(project)
 
-    assert loaded.config.database.path == workspace / "data" / "ledger" / "account_eval.db"
+    assert loaded.config.database.path == workspace / "data" / "ledger" / "dagoberd.db"
     assert loaded.config.reporting.output_dir == workspace / "data" / "reports"
     assert loaded.config.documents.storage_dir == workspace / "data" / "documents"
 
@@ -165,7 +165,7 @@ def test_data_root_and_cloud_workspace_derive_default_paths(tmp_path):
     data_root.mkdir()
     for name in ("documents", "reports", "imports"):
         (cloud_workspace / name).mkdir(parents=True)
-    project = project_dir / "account-eval.toml"
+    project = project_dir / "dagoberd.toml"
     project.write_text(
         f"""[data]
 root = "{_toml_path(data_root)}"
@@ -180,7 +180,7 @@ workspace = "{_toml_path(cloud_workspace)}"
 
     assert loaded.config.data.root == data_root.resolve()
     assert loaded.config.cloud.workspace == cloud_workspace.resolve()
-    assert loaded.config.database.path == data_root / "ledger" / "account_eval.db"
+    assert loaded.config.database.path == data_root / "ledger" / "dagoberd.db"
     assert loaded.config.documents.storage_dir == cloud_workspace / "documents"
     assert loaded.config.reporting.output_dir == cloud_workspace / "reports"
 
@@ -193,7 +193,7 @@ def test_data_root_env_override_and_explicit_paths_win(tmp_path, monkeypatch):
     project_dir.mkdir()
     configured_root.mkdir()
     env_root.mkdir()
-    project = project_dir / "account-eval.toml"
+    project = project_dir / "dagoberd.toml"
     project.write_text(
         f"""[data]
 root = "{_toml_path(configured_root)}"
@@ -203,7 +203,7 @@ path = "{_toml_path(explicit_db)}"
 """,
         encoding="utf-8",
     )
-    monkeypatch.setenv("ACCOUNT_EVAL_DATA_ROOT", str(env_root))
+    monkeypatch.setenv("DAGOBERD_DATA_ROOT", str(env_root))
 
     loaded = load_config(project)
 
@@ -212,15 +212,15 @@ path = "{_toml_path(explicit_db)}"
 
 
 def test_unconfigured_data_root_never_selects_a_sibling_repository(tmp_path, monkeypatch):
-    monkeypatch.delenv("ACCOUNT_EVAL_DATA_ROOT", raising=False)
+    monkeypatch.delenv("DAGOBERD_DATA_ROOT", raising=False)
     project_dir = tmp_path / "Dagoberd"
     data_root = tmp_path / "DagoberdData"
     project_dir.mkdir()
     data_root.mkdir()
-    project = project_dir / "account-eval.toml"
+    project = project_dir / "dagoberd.toml"
     project.write_text(
         """[database]
-path = "output/account_eval.db"
+path = "output/dagoberd.db"
 """,
         encoding="utf-8",
     )
@@ -228,7 +228,7 @@ path = "output/account_eval.db"
     loaded = load_config(project)
 
     assert loaded.config.data.root is None
-    assert loaded.config.database.path == project_dir / "output" / "account_eval.db"
+    assert loaded.config.database.path == project_dir / "output" / "dagoberd.db"
 
 
 def test_config_show_never_reads_or_prints_secret_values(
@@ -236,7 +236,7 @@ def test_config_show_never_reads_or_prints_secret_values(
     monkeypatch,
     capsys,
 ):
-    project = tmp_path / "account-eval.toml"
+    project = tmp_path / "dagoberd.toml"
     project.write_text(
         DEFAULT_CONFIG_TOML
         + """
@@ -255,7 +255,7 @@ enabled = true
 
 
 def test_config_show_masks_delivery_recipients(tmp_path, capsys):
-    project = tmp_path / "account-eval.toml"
+    project = tmp_path / "dagoberd.toml"
     project.write_text(
         DEFAULT_CONFIG_TOML
         + """
@@ -273,7 +273,7 @@ recipients = ["owner@example.org"]
 
 
 def test_legacy_comdirect_configuration_is_rejected(tmp_path):
-    project = tmp_path / "account-eval.toml"
+    project = tmp_path / "dagoberd.toml"
     project.write_text(
         """[comdirect]
 enabled = false
@@ -287,7 +287,7 @@ password_secret = "COMDIRECT_PASSWORD"
 
 
 def test_named_comdirect_connections_have_isolated_default_keychain_references(tmp_path):
-    project = tmp_path / "account-eval.toml"
+    project = tmp_path / "dagoberd.toml"
     project.write_text(
         """[comdirect.connections.private]
 enabled = true
@@ -307,7 +307,7 @@ session_mode = "keychain_timed"
 
 
 def test_named_comdirect_connections_cannot_override_credential_references(tmp_path):
-    project = tmp_path / "account-eval.toml"
+    project = tmp_path / "dagoberd.toml"
     project.write_text(
         """[comdirect.connections.private]
 username_secret = "shared.username"
@@ -323,8 +323,8 @@ username_secret = "shared.username"
 
 
 def test_default_example_matches_generated_configuration(tmp_path):
-    target = initialize_project_config(tmp_path / "account-eval.toml")
-    repository_example = Path(__file__).parents[2] / "account-eval.toml.example"
+    target = initialize_project_config(tmp_path / "dagoberd.toml")
+    repository_example = Path(__file__).parents[2] / "dagoberd.toml.example"
 
     assert target.read_text(encoding="utf-8") == repository_example.read_text(encoding="utf-8")
 
@@ -354,7 +354,7 @@ def test_secret_store_uses_environment_after_keyring(monkeypatch):
 def test_secret_store_uses_dotenv_only_as_last_fallback(tmp_path, monkeypatch):
     import keyring
 
-    name = "ACCOUNT_EVAL_TEST_DOTENV_SECRET"
+    name = "DAGOBERD_TEST_DOTENV_SECRET"
     monkeypatch.setattr(keyring, "get_password", lambda service, key: None)
     monkeypatch.delenv(name, raising=False)
     dotenv_path = tmp_path / ".env"
@@ -382,7 +382,7 @@ def test_set_secret_writes_only_to_keyring(monkeypatch):
     SecretStore().set("comdirect.client-secret", "sensitive")
 
     assert stored == {
-        "service": "account-eval",
+        "service": "dagoberd",
         "name": "COMDIRECT_CLIENT_SECRET",
         "value": "sensitive",
     }
@@ -395,7 +395,7 @@ def test_cli_secret_input_is_prompted_and_not_passed_as_argument(
 ):
     import keyring
 
-    project = tmp_path / "account-eval.toml"
+    project = tmp_path / "dagoberd.toml"
     project.write_text(DEFAULT_CONFIG_TOML, encoding="utf-8")
     stored = {}
     monkeypatch.setattr(

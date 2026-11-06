@@ -14,7 +14,7 @@ from dagoberd.profiles import install_builtin_profiles
 
 
 def _workspace(tmp_path):
-    config = tmp_path / "account-eval.toml"
+    config = tmp_path / "dagoberd.toml"
     config.write_text("""[database]
 path = "ledger.db"
 [llm]
@@ -157,7 +157,7 @@ def test_top_level_help_describes_every_command():
 
 @pytest.mark.parametrize("missing_mapping", [False, True])
 def test_invalid_wiso_run_never_initializes_a_ledger(tmp_path, missing_mapping):
-    config = tmp_path / "account-eval.toml"
+    config = tmp_path / "dagoberd.toml"
     config.write_text('[database]\npath = "ledger.db"\n')
     tree = tmp_path / "categories.Tre"
     tree.write_text("Baumdaten\n\t0\n\tCategories\nSection\n\tValue\n", encoding="cp1252")

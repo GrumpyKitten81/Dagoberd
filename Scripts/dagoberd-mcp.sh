@@ -2,7 +2,7 @@
 set -eu
 
 ROOT="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
-LAUNCHER="$ROOT/.account-eval/mcp"
+LAUNCHER="$ROOT/.dagoberd/mcp"
 
 if [ -x "$LAUNCHER" ]; then
   exec "$LAUNCHER" "$@"

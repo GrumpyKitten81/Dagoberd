@@ -13,7 +13,7 @@ Install Python 3.12+ and Poetry 2.2+, then run from this checkout:
 ```bash
 poetry sync
 poetry run dagoberd demo create
-poetry run dagoberd --config .account-eval/demo/account-eval.toml gui
+poetry run dagoberd --config .dagoberd/demo/dagoberd.toml gui
 ```
 
 The browser opens a separate workspace containing synthetic data. The demo needs no bank credentials, external model or private partner repository. Dependency installation time depends on your connection.
@@ -37,16 +37,7 @@ Start your preferred coding agent separately and load the Dagoberd skill. Dagobe
 
 ## Development and documentation
 
-Dagoberd was previously named AccountEval. Install the `dagoberd` distribution and use
-`dagoberd` or `dagoberd-mcp`; Python integrations now import `dagoberd`.
-The former `account-eval` and `account-eval-mcp` commands remain compatibility aliases.
-After upgrading, run `dagoberd agents configure` to regenerate the installation-bound
-MCP launcher for the renamed Python package, and update client launcher paths to
-`Scripts/dagoberd-mcp.sh` or `Scripts/dagoberd-mcp.cmd`.
-Existing `account-eval.toml` / `account-eval.local.toml` configuration files,
-`ACCOUNT_EVAL_*` environment variables, database filenames, workspace registry,
-keyring entries, browser preferences and versioned data contracts retain their
-original names so the rename does not move financial data or disconnect credentials.
+Install the `dagoberd` distribution and use `dagoberd` or `dagoberd-mcp`. Python integrations import `dagoberd`.
 
 Run `poetry run pre-commit install` once after cloning. The unfiltered Quality workflow checks formatting, lint, types, the complete test suite and package builds on pull requests and pushes to `main`.
 

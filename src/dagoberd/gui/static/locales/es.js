@@ -76,7 +76,7 @@ export default {
   "ui.set_selection": "Establecer selección",
   "ui.restore_defaults": "Restaurar valores predeterminados",
   "ui.0_import_annotations": "0 Anotaciones de importación",
-  "ui.read_only_edit_dagoberd_local_toml_to": "Solo lectura · modifica account-eval.local.toml para realizar cambios.",
+  "ui.read_only_edit_dagoberd_local_toml_to": "Solo lectura · modifica dagoberd.local.toml para realizar cambios.",
   "ui.no_category_column": "sin columna de categoría",
   "ui.2_history": "2 Historial",
   "ui.uses_the_category_of_a_confirmed_previous_transaction": "Usa la categoría de un movimiento anterior confirmado con idénticos ",

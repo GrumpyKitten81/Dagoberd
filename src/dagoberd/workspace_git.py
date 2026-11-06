@@ -215,11 +215,13 @@ class WorkspaceGit:
             parts = path.parts
             if any(
                 part.lower().startswith(".env")
+                or part.lower().startswith(".account-")
+                or ".local.toml" in part.lower()
                 or part.lower()
                 in {
                     ".git",
-                    ".account-eval",
-                    "account-eval.local.toml",
+                    ".dagoberd",
+                    "dagoberd.local.toml",
                     "workspaces.toml",
                 }
                 or part.lower().endswith((".lock", "-wal", "-shm", "-journal", ".pem", ".key"))

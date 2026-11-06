@@ -667,7 +667,7 @@ def _migration_010_personalized_analysis(
             description TEXT NOT NULL DEFAULT '',
             definition_json TEXT NOT NULL,
             contract_version TEXT NOT NULL
-                DEFAULT 'account-eval-analysis-v1',
+                DEFAULT 'dagoberd-analysis-v1',
             version INTEGER NOT NULL DEFAULT 1,
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP

@@ -1,6 +1,6 @@
 import { readSession, writeSession } from './browser-storage.js';
 import { errorMessage, msg } from './i18n.js';
-const TOKEN_STORAGE_KEY = 'account-eval.gui-token';
+const TOKEN_STORAGE_KEY = 'dagoberd.gui-token';
 const fragmentToken = new URLSearchParams(location.hash.slice(1)).get('t') || '';
 if (fragmentToken) {
   writeSession(TOKEN_STORAGE_KEY, fragmentToken);
@@ -19,7 +19,7 @@ export const state = {
 };
 
 export async function api(path, options = {}) {
-  const headers = { 'X-AccountEval-Token': token, ...(options.headers || {}) };
+  const headers = { 'X-Dagoberd-Token': token, ...(options.headers || {}) };
   if (options.body && !(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
@@ -45,7 +45,7 @@ export async function apiUpload(path, file) {
 
 export async function apiBlob(path) {
   const prefix = state.workspaceId ? `/workspaces/${encodeURIComponent(state.workspaceId)}` : '';
-  const response = await fetch(`/api${prefix}${path}`, { headers: { 'X-AccountEval-Token': token } });
+  const response = await fetch(`/api${prefix}${path}`, { headers: { 'X-Dagoberd-Token': token } });
   if (!response.ok) {
     const error = new Error();
     error.message = msg('ui.file_could_not_be_loaded', {status: response.status});

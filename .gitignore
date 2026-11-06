@@ -136,9 +136,10 @@ celerybeat.pid
 
 # Environments
 .env
-account-eval.local.toml
-account-eval.local.toml.*
-.account-eval/
+*.local.toml
+*.local.toml.*
+.account-*/
+.dagoberd/
 .envrc
 .venv
 env/

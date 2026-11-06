@@ -24,23 +24,25 @@ from dagoberd.config import (
 from dagoberd.workspace_lock import file_lock
 
 CURRENT_WORKSPACE: ContextVar[LoadedConfig | None] = ContextVar("workspace", default=None)
-REGISTRY_ENV = "ACCOUNT_EVAL_WORKSPACE_REGISTRY"
+REGISTRY_ENV = "DAGOBERD_WORKSPACE_REGISTRY"
 IGNORE_RULES = (
     ".env",
     ".env.*",
-    "account-eval.local.toml",
-    ".account-eval/",
+    "*.local.toml",
+    "*.local.toml.*",
+    ".account-*/",
+    ".dagoberd/",
     "*-wal",
     "*-shm",
     "*-journal",
     "*.lock",
-    ".account-eval-write-*/",
+    ".dagoberd-write-*/",
 )
 
 
 def atomic_text(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    descriptor, temporary = tempfile.mkstemp(prefix=".account-eval-write-", dir=path.parent)
+    descriptor, temporary = tempfile.mkstemp(prefix=".dagoberd-write-", dir=path.parent)
     staged = Path(temporary)
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
@@ -73,7 +75,7 @@ def default_registry_path() -> Path:
     base = Path(
         os.environ.get("APPDATA") or os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config"
     )
-    return base / "account-eval" / "workspaces.toml"
+    return base / "dagoberd" / "workspaces.toml"
 
 
 def storage_paths(loaded: LoadedConfig) -> list[Path]:
@@ -82,7 +84,7 @@ def storage_paths(loaded: LoadedConfig) -> list[Path]:
         config.database.path,
         config.documents.storage_dir,
         config.reporting.output_dir,
-        loaded.project_path.parent / ".account-eval",
+        loaded.project_path.parent / ".dagoberd",
     ]
     if config.cloud.workspace is not None:
         paths.append(config.cloud.workspace)
@@ -243,7 +245,7 @@ class WorkspaceRegistry:
         if create and root.exists() and any(root.iterdir()):
             raise ValueError("New workspace directory must be empty")
         root.mkdir(parents=True, exist_ok=True)
-        path = root / "account-eval.toml"
+        path = root / "dagoberd.toml"
         if not path.exists():
             document = tomlkit.parse(DEFAULT_CONFIG_TOML)
             document["workspace"] = {"id": str(uuid4()), "name": name}
@@ -266,7 +268,7 @@ class WorkspaceRegistry:
             elif configured.config.cloud.workspace is not None:
                 raise ValueError("Use a cloud relocation preview to change existing cloud storage")
             else:
-                local_path = path.with_name("account-eval.local.toml")
+                local_path = path.with_name("dagoberd.local.toml")
                 local = (
                     tomlkit.parse(local_path.read_text(encoding="utf-8"))
                     if local_path.exists()
@@ -361,14 +363,14 @@ def workspace_operation(
         else:
             with (
                 file_lock(
-                    loaded.project_path.parent / ".account-eval" / "workspace.lock",
+                    loaded.project_path.parent / ".dagoberd" / "workspace.lock",
                     exclusive=exclusive,
                 ),
                 file_lock(
                     loaded.config.database.path.with_suffix(".workspace.lock"), exclusive=exclusive
                 ),
             ):
-                if (loaded.project_path.parent / ".account-eval" / "cloud-migration.json").exists():
+                if (loaded.project_path.parent / ".dagoberd" / "cloud-migration.json").exists():
                     raise ValueError(
                         "Cloud relocation is incomplete; use workspaces cloud <name> recover --yes"
                     )

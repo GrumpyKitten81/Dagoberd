@@ -40,7 +40,7 @@ CAMT = """<?xml version="1.0" encoding="UTF-8"?>
 
 
 def repository(tmp_path: Path) -> LedgerRepository:
-    return LedgerRepository(LedgerDatabase(tmp_path / "account-eval.db"))
+    return LedgerRepository(LedgerDatabase(tmp_path / "dagoberd.db"))
 
 
 def test_camt053_import_is_account_specific_signed_and_idempotent(tmp_path):
@@ -108,7 +108,7 @@ def test_tabular_profile_returns_all_structured_errors_and_blocks_execution(tmp_
 
 
 def portability(tmp_path: Path) -> PortabilityService:
-    db = LedgerDatabase(tmp_path / "output" / "account-eval.db")
+    db = LedgerDatabase(tmp_path / "output" / "dagoberd.db")
     LedgerRepository(db)
     documents = tmp_path / "output" / "documents"
     documents.mkdir(parents=True)
@@ -117,7 +117,7 @@ def portability(tmp_path: Path) -> PortabilityService:
         db.path,
         documents,
         tmp_path / "output",
-        tmp_path / "account-eval.toml",
+        tmp_path / "dagoberd.toml",
         masked_config={"database": {"path": str(db.path)}},
     )
 
@@ -231,9 +231,9 @@ def test_portability_cli_export_verify_integrity_and_deletion_preview(
     tmp_path,
     capsys,
 ):
-    config = tmp_path / "account-eval.toml"
+    config = tmp_path / "dagoberd.toml"
     config.write_text(
-        "[database]\npath='output/account-eval.db'\n"
+        "[database]\npath='output/dagoberd.db'\n"
         "[reporting]\noutput_dir='output'\n"
         "[documents]\nstorage_dir='output/documents'\n"
         "[comdirect.connections.private]\nenabled=false\n",
@@ -299,9 +299,9 @@ def test_portability_cli_export_verify_integrity_and_deletion_preview(
 
 
 def test_phase4_mcp_contract_uses_idempotency_and_secret_references(tmp_path):
-    config = tmp_path / "account-eval.toml"
+    config = tmp_path / "dagoberd.toml"
     config.write_text(
-        "[database]\npath='output/account-eval.db'\n"
+        "[database]\npath='output/dagoberd.db'\n"
         "[reporting]\noutput_dir='output'\n"
         "[documents]\nstorage_dir='output/documents'\n"
         "[comdirect.connections.private]\nenabled=false\n",
@@ -338,9 +338,9 @@ def test_phase4_mcp_contract_uses_idempotency_and_secret_references(tmp_path):
 
 
 def test_mcp_comdirect_sync_requires_explicit_local_opt_in(tmp_path):
-    config = tmp_path / "account-eval.toml"
+    config = tmp_path / "dagoberd.toml"
     config.write_text(
-        "[database]\npath='output/account-eval.db'\n"
+        "[database]\npath='output/dagoberd.db'\n"
         "[comdirect.connections.private]\n"
         "enabled=true\nsession_mode='keychain_timed'\nallow_mcp_sync=false\n",
         encoding="utf-8",
@@ -369,7 +369,7 @@ class MemorySecrets:
 
 
 def test_mcp_expired_session_is_revoked_and_removed_per_connection(tmp_path, monkeypatch):
-    config = tmp_path / "account-eval.toml"
+    config = tmp_path / "dagoberd.toml"
     config.write_text(
         """[comdirect.connections.private]
 enabled = true

@@ -19,7 +19,7 @@ from dagoberd.accounts import AccountScope
 from dagoberd.ledger.migrations import CURRENT_SCHEMA_VERSION
 from dagoberd.ledger.repository import LedgerRepository, VersionConflictError
 
-ANALYSIS_CONTRACT_VERSION = "account-eval-analysis-v1"
+ANALYSIS_CONTRACT_VERSION = "dagoberd-analysis-v1"
 AnalysisSection = Literal[
     "cashflow",
     "income_expense",

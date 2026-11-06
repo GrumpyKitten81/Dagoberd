@@ -38,7 +38,7 @@ class WorkspaceCloud:
                 config.database.path,
                 config.documents.storage_dir,
                 config.reporting.output_dir,
-                self.loaded.project_path.parent / ".account-eval",
+                self.loaded.project_path.parent / ".dagoberd",
             )
         ):
             raise ValueError("New cloud destination overlaps existing workspace storage")
@@ -163,7 +163,7 @@ class WorkspaceCloud:
                 else None
             )
             recovery = (
-                self.loaded.project_path.parent / ".account-eval" / "cloud-recovery" / str(uuid4())
+                self.loaded.project_path.parent / ".dagoberd" / "cloud-recovery" / str(uuid4())
             )
             recovery.mkdir(parents=True, exist_ok=False)
             database = LedgerDatabase(self.loaded.config.database.path)
@@ -180,7 +180,7 @@ class WorkspaceCloud:
                 [(item["relative"], target / item["relative"]) for item in plan["files"]],
             )
             self.registry.refresh_storage(self.entry.id)
-            journal = self.loaded.project_path.parent / ".account-eval" / "cloud-migration.json"
+            journal = self.loaded.project_path.parent / ".dagoberd" / "cloud-migration.json"
             atomic_text(
                 journal,
                 json.dumps(
@@ -222,7 +222,7 @@ def recover_cloud(registry: WorkspaceRegistry, selector: str, *, yes: bool) -> d
     if not yes:
         raise ValueError("Cloud recovery requires local confirmation with --yes")
     entry = registry.entry(selector)
-    metadata = entry.config_path.parent / ".account-eval"
+    metadata = entry.config_path.parent / ".dagoberd"
     journal = metadata / "cloud-migration.json"
     with file_lock(metadata / "workspace.lock", exclusive=True):
         record = json.loads(journal.read_text(encoding="utf-8"))
@@ -244,7 +244,7 @@ def recover_cloud(registry: WorkspaceRegistry, selector: str, *, yes: bool) -> d
                     raise ValueError("Cloud recovery backup belongs to another workspace")
             LedgerDatabase(database).restore(backup)
             atomic_text(entry.config_path, record["project_before"])
-            local = entry.config_path.with_name("account-eval.local.toml")
+            local = entry.config_path.with_name("dagoberd.local.toml")
             if record["local_before"] is None:
                 local.unlink(missing_ok=True)
             else:

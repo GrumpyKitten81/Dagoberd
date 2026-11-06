@@ -93,7 +93,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="dagoberd",
         description="Local financial ledger",
     )
-    parser.add_argument("--config", help="Path to account-eval.toml")
+    parser.add_argument("--config", help="Path to dagoberd.toml")
     parser.add_argument("--workspace", help="Registered workspace name or UUID")
     parser.add_argument("--workspace-registry", help="Path to the local workspace registry")
     parser.add_argument("--db", help="Path to the local SQLite database")
@@ -122,10 +122,10 @@ def build_parser() -> argparse.ArgumentParser:
     demo = commands.add_parser("demo", help="Manage a synthetic demo workspace")
     demo_commands = demo.add_subparsers(dest="demo_command", required=True)
     demo_create = demo_commands.add_parser("create")
-    demo_create.add_argument("--path", default=".account-eval/demo")
+    demo_create.add_argument("--path", default=".dagoberd/demo")
     demo_create.add_argument("--force", action="store_true")
     demo_reset = demo_commands.add_parser("reset")
-    demo_reset.add_argument("--path", default=".account-eval/demo")
+    demo_reset.add_argument("--path", default=".dagoberd/demo")
     demo_reset.add_argument("--yes", action="store_true", required=True)
 
     agents = commands.add_parser("agents", help="Configure and check optional agent integration")
@@ -865,7 +865,7 @@ def build_parser() -> argparse.ArgumentParser:
     portability_backup.add_argument("--output", required=True)
     portability_backup.add_argument(
         "--password-secret",
-        default="ACCOUNT_EVAL_BACKUP_PASSWORD",
+        default="DAGOBERD_BACKUP_PASSWORD",
     )
     portability_verify = portability_commands.add_parser("verify")
     portability_verify.add_argument("path")
@@ -1002,7 +1002,7 @@ def _handle_project_commands(
             if input("Write local configuration? [y/N] ").strip().lower() not in {"y", "yes"}:
                 _print_json({"status": "cancelled"})
                 return 1
-        config_path = Path(args.config or "account-eval.toml")
+        config_path = Path(args.config or "dagoberd.toml")
         configured = configure_local_project(config_path, answers)
         configured["agent_runtime"] = configure_agent_launcher(config_path.parent or ".")
         _print_json(configured)
@@ -1028,7 +1028,7 @@ def _handle_project_commands(
         _print_json(
             diagnose_agent_runtime(
                 root,
-                config_path=args.config or "account-eval.toml",
+                config_path=args.config or "dagoberd.toml",
             )
         )
         return 0
@@ -1100,7 +1100,7 @@ def _handle_project_commands(
             SecretStore(dotenv_path=loaded.project_path.with_name(".env")),
         )
         if llm_provider is None:
-            parser.error("LLM ist in account-eval.toml deaktiviert")
+            parser.error("LLM ist in dagoberd.toml deaktiviert")
         _print_json(llm_provider.test_connection())
         return 0
     if args.command == "auth" and args.provider == "comdirect":
@@ -1289,7 +1289,7 @@ def _run(argv: list[str] | None = None) -> int:
         )
         return launch_workspace_gui(args, registry, selected)
     if args.command == "init":
-        existing = Path(args.config or "account-eval.toml")
+        existing = Path(args.config or "dagoberd.toml")
         if args.workspace or (
             existing.is_file() and load_config(existing).config.workspace.id is not None
         ):

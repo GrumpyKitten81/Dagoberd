@@ -19,7 +19,7 @@ from dagoberd.ledger.repository import LedgerRepository
 from dagoberd.profiles import install_builtin_profiles
 
 pytestmark = pytest.mark.skipif(
-    os.environ.get("ACCOUNT_EVAL_BROWSER_TESTS") != "1",
+    os.environ.get("DAGOBERD_BROWSER_TESTS") != "1",
     reason="Chromium is installed only in the dedicated GUI test job",
 )
 
@@ -31,7 +31,7 @@ def _available_port() -> int:
 
 
 def test_bulk_inspector_preview_apply_and_responsive_discard_warning(tmp_path):
-    config_path = tmp_path / "account-eval.toml"
+    config_path = tmp_path / "dagoberd.toml"
     config_path.write_text(
         """[database]
 path = "ledger.db"
@@ -144,7 +144,7 @@ storage_dir = "documents"
             page.reload()
             rows.first.wait_for()
             assert page.locator("html").get_attribute("lang") == "es"
-            page.evaluate("localStorage.setItem('account-eval.gui-language', 'invalid')")
+            page.evaluate("localStorage.setItem('dagoberd.gui-language', 'invalid')")
             page.reload()
             rows.first.wait_for()
             assert page.locator("html").get_attribute("lang") == "en"

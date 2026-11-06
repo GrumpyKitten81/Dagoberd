@@ -43,7 +43,7 @@ dagoberd --workspace-registry ./demo-registry.toml --workspace demo accounts reg
 dagoberd --workspace-registry ./demo-registry.toml --workspace demo accounts list
 ```
 
-In `demo-workspace/account-eval.toml`, add this synthetic profile:
+In `demo-workspace/dagoberd.toml`, add this synthetic profile:
 
 ```toml
 [imports.profiles.synthetic_account]

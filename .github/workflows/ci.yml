@@ -79,7 +79,7 @@ jobs:
           '--force-reinstall', artifacts[0]])"
       - name: Run installed-package release smoke tests
         env:
-          ACCOUNT_EVAL_RELEASE_ARTIFACT: "1"
+          DAGOBERD_RELEASE_ARTIFACT: "1"
         run: python -m pytest -q tests/release
 
   release-smoke-full:
@@ -143,7 +143,7 @@ jobs:
           '--force-reinstall', artifacts[0]])"
       - name: Run installed-package release smoke tests
         env:
-          ACCOUNT_EVAL_RELEASE_ARTIFACT: "1"
+          DAGOBERD_RELEASE_ARTIFACT: "1"
         run: python -m pytest -q tests/release
 
   windows-unit-smoke:
@@ -208,5 +208,5 @@ jobs:
         run: poetry run playwright install --with-deps chromium
       - name: Run GUI browser tests
         env:
-          ACCOUNT_EVAL_BROWSER_TESTS: "1"
+          DAGOBERD_BROWSER_TESTS: "1"
         run: poetry run python -m pytest -q tests/browser

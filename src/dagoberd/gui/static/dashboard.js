@@ -3,7 +3,7 @@ import { msg, joinMessages, number, date } from './i18n.js';
 import { append, clear, el, formatAmount, notify, svg } from './dom.js';
 import { api, state } from './store.js';
 
-const PERIOD_STORAGE_KEY = 'account-eval.dashboard-period-v1';
+const PERIOD_STORAGE_KEY = 'dagoberd.dashboard-period-v1';
 const PERIODS = [
   ['3m', msg("ui.3_months")],
   ['ytd', msg("ui.this_year")],

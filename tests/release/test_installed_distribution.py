@@ -59,9 +59,7 @@ def test_distribution_metadata_and_console_scripts() -> None:
     assert version("dagoberd") == __version__
     assert console_script("dagoberd").is_file()
     assert console_script("dagoberd-mcp").is_file()
-    assert console_script("account-eval").is_file()
-    assert console_script("account-eval-mcp").is_file()
-    if os.environ.get("ACCOUNT_EVAL_RELEASE_ARTIFACT") == "1":
+    if os.environ.get("DAGOBERD_RELEASE_ARTIFACT") == "1":
         module_path = Path(dagoberd.__file__).resolve()
         assert "site-packages" in module_path.parts or "dist-packages" in module_path.parts
 
@@ -75,7 +73,7 @@ def test_cli_initializes_and_diagnoses_local_workspace(tmp_path: Path) -> None:
         text=True,
     )
     assert initialized.returncode == 0, initialized.stderr
-    assert (tmp_path / "account-eval.toml").is_file()
+    assert (tmp_path / "dagoberd.toml").is_file()
 
     diagnosed = subprocess.run(
         [str(console_script("dagoberd")), "doctor"],
@@ -90,7 +88,7 @@ def test_cli_initializes_and_diagnoses_local_workspace(tmp_path: Path) -> None:
 
 
 def test_account_scoped_import_report_and_encrypted_backup(tmp_path: Path) -> None:
-    database = LedgerDatabase(tmp_path / "output" / "account-eval.db")
+    database = LedgerDatabase(tmp_path / "output" / "dagoberd.db")
     repository = LedgerRepository(database)
     statement = tmp_path / "statement.xml"
     statement.write_text(CAMT_STATEMENT, encoding="utf-8")
@@ -114,8 +112,8 @@ def test_account_scoped_import_report_and_encrypted_backup(tmp_path: Path) -> No
     }
     assert report["metadata"]["transaction_count"] == 1
 
-    project_path = tmp_path / "account-eval.toml"
-    project_path.write_text("[database]\npath='output/account-eval.db'\n", encoding="utf-8")
+    project_path = tmp_path / "dagoberd.toml"
+    project_path.write_text("[database]\npath='output/dagoberd.db'\n", encoding="utf-8")
     portability = PortabilityService(
         database.path,
         tmp_path / "output" / "documents",
@@ -137,7 +135,7 @@ def test_real_stdio_mcp_process_lists_safe_tools(tmp_path: Path) -> None:
             args=["-m", "dagoberd.mcp_server"],
             env={
                 **os.environ,
-                "ACCOUNT_EVAL_DB": str(tmp_path / "mcp-stdio.db"),
+                "DAGOBERD_DB": str(tmp_path / "mcp-stdio.db"),
             },
         )
         async with (

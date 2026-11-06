@@ -10,7 +10,7 @@ const definitions = {
 };
 export const languages = Object.fromEntries(Object.entries(definitions).map(([code, definition]) => [code, definition.name]));
 export const catalogs = Object.fromEntries(Object.entries(definitions).map(([code, definition]) => [code, definition.catalog]));
-const STORAGE_KEY = 'account-eval.gui-language';
+const STORAGE_KEY = 'dagoberd.gui-language';
 let language = 'en';
 try {
   const stored = localStorage.getItem(STORAGE_KEY);

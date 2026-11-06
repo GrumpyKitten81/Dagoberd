@@ -19,7 +19,7 @@ from .migrations import (
 
 class LedgerDatabase:
     def __init__(self, path: str | Path | None = None) -> None:
-        self.path = Path(path or "output/account_eval.db")
+        self.path = Path(path or "output/dagoberd.db")
 
     def connect(self) -> sqlite3.Connection:
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -218,7 +218,7 @@ class LedgerDatabase:
                 )
             ]
             payload = {
-                "format": "account-eval-ledger-export-v1",
+                "format": "dagoberd-ledger-export-v1",
                 "created_at": datetime.now(UTC).isoformat(),
                 "tables": {
                     table: [dict(row) for row in connection.execute(f'SELECT * FROM "{table}"')]

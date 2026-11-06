@@ -41,7 +41,7 @@
 - The English classifier prompt advances to v3; previews bound to the previous prompt version must be recreated. Historical results and machine-readable contracts are preserved.
 - Local endpoint validation explicitly rejects IPv4-mapped IPv6 addresses consistently across Python versions.
 
-- CLI contract advances to `account-eval-cli-v2`: classification actions use `classifications set|apply-rules|deterministic`, profile creation uses `profiles create`, rule/hint creation uses `rules add` and `hints add`, and receipt metadata registration uses `documents register`.
+- CLI contract advances to `dagoberd-cli-v2`: classification actions use `classifications set|apply-rules|deterministic`, profile creation uses `profiles create`, rule/hint creation uses `rules add` and `hints add`, and receipt metadata registration uses `documents register`.
 - File imports use `import preview` followed by `import run`; receipt candidates use `documents candidates`. Previous top-level names are removed without compatibility aliases. MCP and report-extension contracts remain unchanged.
 - Repeated setup updates only assistant-managed connection, LLM and base-currency values while preserving data locations, extensions, other connections and local limits.
 - Restore stages document and report files beside their destinations so atomic replacement also works across filesystem boundaries.

@@ -1,10 +1,10 @@
 # Dagoberd project configuration (no secrets)
-# Machine-specific overrides: account-eval.local.toml (gitignored; copy patterns from below)
+# Machine-specific overrides: dagoberd.local.toml (gitignored; copy patterns from below)
 
 [database]
-path = "output/account_eval.db"
+path = "output/dagoberd.db"
 
-# Optional private data roots and experimental Comdirect settings belong in account-eval.local.toml:
+# Optional private data roots and experimental Comdirect settings belong in dagoberd.local.toml:
 #
 # [data]
 # root = "/path/to/private-workspace"
@@ -39,7 +39,7 @@ mode = "local"
 provider = "openai-compatible"
 base_url = "http://127.0.0.1:11434/v1"
 model = ""
-api_key_secret = "ACCOUNT_EVAL_LLM_API_KEY"
+api_key_secret = "DAGOBERD_LLM_API_KEY"
 allow_cloud = false
 timeout_seconds = 30.0
 temperature = 0.0
@@ -75,11 +75,11 @@ port = 587
 starttls = true
 use_ssl = false
 from_address = ""
-username_secret = "ACCOUNT_EVAL_SMTP_USERNAME"
-password_secret = "ACCOUNT_EVAL_SMTP_PASSWORD"
+username_secret = "DAGOBERD_SMTP_USERNAME"
+password_secret = "DAGOBERD_SMTP_PASSWORD"
 timeout_seconds = 30.0
 
-# Keep local recipients in account-eval.local.toml:
+# Keep local recipients in dagoberd.local.toml:
 # [delivery.targets.personal]
 # recipients = ["name@example.org"]
 # subject_prefix = "My finances"
@@ -135,6 +135,6 @@ allow_manual_transactions_mcp = false
 # name = "Private"
 #
 # Optional shared cloud root; each UUID gets its own workspaces/<id>/ directory.
-# Configure the machine path in account-eval.local.toml; do not combine with cloud.workspace.
+# Configure the machine path in dagoberd.local.toml; do not combine with cloud.workspace.
 # [cloud]
 # root = "/path/to/synchronized-files"

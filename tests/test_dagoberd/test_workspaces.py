@@ -28,10 +28,10 @@ from dagoberd.workspaces import WorkspaceRegistry, resolve_workspace, workspace_
 
 @pytest.fixture
 def registry(tmp_path, monkeypatch):
-    monkeypatch.delenv("ACCOUNT_EVAL_DATA_ROOT", raising=False)
-    monkeypatch.delenv("ACCOUNT_EVAL_CLOUD_WORKSPACE", raising=False)
+    monkeypatch.delenv("DAGOBERD_DATA_ROOT", raising=False)
+    monkeypatch.delenv("DAGOBERD_CLOUD_WORKSPACE", raising=False)
     path = tmp_path / "settings" / "workspaces.toml"
-    monkeypatch.setenv("ACCOUNT_EVAL_WORKSPACE_REGISTRY", str(path))
+    monkeypatch.setenv("DAGOBERD_WORKSPACE_REGISTRY", str(path))
     return WorkspaceRegistry(path)
 
 
@@ -56,7 +56,7 @@ def test_initialize_repository_preserves_files_and_is_repeatable(registry, tmp_p
 
 def test_legacy_force_init_cannot_reset_workspace_identity(registry, tmp_path, capsys):
     registry.initialize("private", tmp_path / "private")
-    path = tmp_path / "private" / "account-eval.toml"
+    path = tmp_path / "private" / "dagoberd.toml"
     before = path.read_bytes()
     assert main(["--config", str(path), "init", "--force"]) == 1
     assert "identity is preserved" in capsys.readouterr().out
@@ -66,7 +66,7 @@ def test_legacy_force_init_cannot_reset_workspace_identity(registry, tmp_path, c
 def test_registration_preserves_ledger_until_first_binding_invalidates_legacy_approval(
     registry, tmp_path
 ):
-    path = initialize_project_config(tmp_path / "legacy" / "account-eval.toml")
+    path = initialize_project_config(tmp_path / "legacy" / "dagoberd.toml")
     loaded = load_config(path)
     repo = LedgerRepository(LedgerDatabase(loaded.config.database.path))
     source = tmp_path / "synthetic.csv"
@@ -95,9 +95,7 @@ def test_cloud_namespaces_and_explicit_selection(registry, tmp_path):
         resolve_workspace(registry=registry)
     assert resolve_workspace("business", registry=registry).config.workspace.id
     with pytest.raises(ValueError, match="either"):
-        resolve_workspace(
-            "private", str(tmp_path / "private" / "account-eval.toml"), registry=registry
-        )
+        resolve_workspace("private", str(tmp_path / "private" / "dagoberd.toml"), registry=registry)
     with pytest.raises(ValueError, match="overrides"):
         resolve_workspace("private", db_path="other.db", registry=registry)
 
@@ -107,7 +105,7 @@ def test_legacy_configuration_alias_uses_registered_identity_and_rejects_overrid
 ):
     registry.initialize("private", tmp_path / "private")
     registered = registry.load("private")
-    legacy = tmp_path / "legacy" / "account-eval.toml"
+    legacy = tmp_path / "legacy" / "dagoberd.toml"
     legacy.parent.mkdir()
     raw = registered.config.model_dump(mode="json", exclude_none=True, exclude={"workspace"})
     legacy.write_text(tomlkit.dumps(raw), encoding="utf-8")
@@ -128,20 +126,20 @@ def test_reject_duplicate_identity_and_path_collision(registry, tmp_path):
     registry.initialize("first", tmp_path / "first")
     other = tmp_path / "other"
     other.mkdir()
-    shutil.copy(tmp_path / "first" / "account-eval.toml", other / "account-eval.toml")
+    shutil.copy(tmp_path / "first" / "dagoberd.toml", other / "dagoberd.toml")
     with pytest.raises(ValueError, match="identity"):
-        registry.add("duplicate", other / "account-eval.toml")
-    (other / "account-eval.toml").write_text(
+        registry.add("duplicate", other / "dagoberd.toml")
+    (other / "dagoberd.toml").write_text(
         "[documents]\nstorage_dir = " + json.dumps(str(tmp_path / "first" / "output" / "nested")),
         encoding="utf-8",
     )
     with pytest.raises(ValueError, match="overlaps"):
-        registry.add("collision", other / "account-eval.toml")
+        registry.add("collision", other / "dagoberd.toml")
 
 
 def test_cloud_overrides_and_global_environment_cannot_escape(registry, tmp_path, monkeypatch):
     registry.initialize("first", tmp_path / "first", cloud_root=tmp_path / "cloud")
-    local = tmp_path / "first" / "account-eval.local.toml"
+    local = tmp_path / "first" / "dagoberd.local.toml"
     local.write_text(
         local.read_text(encoding="utf-8") + '\n[documents]\nstorage_dir = "elsewhere"\n',
         encoding="utf-8",
@@ -149,14 +147,14 @@ def test_cloud_overrides_and_global_environment_cannot_escape(registry, tmp_path
     with pytest.raises(ValueError, match="namespace"):
         registry.load("first")
     local.unlink()
-    monkeypatch.setenv("ACCOUNT_EVAL_CLOUD_WORKSPACE", str(tmp_path / "unscoped"))
+    monkeypatch.setenv("DAGOBERD_CLOUD_WORKSPACE", str(tmp_path / "unscoped"))
     with pytest.raises(ValueError, match="environment"):
         registry.load("first")
 
 
 def test_legacy_cloud_workspace_does_not_move(tmp_path, monkeypatch):
-    monkeypatch.delenv("ACCOUNT_EVAL_CLOUD_WORKSPACE", raising=False)
-    config = tmp_path / "account-eval.toml"
+    monkeypatch.delenv("DAGOBERD_CLOUD_WORKSPACE", raising=False)
+    config = tmp_path / "dagoberd.toml"
     config.write_text('[cloud]\nworkspace = "cloud"\n', encoding="utf-8")
     assert load_config(config).config.documents.storage_dir == tmp_path / "cloud" / "documents"
     config.write_text('[cloud]\nworkspace = "cloud"\nroot = "shared"\n', encoding="utf-8")
@@ -217,7 +215,7 @@ def test_gui_scoped_requests_and_jobs_are_isolated(registry, tmp_path):
                 f"Cash {index}", account_kind="cash", idempotency_key="same-key"
             )
     client = TestClient(create_workspace_app(registry, "token"))
-    headers = {"X-AccountEval-Token": "token"}
+    headers = {"X-Dagoberd-Token": "token"}
     assert client.get("/api/workspaces").status_code == 401
     assert client.get("/api/meta", headers=headers).status_code == 400
     for index, entry in enumerate(entries):
@@ -382,7 +380,7 @@ def test_workspace_agent_launcher_and_handshake_preserve_selection(registry, tmp
         registry.initialize(name, tmp_path / name)
     assert main(["--workspace", "private", "agents", "configure"]) == 0
     launcher = json.loads(capsys.readouterr().out)["launcher"]
-    assert Path(launcher).parent == tmp_path / "private" / ".account-eval"
+    assert Path(launcher).parent == tmp_path / "private" / ".dagoberd"
     assert main(["--workspace", "private", "agents", "doctor"]) == 0
     result = json.loads(capsys.readouterr().out)
     assert result["handshake"]["safe_tools_present"]
@@ -403,9 +401,9 @@ def test_git_preview_commit_push_clone_and_changed_fingerprint(registry, tmp_pat
     git(root, "remote", "add", "origin", str(remote))
     service = WorkspaceGit(registry, "private")
     with pytest.raises(ValueError, match="private origin"):
-        service.preview("commit", ["account-eval.toml"], "Initialize")
+        service.preview("commit", ["dagoberd.toml"], "Initialize")
     service.trust(yes=True)
-    files = ["account-eval.toml", ".gitignore", ".gitattributes", "output/account_eval.db"]
+    files = ["dagoberd.toml", ".gitignore", ".gitattributes", "output/dagoberd.db"]
     preview = service.preview("commit", files, "Initialize")
     with pytest.raises(ValueError, match="confirmation"):
         service.run(preview["preview_id"], preview["fingerprint"], yes=False)

@@ -40,8 +40,6 @@ dependencies = [
 [project.scripts]
 dagoberd = "dagoberd.cli:main"
 dagoberd-mcp = "dagoberd.mcp_server:main"
-account-eval = "dagoberd.cli:main"
-account-eval-mcp = "dagoberd.mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/GrumpyKitten81/Dagoberd"
@@ -65,6 +63,9 @@ requires-poetry = ">=2.2,<3.0"
 packages = [
     {include = "dagoberd", from = "src"},
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [tool.ruff]
 target-version = "py312"

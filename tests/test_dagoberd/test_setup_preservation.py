@@ -12,9 +12,9 @@ from dagoberd.onboarding import SetupAnswers, configure_local_project
 
 @pytest.mark.parametrize("inline_reporting", [False, True])
 def test_repeated_setup_preserves_unmanaged_values(tmp_path, monkeypatch, inline_reporting):
-    monkeypatch.delenv("ACCOUNT_EVAL_DATA_ROOT", raising=False)
-    monkeypatch.delenv("ACCOUNT_EVAL_CLOUD_WORKSPACE", raising=False)
-    project = tmp_path / "account-eval.toml"
+    monkeypatch.delenv("DAGOBERD_DATA_ROOT", raising=False)
+    monkeypatch.delenv("DAGOBERD_CLOUD_WORKSPACE", raising=False)
+    project = tmp_path / "dagoberd.toml"
     project.write_text(DEFAULT_CONFIG_TOML, encoding="utf-8")
     (tmp_path / "private-data").mkdir()
     (tmp_path / "private-cloud").mkdir()
@@ -52,7 +52,7 @@ batch_size = 7
 auto_match_threshold = 0.98
 """
     )
-    local = tmp_path / "account-eval.local.toml"
+    local = tmp_path / "dagoberd.local.toml"
     local.write_text(content, encoding="utf-8")
     expected = tomllib.loads(content)
     for answers in (
@@ -70,8 +70,8 @@ auto_match_threshold = 0.98
             preserved["llm"][key] = expected["llm"][key]
         assert preserved == expected
         loaded = load_config(project)
-        assert loaded.config.database.path == tmp_path / "private-data/ledger/account_eval.db"
-        assert not (tmp_path / "output/account_eval.db").exists()
+        assert loaded.config.database.path == tmp_path / "private-data/ledger/dagoberd.db"
+        assert not (tmp_path / "output/dagoberd.db").exists()
     assert actual["llm"]["model"] == "test-model"
     assert actual["reporting"]["base_currency"] == "USD"
 
@@ -80,9 +80,9 @@ auto_match_threshold = 0.98
     "content", ['[reporting]\ndefault_formats = ["invalid"]\n', "[data]\nroot = [\n"]
 )
 def test_invalid_setup_never_replaces_local_file_or_creates_database(tmp_path, content):
-    project = tmp_path / "account-eval.toml"
+    project = tmp_path / "dagoberd.toml"
     project.write_text(DEFAULT_CONFIG_TOML, encoding="utf-8")
-    local = tmp_path / "account-eval.local.toml"
+    local = tmp_path / "dagoberd.local.toml"
     local.write_text(content, encoding="utf-8")
     with pytest.raises((ValidationError, ValueError)):
         configure_local_project(project, SetupAnswers())

@@ -14,7 +14,7 @@ from dagoberd.config import LLMConfig
 
 from .base import LLMClassificationInput, LLMClassificationResponse, LLMClassificationSuggestion
 
-PROMPT_VERSION = "account-eval-classification-v3"
+PROMPT_VERSION = "dagoberd-classification-v3"
 
 
 class LLMProviderError(RuntimeError):
@@ -46,7 +46,7 @@ class OpenAICompatibleProvider:
     ) -> None:
         config = LLMConfig.model_validate(config.model_dump())
         if not config.enabled:
-            raise ValueError("LLM is disabled in account-eval.toml")
+            raise ValueError("LLM is disabled in dagoberd.toml")
         if config.mode == "cloud" and not config.allow_cloud:
             raise ValueError("Cloud LLM use requires llm.allow_cloud = true")
         if config.mode == "cloud" and not api_key:

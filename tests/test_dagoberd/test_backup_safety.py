@@ -32,7 +32,7 @@ def workspace(tmp_path):
     documents = tmp_path / "documents"
     documents.mkdir()
     (documents / "invoice.pdf").write_bytes(b"not-a-real-pdf")
-    config = tmp_path / "account-eval.toml"
+    config = tmp_path / "dagoberd.toml"
     config.write_text("[database]\npath='ledger.db'\n", encoding="utf-8")
     return PortabilityService(database.path, documents, tmp_path / "output", config)
 
@@ -48,7 +48,7 @@ def create_backup(service: PortabilityService, kind: str, target: Path):
 
 
 def assert_no_staging(root: Path) -> None:
-    assert not list(root.rglob(".account-eval-write-*"))
+    assert not list(root.rglob(".dagoberd-write-*"))
 
 
 @pytest.mark.parametrize("kind", FORMATS)
@@ -64,9 +64,7 @@ def test_backup_is_protected_from_creation_and_verified_before_final_name(
 
     def observe_creation(path, flags, mode=0o777, **kwargs):
         descriptor = original_open(path, flags, mode, **kwargs)
-        if Path(path).name == "payload" and Path(path).parent.name.startswith(
-            ".account-eval-write-"
-        ):
+        if Path(path).name == "payload" and Path(path).parent.name.startswith(".dagoberd-write-"):
             protected_files.append(Path(path))
             if os.name != "nt":
                 assert stat.S_IMODE(os.fstat(descriptor).st_mode) == 0o600
@@ -159,7 +157,7 @@ def test_sync_and_link_failures_do_not_leave_final_files(
 
     def fail_sync(descriptor):
         nonlocal failed
-        if list(tmp_path.glob(".account-eval-write-*/payload")):
+        if list(tmp_path.glob(".dagoberd-write-*/payload")):
             failed = True
             raise OSError("Injected filesystem failure")
         return sync(descriptor)
@@ -309,7 +307,7 @@ def test_hard_process_abort_leaves_only_recognizable_private_staging(tmp_path):
 
     assert result.returncode == 23, result.stderr
     assert not target.exists()
-    staged = list(tmp_path.glob(".account-eval-write-*/payload"))
+    staged = list(tmp_path.glob(".dagoberd-write-*/payload"))
     assert len(staged) == 1
     assert staged[0].read_bytes() == b"not-a-real-pdf"
     if os.name != "nt":
@@ -326,11 +324,7 @@ def test_cleanup_failure_keeps_verified_backup_and_protected_staging(
 
     def fail_final_cleanup(cls, path, *args, **kwargs):
         path = Path(path)
-        if (
-            path.parent == tmp_path
-            and path.name.startswith(".account-eval-write-")
-            and target.exists()
-        ):
+        if path.parent == tmp_path and path.name.startswith(".dagoberd-write-") and target.exists():
             raise PermissionError("Injected cleanup failure")
         return rmtree(path, *args, **kwargs)
 
@@ -338,7 +332,7 @@ def test_cleanup_failure_keeps_verified_backup_and_protected_staging(
     with pytest.raises(PermissionError, match="cleanup failure"):
         create_backup(workspace, kind, target)
 
-    staged = list(tmp_path.glob(".account-eval-write-*/payload"))
+    staged = list(tmp_path.glob(".dagoberd-write-*/payload"))
     assert len(staged) == 1
     assert target.read_bytes() == staged[0].read_bytes()
     if kind == "sqlite":

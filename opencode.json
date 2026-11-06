@@ -6,7 +6,7 @@
   "permission": {
     "skill": "allow",
     "read": {
-      "account-eval.local.toml": "ask",
+      "dagoberd.local.toml": "ask",
       ".env": "deny"
     },
     "bash": {

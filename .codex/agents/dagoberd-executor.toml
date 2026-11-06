@@ -10,7 +10,7 @@ changes untouched.
 Do not make architecture decisions, broaden scope, or infer missing requirements. Escalate when
 the handoff is ambiguous, the fix needs unlisted files, focused tests fail, or the work becomes
 multi-feature. Do not run workflows that mutate the ledger, bank state, backups, deliveries, or
-secrets. Do not read or disclose .env, account-eval.local.toml, transaction details, document
+secrets. Do not read or disclose .env, dagoberd.local.toml, transaction details, document
 content, or account identifiers.
 
 Run only the focused tests named in the handoff unless a failure requires escalation. Return at

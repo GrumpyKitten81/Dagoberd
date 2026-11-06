@@ -140,9 +140,7 @@ class WorkspaceDispatch:
             await self.app(scope, receive, send)
             return
         headers = dict(scope.get("headers", []))
-        if not secrets.compare_digest(
-            headers.get(b"x-accounteval-token", b""), self.token.encode()
-        ):
+        if not secrets.compare_digest(headers.get(b"x-dagoberd-token", b""), self.token.encode()):
             await JSONResponse(
                 failure(
                     "unauthorized",

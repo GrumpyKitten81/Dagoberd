@@ -1,6 +1,6 @@
 import { readPreference, writePreference } from './browser-storage.js';
 import { builtinLabel, msg, date } from './i18n.js';
-const STORAGE_KEY = 'account-eval.transaction-columns-v1';
+const STORAGE_KEY = 'dagoberd.transaction-columns-v1';
 const DEFAULT_COLUMNS = ['date', 'account', 'booking', 'category', 'amount', 'status'];
 
 export function loadColumnPreferences() {

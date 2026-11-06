@@ -9,7 +9,7 @@ import { loadMetadata, loadOptions, state } from './store.js';
 import { renderTransactions } from './transactions.js';
 import { initializeWorkspaces } from './workspaces.js';
 
-const SCOPE_STORAGE_KEY = 'account-eval.gui-scope-v1';
+const SCOPE_STORAGE_KEY = 'dagoberd.gui-scope-v1';
 const TABS = {
   overview: renderOverview,
   transactions: renderTransactions,

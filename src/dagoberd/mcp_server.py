@@ -1890,10 +1890,10 @@ def create_server(
 
 async def run() -> None:
     server = create_server(
-        db_path=os.environ.get("ACCOUNT_EVAL_DB"),
-        config_path=os.environ.get("ACCOUNT_EVAL_CONFIG"),
-        workspace_id=os.environ.get("ACCOUNT_EVAL_WORKSPACE"),
-        registry_path=os.environ.get("ACCOUNT_EVAL_WORKSPACE_REGISTRY"),
+        db_path=os.environ.get("DAGOBERD_DB"),
+        config_path=os.environ.get("DAGOBERD_CONFIG"),
+        workspace_id=os.environ.get("DAGOBERD_WORKSPACE"),
+        registry_path=os.environ.get("DAGOBERD_WORKSPACE_REGISTRY"),
     )
     async with stdio_server() as (read, write):
         await server.run(read, write, server.create_initialization_options())

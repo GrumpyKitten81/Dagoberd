@@ -8,15 +8,15 @@ from typing import Any
 from dagoberd import __version__
 from dagoberd.ledger.migrations import CURRENT_SCHEMA_VERSION
 
-CLI_CONTRACT_VERSION = "account-eval-cli-v3"
-GUI_CONTRACT_VERSION = "account-eval-gui-v5"
-MCP_CONTRACT_VERSION = "account-eval-mcp-v2"
-PROVIDER_CONTRACT_VERSION = "account-eval-provider-v1"
-IMPORT_CONTRACT_VERSION = "account-eval-import-v2"
-ANALYSIS_CONTRACT_VERSION = "account-eval-analysis-v1"
-EXPORT_CONTRACT_VERSION = "account-eval-portable-export-v2"
-LLM_PREVIEW_CONTRACT_VERSION = "account-eval-llm-preview-v2"
-DELIVERY_CONTRACT_VERSION = "account-eval-delivery-v1"
+CLI_CONTRACT_VERSION = "dagoberd-cli-v3"
+GUI_CONTRACT_VERSION = "dagoberd-gui-v5"
+MCP_CONTRACT_VERSION = "dagoberd-mcp-v2"
+PROVIDER_CONTRACT_VERSION = "dagoberd-provider-v1"
+IMPORT_CONTRACT_VERSION = "dagoberd-import-v2"
+ANALYSIS_CONTRACT_VERSION = "dagoberd-analysis-v1"
+EXPORT_CONTRACT_VERSION = "dagoberd-portable-export-v2"
+LLM_PREVIEW_CONTRACT_VERSION = "dagoberd-llm-preview-v2"
+DELIVERY_CONTRACT_VERSION = "dagoberd-delivery-v1"
 
 
 class ExitCode(IntEnum):

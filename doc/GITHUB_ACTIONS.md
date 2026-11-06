@@ -16,7 +16,7 @@ Ubuntu/Python 3.12/Poetry 2.2+ run `poetry sync`, all-file Pre-commit, full pyte
 
 Symlink escape tests skip locally when link creation lacks filesystem permissions.
 Other creation errors remain failures. The Linux Quality job sets
-`ACCOUNT_EVAL_REQUIRE_SYMLINKS=1`, which requires those security tests to execute
+`DAGOBERD_REQUIRE_SYMLINKS=1`, which requires those security tests to execute
 and fails if link creation is denied. Ordinary report-artifact checks run
 independently of symlink permissions.
 

@@ -32,7 +32,7 @@ from dagoberd.services.restore_files import (
 )
 from dagoberd.services.restore_paths import rebase_archive_references
 
-EXPORT_FORMAT = "account-eval-portable-export-v2"
+EXPORT_FORMAT = "dagoberd-portable-export-v2"
 ENCRYPTED_MAGIC = b"AEBAK2\0"
 
 
@@ -64,7 +64,7 @@ class PortabilityService:
         self.output_dir = Path(output_dir).resolve()
         self.project_path = Path(project_path).resolve()
         self.masked_config = masked_config or {}
-        self.metadata_dir = self.project_path.parent / ".account-eval"
+        self.metadata_dir = self.project_path.parent / ".dagoberd"
 
     def export(self, destination: str | Path) -> dict:
         target = Path(destination).absolute()
@@ -129,7 +129,7 @@ class PortabilityService:
             salt, nonce = os.urandom(16), os.urandom(12)
             key = Scrypt(salt=salt, length=32, n=2**14, r=8, p=1).derive(password.encode("utf-8"))
             header = {
-                "format": "account-eval-encrypted-backup-v2",
+                "format": "dagoberd-encrypted-backup-v2",
                 "kdf": "scrypt-n16384-r8-p1",
                 "cipher": "AES-256-GCM",
                 "salt": salt.hex(),
@@ -219,7 +219,7 @@ class PortabilityService:
                             for suffix in ("-wal", "-shm", "-journal")
                         ),
                         self.project_path,
-                        self.project_path.with_name("account-eval.local.toml"),
+                        self.project_path.with_name("dagoberd.local.toml"),
                         self.project_path.with_name(".env"),
                     },
                     protected_directories=(

@@ -76,7 +76,7 @@ export default {
   "ui.set_selection": "Auswahl festlegen",
   "ui.restore_defaults": "Standard wiederherstellen",
   "ui.0_import_annotations": "0 Import-Annotationen",
-  "ui.read_only_edit_dagoberd_local_toml_to": "Nur lesend · geändert wird in account-eval.local.toml.",
+  "ui.read_only_edit_dagoberd_local_toml_to": "Nur lesend · geändert wird in dagoberd.local.toml.",
   "ui.no_category_column": "keine Kategorie-Spalte",
   "ui.2_history": "2 Historie",
   "ui.uses_the_category_of_a_confirmed_previous_transaction": "Übernimmt die Kategorie einer bestätigten Vorbuchung mit identischem ",

@@ -34,7 +34,7 @@ def create_app(loaded: LoadedConfig | None, token: str) -> FastAPI:
     index = (
         (static_directory / "index.html")
         .read_text(encoding="utf-8")
-        .replace("__ACCOUNT_EVAL_ASSETS__", asset_base)
+        .replace("__DAGOBERD_ASSETS__", asset_base)
     )
     app = FastAPI(docs_url=None, redoc_url=None)
     if loaded is not None:

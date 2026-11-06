@@ -10,10 +10,10 @@ SECRET_ALIASES = {
     "comdirect.client-id": "COMDIRECT_CLIENT_ID",
     "comdirect.client-secret": "COMDIRECT_CLIENT_SECRET",
     "comdirect.timed-session": "COMDIRECT_TIMED_SESSION",
-    "llm.api-key": "ACCOUNT_EVAL_LLM_API_KEY",
-    "backup.password": "ACCOUNT_EVAL_BACKUP_PASSWORD",
-    "smtp.username": "ACCOUNT_EVAL_SMTP_USERNAME",
-    "smtp.password": "ACCOUNT_EVAL_SMTP_PASSWORD",
+    "llm.api-key": "DAGOBERD_LLM_API_KEY",
+    "backup.password": "DAGOBERD_BACKUP_PASSWORD",
+    "smtp.username": "DAGOBERD_SMTP_USERNAME",
+    "smtp.password": "DAGOBERD_SMTP_PASSWORD",
 }
 
 
@@ -28,7 +28,7 @@ def canonical_secret_name(name: str) -> str:
 class SecretStore:
     def __init__(
         self,
-        service: str = "account-eval",
+        service: str = "dagoberd",
         dotenv_path: str | Path | None = None,
     ) -> None:
         from dagoberd.workspaces import CURRENT_WORKSPACE
@@ -106,5 +106,5 @@ class SecretStore:
             return False, str(error)
 
 
-def get_secret(name: str, service: str = "account-eval") -> str | None:
+def get_secret(name: str, service: str = "dagoberd") -> str | None:
     return SecretStore(service=service).get(name)

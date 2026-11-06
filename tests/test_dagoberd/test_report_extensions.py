@@ -145,9 +145,9 @@ def test_artifact_validation_rejects_symlinks_outside_output(
 
 def test_local_config_and_cli_select_extension(tmp_path, capsys):
     repository = _repository(tmp_path)
-    project = tmp_path / "account-eval.toml"
+    project = tmp_path / "dagoberd.toml"
     project.write_text('[database]\npath = "ledger.db"\n[reporting]\noutput_dir = "reports"\n')
-    (tmp_path / "account-eval.local.toml").write_text(
+    (tmp_path / "dagoberd.local.toml").write_text(
         f'[reporting.extensions.custom]\npath = "{EXTENSION.as_posix()}"\nprofile = "rental"\n'
     )
     loaded = load_config(project)

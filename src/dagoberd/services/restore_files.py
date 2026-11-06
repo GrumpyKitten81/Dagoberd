@@ -128,7 +128,7 @@ class RestoreFiles:
             destination.parent.mkdir(parents=True, exist_ok=True)
             if destination.parent not in staging:
                 directory = Path(
-                    tempfile.mkdtemp(prefix=".account-eval-restore-", dir=destination.parent)
+                    tempfile.mkdtemp(prefix=".dagoberd-restore-", dir=destination.parent)
                 )
                 stack.callback(cleanup_restore_directory, directory, cleanup_failures)
                 staging[destination.parent] = directory

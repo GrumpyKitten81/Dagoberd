@@ -66,7 +66,7 @@ Import/provider adapters deliver normalized transactions and raw source identiti
 
 Report extensions are explicitly trusted local Python code running with process privileges, not a sandbox. They receive copies rather than a ledger service. Full history is a separate local opt-in, and reporting never authorizes delivery. Machine paths and extension choices belong in ignored local settings.
 
-The public CLI contract is `account-eval-cli-v3`. Use `classifications set|apply-rules|deterministic`, `profiles create`, `rules add`, `hints add`, `documents register|candidates` and `import preview|run`. Removed top-level commands have no aliases. Deterministic classification never calls a model; document registration records metadata only.
+The public CLI contract is `dagoberd-cli-v3`. Use `classifications set|apply-rules|deterministic`, `profiles create`, `rules add`, `hints add`, `documents register|candidates` and `import preview|run`. Removed top-level commands have no aliases. Deterministic classification never calls a model; document registration records metadata only.
 
 WISO category/tax tree imports need no free-field mapping. Each supplied free-field tree needs complete explicit TOML mapping through `imports.wiso_trees.mapping_file`. Mapper version, normalized mapping, source field identities and hashes bind the preview; missing mappings and collisions fail before writes.
 

@@ -4,9 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Dagoberd</title>
-    <link rel="stylesheet" href="__ACCOUNT_EVAL_ASSETS__/app.css" />
-    <link rel="stylesheet" href="__ACCOUNT_EVAL_ASSETS__/dashboard.css" />
-    <link rel="stylesheet" href="__ACCOUNT_EVAL_ASSETS__/grid.css" />
+    <link rel="stylesheet" href="__DAGOBERD_ASSETS__/app.css" />
+    <link rel="stylesheet" href="__DAGOBERD_ASSETS__/dashboard.css" />
+    <link rel="stylesheet" href="__DAGOBERD_ASSETS__/grid.css" />
     <style>
       #boot-error { max-width: 52rem; padding: 1rem; margin: 2rem auto; color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; border-radius: .5rem; }
       #boot-error strong, #boot-error span { display: block; margin-bottom: .4rem; }
@@ -37,7 +37,7 @@
     <datalist id="tag-options"></datalist>
     <datalist id="merchant-options"></datalist>
     <script type="module">
-      import('__ACCOUNT_EVAL_ASSETS__/app.js').catch((error) => {
+      import('__DAGOBERD_ASSETS__/app.js').catch((error) => {
         console.error('Dagoberd GUI boot failed', error);
         document.querySelector('#app').replaceChildren();
         document.querySelector('#boot-error-detail').textContent =

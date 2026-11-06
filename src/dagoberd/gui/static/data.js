@@ -4,7 +4,7 @@ import { renderDocuments } from './documents.js';
 import { api, apiUpload, state } from './store.js';
 import { readSession, writeSession } from './browser-storage.js';
 
-const JOB_STORAGE_KEY = `account-eval.sync-job.${state.workspaceId || 'legacy'}`;
+const JOB_STORAGE_KEY = `dagoberd.sync-job.${state.workspaceId || 'legacy'}`;
 
 export async function renderData(root) {
   clear(root);

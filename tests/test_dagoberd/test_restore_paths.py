@@ -111,7 +111,7 @@ def target_workspace(tmp_path):
     documents = root / "documents"
     documents.mkdir()
     (documents / "old.pdf").write_bytes(b"changed")
-    return PortabilityService(database.path, documents, root / "output", root / "account-eval.toml")
+    return PortabilityService(database.path, documents, root / "output", root / "dagoberd.toml")
 
 
 def assert_references(service):

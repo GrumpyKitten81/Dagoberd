@@ -16,14 +16,14 @@ from dagoberd.ledger.repository import LedgerRepository
 from dagoberd.workspaces import WorkspaceRegistry, workspace_operation
 
 pytestmark = pytest.mark.skipif(
-    os.environ.get("ACCOUNT_EVAL_BROWSER_TESTS") != "1",
+    os.environ.get("DAGOBERD_BROWSER_TESTS") != "1",
     reason="Chromium is installed only in the dedicated GUI test job",
 )
 
 
 def test_workspace_selection_parallel_tabs_and_repository_initialization(tmp_path, monkeypatch):
-    monkeypatch.delenv("ACCOUNT_EVAL_DATA_ROOT", raising=False)
-    monkeypatch.delenv("ACCOUNT_EVAL_CLOUD_WORKSPACE", raising=False)
+    monkeypatch.delenv("DAGOBERD_DATA_ROOT", raising=False)
+    monkeypatch.delenv("DAGOBERD_CLOUD_WORKSPACE", raising=False)
     registry = WorkspaceRegistry(tmp_path / "settings" / "workspaces.toml")
     entries = []
     for name in ("private", "business"):
@@ -105,7 +105,7 @@ def test_workspace_selection_parallel_tabs_and_repository_initialization(tmp_pat
             )
             dialog.get_by_role("button", name="Apply / preview", exact=True).click()
             first.get_by_role("option", name="association", exact=True).wait_for(state="attached")
-            assert (tmp_path / "provided" / "account-eval.toml").is_file()
+            assert (tmp_path / "provided" / "dagoberd.toml").is_file()
             assert not (tmp_path / "provided" / ".git").exists()
             assert not errors
             browser.close()

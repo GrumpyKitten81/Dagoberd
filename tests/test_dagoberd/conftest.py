@@ -15,7 +15,7 @@ def create_symlink() -> Callable[[Path, Path], None]:
             permission_denied = error.errno in (errno.EPERM, errno.EACCES) or (
                 getattr(error, "winerror", None) == 1314
             )
-            if permission_denied and os.environ.get("ACCOUNT_EVAL_REQUIRE_SYMLINKS") != "1":
+            if permission_denied and os.environ.get("DAGOBERD_REQUIRE_SYMLINKS") != "1":
                 pytest.skip("Symlink creation is unavailable: filesystem permission denied")
             raise
 

@@ -138,7 +138,7 @@ def test_synthetic_cli_journey_and_changed_profile(tmp_path, capsys):
     scoped = ["--workspace", "demo"]
     run(*scoped, "accounts", "register", "file", "SyntheticBank", "SYN-A", "Synthetic")
     account = run(*scoped, "accounts", "list")[0]["id"]
-    config = workspace / "account-eval.toml"
+    config = workspace / "dagoberd.toml"
     with config.open("a", encoding="utf-8") as handle:
         handle.write(
             '\n[imports.profiles.synthetic_account]\nsource = "tabular"\n'

@@ -17,14 +17,19 @@ from dagoberd.reporting.ledger_reports import LedgerReportGenerator
 from dagoberd.services.import_service import ImportService
 from dagoberd.workspace_git import WorkspaceGit, adopt_git, git
 from dagoberd.workspace_status import workspace_status
-from dagoberd.workspace_sync import WorkspaceSync, adopt_snapshot, inspect_snapshot
+from dagoberd.workspace_sync import (
+    WorkspaceSync,
+    adopt_snapshot,
+    inspect_snapshot,
+    validate_snapshot_members,
+)
 from dagoberd.workspaces import WorkspaceRegistry, workspace_operation
 
 
 @pytest.fixture
 def local_registry(tmp_path, monkeypatch):
     registry = WorkspaceRegistry(tmp_path / "settings" / "workspaces.toml")
-    monkeypatch.setenv("ACCOUNT_EVAL_WORKSPACE_REGISTRY", str(registry.path))
+    monkeypatch.setenv("DAGOBERD_WORKSPACE_REGISTRY", str(registry.path))
     return registry
 
 
@@ -52,6 +57,16 @@ def exchange(sync, action):
     return sync.run(preview["preview_id"], preview["fingerprint"], yes=True)
 
 
+@pytest.mark.parametrize("name", ["other.local.toml", "other.local.toml.bak", ".account-old/state"])
+def test_local_settings_and_old_runtime_are_excluded_from_transfers(tmp_path, name):
+    service = WorkspaceGit.__new__(WorkspaceGit)
+    service.root = tmp_path
+    with pytest.raises(ValueError, match="local settings"):
+        service._files([name])
+    with pytest.raises(ValueError, match="machine-local"):
+        validate_snapshot_members([name])
+
+
 def test_local_cli_gui_and_mcp_do_not_require_git_or_network(
     local_registry, tmp_path, monkeypatch, capsys
 ):
@@ -76,7 +91,7 @@ def test_local_cli_gui_and_mcp_do_not_require_git_or_network(
     assert service.execute("workspace_status", {})["valid"]
     assert service.execute("workspace_sync_status", {})["backend"] is None
     with TestClient(create_workspace_app(local_registry, "test-token")) as client:
-        headers = {"X-AccountEval-Token": "test-token"}
+        headers = {"X-Dagoberd-Token": "test-token"}
         result = client.post(
             "/api/workspace-actions", headers=headers, json={"action": "status", "name": "local"}
         )
@@ -104,7 +119,7 @@ def test_later_git_adoption_preserves_identity_previews_and_allows_local_commits
     git(root, "config", "user.email", "synthetic@example.invalid")
     git(root, "config", "user.name", "Synthetic test")
     service = WorkspaceGit(local_registry, "local")
-    preview = service.preview("commit", ["account-eval.toml", ".gitignore"], "Local version")
+    preview = service.preview("commit", ["dagoberd.toml", ".gitignore"], "Local version")
     assert service.run(preview["preview_id"], preview["fingerprint"], yes=True)["head"]
     assert loaded.config.database.path.read_bytes() == before
     with pytest.raises(ValueError, match="requires an origin"):
@@ -233,7 +248,7 @@ def test_sync_root_and_foreign_snapshot_safety(local_registry, tmp_path):
     sync.configure(str(root), yes=True)
     with pytest.raises(ValueError, match="outside synchronized snapshot roots"):
         local_registry.initialize("unsafe", root / "unsafe-local-workspace")
-    assert not (root / "unsafe-local-workspace" / "output" / "account_eval.db").exists()
+    assert not (root / "unsafe-local-workspace" / "output" / "dagoberd.db").exists()
     exchange(sync, "publish")
     record = next(root.rglob("*.json"))
     inspected = inspect_snapshot(record)
@@ -268,7 +283,7 @@ def test_snapshot_api_confirmation_and_private_config_exclusion(local_registry, 
     (loaded.project_path.parent / ".env").write_text("SYNTHETIC_SECRET=not-for-export")
     root = tmp_path / "private-cloud"
     with TestClient(create_workspace_app(local_registry, "test-token")) as client:
-        headers = {"X-AccountEval-Token": "test-token"}
+        headers = {"X-Dagoberd-Token": "test-token"}
         action = {"action": "sync-configure", "name": "local", "cloud_root": str(root)}
         assert client.post("/api/workspace-actions", json=action).status_code == 401
         assert (

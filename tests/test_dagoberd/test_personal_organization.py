@@ -24,9 +24,9 @@ def _service(tmp_path) -> tuple[LedgerRepository, OrganizationService]:
 
 
 def _minimal_config(tmp_path) -> Path:
-    config = tmp_path / "account-eval.toml"
+    config = tmp_path / "dagoberd.toml"
     config.write_text(
-        "[database]\npath='output/account-eval.db'\n"
+        "[database]\npath='output/dagoberd.db'\n"
         "[reporting]\noutput_dir='output'\n"
         "[documents]\nstorage_dir='output/documents'\n"
         "[comdirect.connections.private]\nenabled=false\n",

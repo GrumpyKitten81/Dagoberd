@@ -21,7 +21,7 @@ dagoberd gui
 Register an existing configuration without initializing its ledger:
 
 ```sh
-dagoberd workspaces add private /path/to/repository/account-eval.toml
+dagoberd workspaces add private /path/to/repository/dagoberd.toml
 dagoberd workspaces clone business /path/to/new-checkout --remote ssh://git@example.org/team/private-ledger.git
 dagoberd workspaces doctor business
 ```
@@ -30,17 +30,17 @@ Registration adds a missing stable UUID to the repository configuration but does
 
 The UUID travels with repository configuration. Registering the same UUID twice locally is rejected. `remove <name>` removes only the registry entry; it preserves files, secrets and repository history. A ledger already bound to a different UUID cannot be opened or restored into the selected workspace.
 
-The registry is stored in the operating system's user configuration directory under the legacy `account-eval/workspaces.toml` location. Override it with `--workspace-registry <file>` or `ACCOUNT_EVAL_WORKSPACE_REGISTRY`. Keep it private: it contains local paths, optional snapshot-folder settings and remote approval metadata.
+The registry is stored in the operating system's user configuration directory under `dagoberd/workspaces.toml`. Override it with `--workspace-registry <file>` or `DAGOBERD_WORKSPACE_REGISTRY`. Keep it private: it contains local paths, optional snapshot-folder settings and remote approval metadata.
 
 ## Selection and credentials
 
-With multiple entries, CLI operations require `--workspace <name-or-uuid>` or an explicit `--config <file>`. These selectors are mutually exclusive. Registered workspaces reject `--db`, `ACCOUNT_EVAL_DATA_ROOT` and `ACCOUNT_EVAL_CLOUD_WORKSPACE` overrides. Put workspace-specific paths in their configuration instead. Unregistered standalone configurations retain their existing behavior.
+With multiple entries, CLI operations require `--workspace <name-or-uuid>` or an explicit `--config <file>`. These selectors are mutually exclusive. Registered workspaces reject `--db`, `DAGOBERD_DATA_ROOT` and `DAGOBERD_CLOUD_WORKSPACE` overrides. Put workspace-specific paths in their configuration instead. Unregistered standalone configurations retain their existing behavior.
 
 The GUI starts with a picker and keeps selection in each tab's URL. Switching reloads the page after confirmation and discards unsaved input; it does not redirect running jobs into the new workspace. The workspace management dialog provides initialization, registration, cloning, credential adoption, cloud relocation and Git previews.
 
-MCP `list_workspaces` returns local entries. Domain tools accept `workspace_id`; selection is required when multiple workspaces are registered. Bind one server explicitly with `ACCOUNT_EVAL_WORKSPACE` or `ACCOUNT_EVAL_CONFIG`. Tool selectors cannot override that binding. Data URLs use `/api/workspaces/<uuid>/...`; unscoped data URLs are available only in standalone mode. Public contracts are CLI v3, GUI v5 and MCP v2.
+MCP `list_workspaces` returns local entries. Domain tools accept `workspace_id`; selection is required when multiple workspaces are registered. Bind one server explicitly with `DAGOBERD_WORKSPACE` or `DAGOBERD_CONFIG`. Tool selectors cannot override that binding. Data URLs use `/api/workspaces/<uuid>/...`; unscoped data URLs are available only in standalone mode. Public contracts are CLI v3, GUI v5 and MCP v2.
 
-Keyring services retain `account-eval.workspace.<uuid>`. Workspace-local `.env` files are read without modifying process environment. Registered workspaces do not fall back to global environment credentials or the legacy keyring. Store secrets through the selected workspace:
+Keyring services use `dagoberd.workspace.<uuid>`. Workspace-local `.env` files are read without modifying process environment. Registered workspaces do not fall back to global environment credentials or the legacy keyring. Store secrets through the selected workspace:
 
 ```sh
 dagoberd --workspace private config set-secret comdirect.primary.client-id
@@ -51,7 +51,7 @@ Adoption copies explicitly named legacy keyring entries and never copies bank se
 
 ## Separate cloud files
 
-For new workspaces, initialization accepts `--cloud-root /path/to/synchronized-files`. For configured workspaces, store the machine-specific root in ignored `account-eval.local.toml`:
+For new workspaces, initialization accepts `--cloud-root /path/to/synchronized-files`. For configured workspaces, store the machine-specific root in ignored `dagoberd.local.toml`:
 
 ```toml
 [cloud]
@@ -89,7 +89,7 @@ Add Git later without changing workspace identity, paths, previews, data or cred
 ```sh
 dagoberd workspaces git private init --yes
 dagoberd workspaces git private status
-dagoberd workspaces git private preview commit --file account-eval.toml --file .gitignore --message "Local version"
+dagoberd workspaces git private preview commit --file dagoberd.toml --file .gitignore --message "Local version"
 dagoberd workspaces git private run <preview-id> --fingerprint <sha256> --yes
 ```
 
@@ -116,7 +116,7 @@ Git must be installed; existing SSH configuration or credential helpers handle a
 ```sh
 dagoberd workspaces git private status
 dagoberd workspaces git private trust --yes
-dagoberd workspaces git private preview commit --file account-eval.toml --file output/account_eval.db --message "Update private ledger"
+dagoberd workspaces git private preview commit --file dagoberd.toml --file output/dagoberd.db --message "Update private ledger"
 dagoberd workspaces git private run <preview-id> --fingerprint <sha256> --yes
 dagoberd workspaces git private preview push
 dagoberd workspaces git private run <push-preview-id> --fingerprint <sha256> --yes

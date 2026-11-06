@@ -15,11 +15,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from dagoberd.llm_endpoint import validate_llm_endpoint
 
-PROJECT_CONFIG_NAME = "account-eval.toml"
-LOCAL_CONFIG_NAME = "account-eval.local.toml"
-DATA_ROOT_ENV = "ACCOUNT_EVAL_DATA_ROOT"
-CLOUD_WORKSPACE_ENV = "ACCOUNT_EVAL_CLOUD_WORKSPACE"
-DEFAULT_DATABASE_PATH = Path("output/account_eval.db")
+PROJECT_CONFIG_NAME = "dagoberd.toml"
+LOCAL_CONFIG_NAME = "dagoberd.local.toml"
+DATA_ROOT_ENV = "DAGOBERD_DATA_ROOT"
+CLOUD_WORKSPACE_ENV = "DAGOBERD_CLOUD_WORKSPACE"
+DEFAULT_DATABASE_PATH = Path("output/dagoberd.db")
 DEFAULT_DOCUMENTS_DIR = Path("output/documents")
 DEFAULT_REPORTING_DIR = Path("output")
 
@@ -171,7 +171,7 @@ class LLMConfig(StrictModel):
     provider: str = "openai-compatible"
     base_url: str = "http://127.0.0.1:11434/v1"
     model: str = ""
-    api_key_secret: str = "ACCOUNT_EVAL_LLM_API_KEY"
+    api_key_secret: str = "DAGOBERD_LLM_API_KEY"
     allow_cloud: bool = False
     timeout_seconds: float = Field(default=30.0, gt=0, le=300)
     temperature: float = Field(default=0.0, ge=0, le=2)
@@ -273,8 +273,8 @@ class DeliveryConfig(StrictModel):
     starttls: bool = True
     use_ssl: bool = False
     from_address: str = ""
-    username_secret: str = "ACCOUNT_EVAL_SMTP_USERNAME"
-    password_secret: str = "ACCOUNT_EVAL_SMTP_PASSWORD"
+    username_secret: str = "DAGOBERD_SMTP_USERNAME"
+    password_secret: str = "DAGOBERD_SMTP_PASSWORD"
     timeout_seconds: float = Field(default=30.0, gt=0, le=120)
     targets: dict[str, EmailTargetConfig] = Field(default_factory=dict)
 
@@ -399,12 +399,12 @@ class LoadedConfig:
 
 
 DEFAULT_CONFIG_TOML = """# Dagoberd project configuration (no secrets)
-# Machine-specific overrides: account-eval.local.toml (gitignored; copy patterns from below)
+# Machine-specific overrides: dagoberd.local.toml (gitignored; copy patterns from below)
 
 [database]
-path = "output/account_eval.db"
+path = "output/dagoberd.db"
 
-# Optional private data roots and experimental Comdirect settings belong in account-eval.local.toml:
+# Optional private data roots and experimental Comdirect settings belong in dagoberd.local.toml:
 #
 # [data]
 # root = "/path/to/private-workspace"
@@ -439,7 +439,7 @@ mode = "local"
 provider = "openai-compatible"
 base_url = "http://127.0.0.1:11434/v1"
 model = ""
-api_key_secret = "ACCOUNT_EVAL_LLM_API_KEY"
+api_key_secret = "DAGOBERD_LLM_API_KEY"
 allow_cloud = false
 timeout_seconds = 30.0
 temperature = 0.0
@@ -475,11 +475,11 @@ port = 587
 starttls = true
 use_ssl = false
 from_address = ""
-username_secret = "ACCOUNT_EVAL_SMTP_USERNAME"
-password_secret = "ACCOUNT_EVAL_SMTP_PASSWORD"
+username_secret = "DAGOBERD_SMTP_USERNAME"
+password_secret = "DAGOBERD_SMTP_PASSWORD"
 timeout_seconds = 30.0
 
-# Keep local recipients in account-eval.local.toml:
+# Keep local recipients in dagoberd.local.toml:
 # [delivery.targets.personal]
 # recipients = ["name@example.org"]
 # subject_prefix = "My finances"
@@ -535,7 +535,7 @@ allow_manual_transactions_mcp = false
 # name = "Private"
 #
 # Optional shared cloud root; each UUID gets its own workspaces/<id>/ directory.
-# Configure the machine path in account-eval.local.toml; do not combine with cloud.workspace.
+# Configure the machine path in dagoberd.local.toml; do not combine with cloud.workspace.
 # [cloud]
 # root = "/path/to/synchronized-files"
 """
@@ -679,7 +679,7 @@ def _apply_root_derived_paths(
     ):
         database = raw.setdefault("database", {})
         if isinstance(database, dict):
-            database["path"] = str(data_root / "ledger" / "account_eval.db")
+            database["path"] = str(data_root / "ledger" / "dagoberd.db")
     if cloud_workspace:
         if _path_still_default(raw, "documents", "storage_dir", str(DEFAULT_DOCUMENTS_DIR)):
             documents = raw.setdefault("documents", {})

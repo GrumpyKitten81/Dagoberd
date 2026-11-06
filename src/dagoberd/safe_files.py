@@ -13,7 +13,7 @@ def prepared_new_file(destination: Path) -> Iterator[Path]:
     if destination.exists() or destination.is_symlink():
         raise FileExistsError(f"Destination already exists: {destination}")
     with tempfile.TemporaryDirectory(
-        prefix=".account-eval-write-", dir=destination.parent
+        prefix=".dagoberd-write-", dir=destination.parent
     ) as temporary:
         staged = Path(temporary) / "payload"
         descriptor = os.open(staged, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)

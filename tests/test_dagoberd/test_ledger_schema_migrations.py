@@ -218,7 +218,7 @@ def test_json_export_contains_versioned_ledger_tables(tmp_path):
     import json
 
     payload = json.loads(destination.read_text(encoding="utf-8"))
-    assert payload["format"] == "account-eval-ledger-export-v1"
+    assert payload["format"] == "dagoberd-ledger-export-v1"
     assert "ledger_transactions" in payload["tables"]
     assert "schema_migrations" in payload["tables"]
 

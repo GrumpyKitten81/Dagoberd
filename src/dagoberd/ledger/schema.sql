@@ -391,7 +391,7 @@ CREATE TABLE IF NOT EXISTS ledger_saved_analyses (
     name TEXT NOT NULL,
     description TEXT NOT NULL DEFAULT '',
     definition_json TEXT NOT NULL,
-    contract_version TEXT NOT NULL DEFAULT 'account-eval-analysis-v1',
+    contract_version TEXT NOT NULL DEFAULT 'dagoberd-analysis-v1',
     version INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP

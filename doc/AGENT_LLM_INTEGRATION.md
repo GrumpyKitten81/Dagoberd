@@ -45,7 +45,7 @@ GUI routes `/api/classification/llm/preview`, `/api/classification/llm/<preview-
 
 ## Separate configuration
 
-Configure the classifier in ignored `account-eval.local.toml`. Personal agent providers/templates belong in local settings or a private partner repository and are not automatically installed.
+Configure the classifier in ignored `dagoberd.local.toml`. Personal agent providers/templates belong in local settings or a private partner repository and are not automatically installed.
 
 ```toml
 [llm]
@@ -67,14 +67,14 @@ provider = "openai-compatible"
 base_url = "https://llm.example.invalid/v1"
 model = "provider-model"
 allow_cloud = true
-api_key_secret = "ACCOUNT_EVAL_LLM_API_KEY"
+api_key_secret = "DAGOBERD_LLM_API_KEY"
 ```
 
 Store the key locally with `config set-secret llm.api-key`. `llm show` displays configuration; `llm test` checks model listing without sending transactions. Endpoint validation/opt-in apply to testing but require no transaction preview. Requests do not follow redirects; local requests ignore environment proxies. Enabled endpoints reject embedded credentials, queries and fragments.
 
 ## Preview contract and model responses
 
-`account-eval-llm-preview-v2` binds profile, redacted payloads, transaction versions and a non-secret configuration snapshot. It includes endpoint/request parameters, privacy settings, prompt version and secret reference names, never secret values. Changes require a new preview; normal expiry is 30 minutes. Upgrade invalidates legacy unbound open previews and preserves history/audit. Failed/partially processed runs are not automatically resent; existing suggestions remain reviewable.
+`dagoberd-llm-preview-v2` binds profile, redacted payloads, transaction versions and a non-secret configuration snapshot. It includes endpoint/request parameters, privacy settings, prompt version and secret reference names, never secret values. Changes require a new preview; normal expiry is 30 minutes. Upgrade invalidates legacy unbound open previews and preserves history/audit. Failed/partially processed runs are not automatically resent; existing suggestions remain reviewable.
 
 Requests contain date/amount/currency, redacted purpose/counterparty/reference, profile, allowed categories, hints, taxonomy and prompt/model parameters, never documents or bank secrets. A complete JSON object or complete JSON code block is required:
 
@@ -92,4 +92,4 @@ A dedicated versioned interface for researched agent suggestions is not implemen
 
 ## Workspace selection
 
-Use `workspaces list` or MCP `list_workspaces`, then select the intended user circle before accessing accounts. CLI accepts `--workspace <name>`; MCP tools accept `workspace_id` or a server binding through `ACCOUNT_EVAL_WORKSPACE`. `ACCOUNT_EVAL_WORKSPACE_REGISTRY` selects an alternate local registry. A tool selector cannot override a bound server. Agent access does not authorize cross-workspace data combination or Git execution. MCP exposes Git status/previews only; transfers, credential adoption and cloud relocation require local CLI/GUI actions. See [multiple workspaces](MULTIPLE_WORKSPACES.md).
+Use `workspaces list` or MCP `list_workspaces`, then select the intended user circle before accessing accounts. CLI accepts `--workspace <name>`; MCP tools accept `workspace_id` or a server binding through `DAGOBERD_WORKSPACE`. `DAGOBERD_WORKSPACE_REGISTRY` selects an alternate local registry. A tool selector cannot override a bound server. Agent access does not authorize cross-workspace data combination or Git execution. MCP exposes Git status/previews only; transfers, credential adoption and cloud relocation require local CLI/GUI actions. See [multiple workspaces](MULTIPLE_WORKSPACES.md).

@@ -31,6 +31,6 @@ jobs:
       - run: poetry run pre-commit run --all-files
       - run: poetry run python -m pytest
         env:
-          ACCOUNT_EVAL_REQUIRE_SYMLINKS: "1"
+          DAGOBERD_REQUIRE_SYMLINKS: "1"
       - run: poetry check
       - run: poetry build

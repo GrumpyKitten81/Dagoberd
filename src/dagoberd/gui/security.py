@@ -40,7 +40,7 @@ class TokenMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         if request.url.path.startswith("/api/") and not secrets.compare_digest(
-            request.headers.get("X-AccountEval-Token", ""), self.token
+            request.headers.get("X-Dagoberd-Token", ""), self.token
         ):
             return JSONResponse(
                 failure(

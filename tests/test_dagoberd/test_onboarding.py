@@ -19,7 +19,7 @@ from dagoberd.onboarding import (
 
 
 def test_setup_writes_only_secure_non_secret_overrides(tmp_path: Path) -> None:
-    config = tmp_path / "account-eval.toml"
+    config = tmp_path / "dagoberd.toml"
     result = configure_local_project(
         config,
         SetupAnswers(
@@ -50,7 +50,7 @@ def test_agent_launcher_uses_active_environment_without_poetry(tmp_path: Path) -
 
 
 def test_agent_doctor_succeeds_after_launcher_configuration(tmp_path: Path) -> None:
-    config_path = tmp_path / "account-eval.toml"
+    config_path = tmp_path / "dagoberd.toml"
     config_path.write_text(DEFAULT_CONFIG_TOML, encoding="utf-8")
     configure_agent_launcher(tmp_path)
     diagnosis = diagnose_agent_runtime(tmp_path, config_path=config_path)
@@ -87,7 +87,7 @@ def test_codex_integration_reports_invalid_executor_definition(tmp_path: Path) -
     agents.mkdir(parents=True)
     (tmp_path / ".codex" / "AGENTS.md").write_text("# Codex\n", encoding="utf-8")
     (tmp_path / ".codex" / "config.toml").write_text(
-        '[mcp_servers.account-eval]\ncommand = "./Scripts/dagoberd-mcp.sh"\n',
+        '[mcp_servers.dagoberd]\ncommand = "./Scripts/dagoberd-mcp.sh"\n',
         encoding="utf-8",
     )
     for filename, name, sandbox in (
@@ -114,9 +114,9 @@ def test_codex_integration_reports_invalid_executor_definition(tmp_path: Path) -
 
 
 def test_setup_preserves_manual_delivery_targets(tmp_path: Path) -> None:
-    config = tmp_path / "account-eval.toml"
+    config = tmp_path / "dagoberd.toml"
     configure_local_project(config, SetupAnswers())
-    local = tmp_path / "account-eval.local.toml"
+    local = tmp_path / "dagoberd.local.toml"
     local.write_text(
         """[delivery]
 enabled = true

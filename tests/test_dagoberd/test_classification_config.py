@@ -51,7 +51,7 @@ def _transaction(service: OrganizationService, account_id: str, key: str, purpos
 def test_cli_reports_model_failures_without_storing_suggestions(tmp_path, monkeypatch, capsys):
     repository, service, account_id = _setup(tmp_path)
     transaction = _transaction(service, account_id, "invalid-model-output", "Unknown vendor")
-    config = tmp_path / "account-eval.toml"
+    config = tmp_path / "dagoberd.toml"
     config.write_text('[database]\npath="ledger.db"\n', encoding="utf-8")
 
     class FailingProvider:

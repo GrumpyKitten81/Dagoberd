@@ -41,7 +41,7 @@ Self-test uses synthetic data, starts a real local stdio MCP and checks reportin
 
 ```bash
 poetry run dagoberd demo create
-poetry run dagoberd --config .account-eval/demo/account-eval.toml gui
+poetry run dagoberd --config .dagoberd/demo/dagoberd.toml gui
 poetry run dagoberd demo reset --yes
 ```
 
@@ -49,7 +49,7 @@ A built wheel can be installed with pipx. Before upgrades or uninstalling, creat
 
 ## 3. Local configuration
 
-See `account-eval.toml.example`. Personal choices belong in ignored `account-eval.local.toml`.
+See `dagoberd.toml.example`. Personal choices belong in ignored `dagoberd.local.toml`.
 
 ### Secrets
 
@@ -103,7 +103,7 @@ root = "/path/to/private-workspace"
 workspace = "/path/to/synchronized-files"
 ```
 
-Derived paths are `{data.root}/ledger/account_eval.db`, `{cloud.workspace}/documents` and `{cloud.workspace}/reports`; explicit database/document/report paths still override them. Environment overrides are `ACCOUNT_EVAL_DATA_ROOT` and `ACCOUNT_EVAL_CLOUD_WORKSPACE`.
+Derived paths are `{data.root}/ledger/dagoberd.db`, `{cloud.workspace}/documents` and `{cloud.workspace}/reports`; explicit database/document/report paths still override them. Environment overrides are `DAGOBERD_DATA_ROOT` and `DAGOBERD_CLOUD_WORKSPACE`.
 
 Close GUI/MCP and database writers before versioning a private ledger. Never write to the same synchronized database from two machines. On a new machine, explicitly configure roots/extensions and secrets, then run `doctor` and `accounts list`.
 
@@ -425,7 +425,7 @@ poetry run dagoberd portability integrity
 poetry run dagoberd portability export --output output/example.aex
 poetry run dagoberd config set-secret backup.password
 poetry run dagoberd portability backup --output output/backups/example.aebak
-poetry run dagoberd portability verify output/backups/example.aebak --password-secret ACCOUNT_EVAL_BACKUP_PASSWORD
+poetry run dagoberd portability verify output/backups/example.aebak --password-secret DAGOBERD_BACKUP_PASSWORD
 poetry run dagoberd audit --limit 100
 ```
 
@@ -433,7 +433,7 @@ poetry run dagoberd audit --limit 100
 
 ### Safe output creation
 
-Prepare backups/exports at `.account-eval-write-*/payload` beside the destination. Unix files use `0600`, directories `0700`; inherited Windows ACLs remain authoritative. After writing, format/integrity checks and synchronization, an atomic hardlink creates the final name. Filesystems must support hardlinks. Existing targets are never overwritten, even under concurrency; use a new filename. CLI conflicts return `already_exists`, exit 1.
+Prepare backups/exports at `.dagoberd-write-*/payload` beside the destination. Unix files use `0600`, directories `0700`; inherited Windows ACLs remain authoritative. After writing, format/integrity checks and synchronization, an atomic hardlink creates the final name. Filesystems must support hardlinks. Existing targets are never overwritten, even under concurrency; use a new filename. CLI conflicts return `already_exists`, exit 1.
 
 Handled failures leave no incomplete final output. Hard interruptions may leave private staging whose payload is not an approved backup. Cleanup failure after adoption can leave a valid output: verify it before retrying and remove only the exact associated staging directory. Existing backups are not automatically deleted.
 
@@ -442,7 +442,7 @@ Handled failures leave no incomplete final output. Hard interruptions may leave 
 Stop GUI, MCP, syncs and all writers. Provide space for input, prepared contents and rollback copies. Restore is not a transaction across filesystems.
 
 1. Copy/verify the input archive and use that unchanged copy. Check entries, duplicate paths, hashes, schema, SQLite/foreign keys, rebased references and every target before mutation. Reject overlaps, symlinks, internal metadata/config/database/backup conflicts and unmanaged files.
-2. For an existing ledger, create a verified unencrypted rollback export at `backups/before-restore-<timestamp>-<id>.aex`. Fully prepare new contents and previous managed-file copies in restrictive `.account-eval-restore-*` directories beside targets. Record locations in `.account-eval/restore-recovery/restore-*/recovery.json` before adoption.
+2. For an existing ledger, create a verified unencrypted rollback export at `backups/before-restore-<timestamp>-<id>.aex`. Fully prepare new contents and previous managed-file copies in restrictive `.dagoberd-restore-*` directories beside targets. Record locations in `.dagoberd/restore-recovery/restore-*/recovery.json` before adoption.
 3. Adopt the database, atomically replace files on their own filesystems and remove surplus managed files. Handled adoption failures, failed final checks and `Ctrl+C` trigger rollback. Remove a newly created ledger if none existed before. Success/rollback cleans temporary files but retains the rollback export; unrelated unregistered reports remain untouched.
 
 Interpret Windows drive/UNC and Unix source references independently of the current platform, mapping actual archive entries without opening original paths. Windows matching is case-insensitive/separator-aware; Unix is exact. Every nonempty reference must be absolute, inside its exported root and match one archive file. Missing/external/relative/ambiguous references fail before target changes. Metadata-only documents need no archive file. Early failures may leave empty directories or rollback exports, but not changed prior ledger/files.
@@ -481,7 +481,7 @@ poetry run dagoberd portability delete-preview --scope documents --scope reports
 poetry run dagoberd portability delete-run <preview-id> --fingerprint <sha256> --yes
 ```
 
-Scopes are database/documents/reports/backups/exports. Preview binds absolute path, size and hash. Any change aborts before the first deletion. Restrictive receipts remain in `.account-eval/deletion-receipts/`; config and keyring secrets are not automatically deleted. Never substitute free paths or recursive shell deletion.
+Scopes are database/documents/reports/backups/exports. Preview binds absolute path, size and hash. Any change aborts before the first deletion. Restrictive receipts remain in `.dagoberd/deletion-receipts/`; config and keyring secrets are not automatically deleted. Never substitute free paths or recursive shell deletion.
 
 ## 11. Troubleshooting
 
@@ -515,7 +515,7 @@ Use the matching public GitHub issue form for bugs/security concerns, with sanit
 - **ADR-006 — Scope:** `AccountScope` throughout; all means all enabled accounts.
 - **ADR-007 — Semantics:** Booking state, source revisions and versioned relations are separate; cashflow and reconciliation have distinct sum rules.
 - **ADR-008 — Organization:** Primary categories, multiple tags, unique dimension values, normalized merchants and atomically version-bound bulk previews.
-- **ADR-009 — Analysis:** `account-eval-analysis-v1`, canonical integer results, dated rates and balance snapshots; incomplete totals remain visible.
+- **ADR-009 — Analysis:** `dagoberd-analysis-v1`, canonical integer results, dated rates and balance snapshots; incomplete totals remain visible.
 - **ADR-010 — Imports:** Full inspection before mutation; hash/mapper/error-free preview bind execution.
 - **ADR-011 — Ownership:** Open manifest/checksums, authenticated encryption, verified prepared restore/rollback and separate previewed deletion.
 - **ADR-012 — External actions:** Expiring exact payload/artifact previews; changed data invalidates execution. Sending remains local.
@@ -532,7 +532,7 @@ poetry check
 poetry build
 ```
 
-Pre-commit runs Ruff/formatting/Mypy and file hygiene. On Windows, native symbolic-link tests require Developer Mode or a suitably privileged runner; do not exclude them to claim complete acceptance. Install Chromium and set `ACCOUNT_EVAL_BROWSER_TESTS=1` for the separate GUI suite. Standard tests skip only the deliberately opt-in browser tests. Use temporary synthetic workspaces without private overrides, credentials or production files.
+Pre-commit runs Ruff/formatting/Mypy and file hygiene. On Windows, native symbolic-link tests require Developer Mode or a suitably privileged runner; do not exclude them to claim complete acceptance. Install Chromium and set `DAGOBERD_BROWSER_TESTS=1` for the separate GUI suite. Standard tests skip only the deliberately opt-in browser tests. Use temporary synthetic workspaces without private overrides, credentials or production files.
 
 [GitHub Actions](GITHUB_ACTIONS.md) describes Quality, staged/full Release validation, Release security and explicit publishing. A normal main push does not establish the full platform/browser matrix. Match results to the candidate SHA and test installed wheel/sdist without source/partner linkage. Verify issue forms, catalogs, stable contracts and German import fixtures.
 

@@ -72,7 +72,7 @@ def configure_local_project(project_config: str | Path, answers: SetupAnswers) -
     project_path = Path(project_config).resolve()
     if not project_path.exists():
         initialize_project_config(project_path)
-    local_path = project_path.with_name("account-eval.local.toml")
+    local_path = project_path.with_name("dagoberd.local.toml")
     default_url, mode, allow_cloud = LLM_PRESETS[checked.llm_preset]
     base_url = checked.llm_base_url or default_url
     enabled = checked.llm_preset != "disabled"
@@ -131,7 +131,7 @@ def _update_setup_values(settings: MutableMapping[str, Any], updates: dict[str, 
 def configure_agent_launcher(workspace: str | Path = ".") -> dict[str, Any]:
     """Create an ignored launcher using the exact active Python environment."""
     root = Path(workspace).resolve()
-    runtime_dir = root / ".account-eval"
+    runtime_dir = root / ".dagoberd"
     runtime_dir.mkdir(parents=True, exist_ok=True)
     python_path = sys.executable
     if os.name == "nt":
@@ -153,17 +153,17 @@ def configure_agent_launcher(workspace: str | Path = ".") -> dict[str, Any]:
 async def _mcp_handshake(command: str, config: Path, database: Path) -> dict[str, Any]:
     env = {
         **os.environ,
-        "ACCOUNT_EVAL_CONFIG": str(config),
-        "ACCOUNT_EVAL_DB": str(database),
+        "DAGOBERD_CONFIG": str(config),
+        "DAGOBERD_DB": str(database),
     }
-    env.pop("ACCOUNT_EVAL_WORKSPACE", None)
+    env.pop("DAGOBERD_WORKSPACE", None)
     if load_config(config).config.workspace.id is not None:
         from dagoberd.workspaces import CURRENT_WORKSPACE
 
-        env.pop("ACCOUNT_EVAL_DB", None)
+        env.pop("DAGOBERD_DB", None)
         current = CURRENT_WORKSPACE.get()
         if current and current.registry_path:
-            env["ACCOUNT_EVAL_WORKSPACE_REGISTRY"] = str(current.registry_path)
+            env["DAGOBERD_WORKSPACE_REGISTRY"] = str(current.registry_path)
     if os.name == "nt" and str(command).lower().endswith(".cmd"):
         parameters = StdioServerParameters(
             command=sys.executable,
@@ -314,13 +314,13 @@ def diagnose_codex_integration(workspace: str | Path = ".") -> dict[str, Any]:
 def diagnose_agent_runtime(
     workspace: str | Path = ".",
     *,
-    config_path: str | Path = "account-eval.toml",
+    config_path: str | Path = "dagoberd.toml",
 ) -> dict[str, Any]:
     root = Path(workspace).resolve()
     opencode = diagnose_opencode_integration(root)
     codex = diagnose_codex_integration(root)
     claude = diagnose_claude_integration(root)
-    launcher = root / ".account-eval" / ("mcp.cmd" if os.name == "nt" else "mcp")
+    launcher = root / ".dagoberd" / ("mcp.cmd" if os.name == "nt" else "mcp")
     if not launcher.exists():
         return {
             "status": "error",
@@ -365,7 +365,7 @@ def create_demo_workspace(destination: str | Path, *, force: bool = False) -> di
     if root.exists() and any(root.iterdir()) and not force:
         raise FileExistsError(f"Demo workspace is not empty: {root}")
     root.mkdir(parents=True, exist_ok=True)
-    config_path = root / "account-eval.toml"
+    config_path = root / "dagoberd.toml"
     if config_path.exists():
         config_path.unlink()
     initialize_project_config(config_path)
@@ -519,6 +519,6 @@ def copy_default_configuration(destination: str | Path) -> Path:
 def remove_demo_workspace(destination: str | Path) -> None:
     """Remove only an explicitly named demo directory."""
     target = Path(destination).resolve()
-    if target.name != "demo" or not (target / "account-eval.toml").is_file():
+    if target.name != "demo" or not (target / "dagoberd.toml").is_file():
         raise ValueError("Refusing to remove a directory that is not an Dagoberd demo")
     shutil.rmtree(target)

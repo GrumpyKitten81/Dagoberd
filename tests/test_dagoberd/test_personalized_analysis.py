@@ -155,7 +155,7 @@ def test_saved_analysis_rates_cashflow_fixed_costs_trends_and_net_worth(tmp_path
     )
     result = execution["result"]
 
-    assert result["contract_version"] == "account-eval-analysis-v1"
+    assert result["contract_version"] == "dagoberd-analysis-v1"
     cashflow = {row["currency"]: row for row in result["cashflow"]["by_currency"]}
     assert cashflow["EUR"]["net_minor"] == 90000
     assert cashflow["USD"]["net_minor"] == 10000
@@ -300,9 +300,9 @@ def test_cli_and_mcp_share_saved_analysis_contract(tmp_path, capsys):
         == 0
     )
     cli_run = json.loads(capsys.readouterr().out)
-    assert cli_run["result"]["contract_version"] == "account-eval-analysis-v1"
+    assert cli_run["result"]["contract_version"] == "dagoberd-analysis-v1"
 
-    config = tmp_path / "account-eval.toml"
+    config = tmp_path / "dagoberd.toml"
     config.write_text(
         '[reporting]\noutput_dir = "mcp-output"\n',
         encoding="utf-8",

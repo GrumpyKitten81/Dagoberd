@@ -11,7 +11,7 @@ def test_auth_command_stores_timed_session_without_printing_tokens(
     monkeypatch,
     capsys,
 ):
-    project = tmp_path / "account-eval.toml"
+    project = tmp_path / "dagoberd.toml"
     project.write_text(
         DEFAULT_CONFIG_TOML
         + """
@@ -61,7 +61,7 @@ session_mode = "keychain_timed"
 
 
 def test_timed_sessions_use_separate_keychain_entries_per_connection(tmp_path, monkeypatch):
-    project = tmp_path / "account-eval.toml"
+    project = tmp_path / "dagoberd.toml"
     project.write_text(
         """[comdirect.connections.private]
 enabled = true
