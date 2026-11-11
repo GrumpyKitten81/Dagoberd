@@ -356,10 +356,6 @@ tr.selected .status-icon.more {
   display: none;
 }
 
-.compact-inspector {
-  border-radius: var(--radius-control);
-}
-
 .compact-inspector > header,
 .bulk-inspector-actions {
   display: flex;

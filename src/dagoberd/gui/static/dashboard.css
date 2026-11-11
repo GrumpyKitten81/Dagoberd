@@ -368,13 +368,11 @@
 }
 
 .account-table {
-  table-layout: fixed;
+  table-layout: auto;
 }
 
-.account-table th:nth-child(1) { width: 38%; }
-.account-table th:nth-child(2) { width: 21%; }
-.account-table th:nth-child(3) { width: 23%; }
-.account-table th:nth-child(4) { width: 18%; }
+.account-table th:first-child { min-width: 9rem; }
+.account-table .link-button { max-width: 18rem; }
 
 .account-table th {
   color: var(--muted);
@@ -552,7 +550,4 @@
     display: none;
   }
 
-  .account-table th:nth-child(1) { width: 46%; }
-  .account-table th:nth-child(2) { width: 29%; }
-  .account-table th:nth-child(4) { width: 25%; }
 }

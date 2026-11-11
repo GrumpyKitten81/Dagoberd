@@ -190,3 +190,90 @@ def test_reports_share_components_work_offline_and_print(page, design_workspace,
         expect(page.locator("#transactions-visible-count")).to_have_text(
             "1 of 2 transactions visible"
         )
+
+
+@pytest.mark.parametrize("language", ["en", "de", "es"])
+@pytest.mark.parametrize("width", [320, 800, 1280])
+def test_account_amounts_fit_cells_and_scroll_without_page_overflow(
+    page, design_workspace, language, width
+):
+    base, _, _, account_id = design_workspace
+    page.set_viewport_size({"width": width, "height": 900})
+    page.add_init_script(f"localStorage.setItem('dagoberd.gui-language', '{language}')")
+
+    def large_amounts(route):
+        response = route.fetch()
+        payload = response.json()
+        payload["data"]["accounts"][0]["balance_minor"] = 123456789012
+        payload["data"]["accounts"][0]["period_change_minor"] = -9876543210
+        route.fulfill(json=payload)
+
+    page.route("**/api/dashboard?*", large_amounts)
+    page.goto(base + f"?account={account_id}#t=design-token")
+    amounts = page.locator(".account-table tbody td.amount")
+    expect(amounts).to_have_count(2)
+    assert amounts.evaluate_all("""nodes => nodes.every(node => {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const text = range.getBoundingClientRect();
+        const cell = node.getBoundingClientRect();
+        return text.left >= cell.left - 1 && text.right <= cell.right + 1;
+    })""")
+    expected = page.evaluate(
+        """language => [
+        new Intl.NumberFormat(language, {style:'currency',currency:'EUR'}).format(1234567890.12),
+        new Intl.NumberFormat(language, {style:'currency',currency:'EUR'}).format(-98765432.10)
+    ]""",
+        language,
+    )
+    assert amounts.all_text_contents() == expected
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+    if width == 320:
+        assert page.locator(".account-groups").evaluate(
+            "node => node.scrollWidth > node.clientWidth"
+        )
+        page.locator(".account-groups").evaluate("node => node.scrollLeft = node.scrollWidth")
+        assert page.locator(".account-groups").evaluate("node => node.scrollLeft > 0")
+
+
+@pytest.mark.parametrize("width", [320, 800, 1280])
+def test_long_document_filename_wraps_without_page_overflow(page, design_workspace, width):
+    base, _, _, account_id = design_workspace
+    page.set_viewport_size({"width": width, "height": 900})
+    filename = "a" * 100 + ".pdf"
+    page.route(
+        "**/api/documents",
+        lambda route: route.fulfill(
+            json={
+                "ok": True,
+                "data": [
+                    {
+                        "id": "synthetic-document",
+                        "filename": filename,
+                        "status": "open",
+                        "amount_minor": None,
+                        "document_date": None,
+                    }
+                ],
+            }
+        ),
+    )
+    page.goto(base + f"?account={account_id}&tab=data#t=design-token")
+    heading = page.locator(".document-card h3")
+    expect(heading).to_have_text(filename)
+    assert heading.evaluate("node => node.scrollWidth <= node.clientWidth")
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+
+
+def test_inspector_uses_card_radius_and_keeps_docked_mobile_layout(page, design_workspace):
+    base, _, _, account_id = design_workspace
+    page.set_viewport_size({"width": 1280, "height": 900})
+    page.goto(base + f"?account={account_id}&tab=transactions#t=design-token")
+    expect(page.locator("#transaction-body tr")).to_have_count(2)
+    page.locator("#transaction-body tr .selection-column input").first.check()
+    page.get_by_role("button", name="Edit selected", exact=True).click()
+    inspector = page.locator("#detail")
+    expect(inspector).to_be_visible()
+    assert inspector.evaluate("node => getComputedStyle(node).borderRadius") == "10px"
+    page.set_viewport_size({"width": 800, "height": 900})
+    assert inspector.evaluate("node => getComputedStyle(node).borderRadius") == "0px"
