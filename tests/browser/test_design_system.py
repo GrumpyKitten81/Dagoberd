@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 import uvicorn
+from language_controls import choose_language
 from playwright.sync_api import Page, expect, sync_playwright
 
 from dagoberd.config import load_config
@@ -119,7 +120,7 @@ def test_gui_theme_all_tabs_languages_and_focus(page, design_workspace, width):
         == "rgb(246, 245, 241)"
     )
     for language in ("en", "de", "es"):
-        page.locator("#language").select_option(language)
+        choose_language(page, language)
         for tab in ("overview", "transactions", "admin", "data", "classification"):
             page.locator(f'[data-tab="{tab}"]').click()
             expect(page.locator("main")).not_to_be_empty()

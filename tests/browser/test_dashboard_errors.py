@@ -8,6 +8,7 @@ from collections.abc import Iterator
 
 import pytest
 import uvicorn
+from language_controls import choose_language
 from playwright.sync_api import Page, expect, sync_playwright
 
 from dagoberd.config import load_config
@@ -142,7 +143,7 @@ def test_error_language_updates_and_api_contracts(page, gui_url):
         ("es", "No se puede conectar con el servidor local de la interfaz."),
         ("en", "The local GUI server could not be reached."),
     ]:
-        page.locator("#language").select_option(language)
+        choose_language(page, language)
         expect(page.locator(".overview-error")).to_contain_text(text)
     page.route(
         "**/api/test-error",

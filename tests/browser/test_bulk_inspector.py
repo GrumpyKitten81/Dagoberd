@@ -9,6 +9,7 @@ from decimal import Decimal
 
 import pytest
 import uvicorn
+from language_controls import choose_language
 from playwright.sync_api import sync_playwright
 
 from dagoberd.config import load_config
@@ -102,7 +103,7 @@ storage_dir = "documents"
             page.on("request", lambda request: requests.append(request.method))
             page.evaluate("window.draftNode = document.querySelector('.bulk-field textarea')")
             for language, label in [("de", "Notiz"), ("es", "Nota"), ("en", "Note")]:
-                page.locator("#language").select_option(language)
+                choose_language(page, language)
                 assert page.locator("html").get_attribute("lang") == language
                 field = page.locator(".bulk-field").filter(has_text=label)
                 assert field.locator("textarea").input_value() == "Together"
@@ -140,7 +141,7 @@ storage_dir = "documents"
             page.once("dialog", lambda dialog: dialog.accept())
             page.get_by_title("Close inspector").click()
             assert page.locator("#detail").is_hidden()
-            page.locator("#language").select_option("es")
+            choose_language(page, "es")
             page.reload()
             rows.first.wait_for()
             assert page.locator("html").get_attribute("lang") == "es"
@@ -155,7 +156,7 @@ storage_dir = "documents"
                 ("es", "Importación de archivos", "Se recomienda importar archivos"),
                 ("en", "File import", "File imports (CSV"),
             ]:
-                page.locator("#language").select_option(language)
+                choose_language(page, language)
                 page.get_by_role("heading", name=title, exact=True).wait_for()
                 page.get_by_text(fragment, exact=False).first.wait_for()
             page.goto(f"http://127.0.0.1:{port}/?tab=admin&account={account['id']}#t=browser-token")
@@ -171,7 +172,7 @@ storage_dir = "documents"
                 ("es", "Columnas de esta cuenta"),
                 ("en", "Columns for this account"),
             ]:
-                page.locator("#language").select_option(language)
+                choose_language(page, language)
                 page.get_by_role("heading", name=heading, exact=True).wait_for()
                 assert admin_draft.input_value() == "Unsubmitted tag"
             page.get_by_role("button", name="Classification", exact=True).click()
@@ -181,7 +182,7 @@ storage_dir = "documents"
                 ("es", "Perfiles de esta cuenta"),
                 ("en", "Profiles for this account"),
             ]:
-                page.locator("#language").select_option(language)
+                choose_language(page, language)
                 page.get_by_role("heading", name=heading, exact=True).wait_for()
             page.get_by_role("button", name="Data", exact=True).click()
             preview_file = tmp_path / "preview.csv"
@@ -197,13 +198,13 @@ storage_dir = "documents"
                 ("es", "Ejecutar importación", "Filas totales"),
                 ("en", "Run import", "Total rows"),
             ]:
-                page.locator("#language").select_option(language)
+                choose_language(page, language)
                 page.get_by_role("button", name=button, exact=True).wait_for()
                 page.get_by_text(label, exact=True).wait_for()
             page.get_by_role("button", name="Overview", exact=True).click()
             page.get_by_role("heading", name="Overview", exact=True).wait_for()
             for language, heading in [("de", "Übersicht"), ("es", "Resumen"), ("en", "Overview")]:
-                page.locator("#language").select_option(language)
+                choose_language(page, language)
                 page.get_by_role("heading", name=heading, exact=True).wait_for()
             asset_base = (
                 page.locator('link[href$="/app.css"]').first.get_attribute("href").rsplit("/", 1)[0]

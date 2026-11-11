@@ -637,5 +637,6 @@ export default {
   "management.effect.cloud-preview": "Preview relocating managed documents and reports; originals remain intact.",
   "management.recovered": "Recovery completed",
   "management.cloud_preserved": "Cloud copies preserved",
-  "management.cloud_root": "Shared cloud root"
+  "management.cloud_root": "Shared cloud root",
+  "language.current": "Language: {name}"
 };

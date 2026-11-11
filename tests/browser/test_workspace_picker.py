@@ -9,6 +9,7 @@ from collections.abc import Iterator
 
 import pytest
 import uvicorn
+from language_controls import rebind_language
 from playwright.sync_api import Page, expect, sync_playwright
 
 from dagoberd.config import load_config
@@ -226,10 +227,7 @@ def test_long_duplicate_names_mobile_layout_and_languages(page, gui):
         ("es", "Elegir espacio de trabajo", "Gestionar espacios de trabajo"),
         ("en", "Choose workspace", "Manage workspaces"),
     ]:
-        page.evaluate(
-            "language => { const picker = document.querySelector('#language'); picker.value = language; picker.dispatchEvent(new Event('change')); }",
-            language,
-        )
+        rebind_language(page, language)
         expect(page.locator("#workspace-picker-title")).to_have_text(title)
         expect(
             page.locator("#workspace-picker").get_by_role("button", name=management, exact=True)

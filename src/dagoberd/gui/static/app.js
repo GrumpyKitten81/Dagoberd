@@ -1,5 +1,5 @@
 import { readPreference, writePreference } from './browser-storage.js';
-import { msg, bind, languages, getLanguage, setLanguage } from './i18n.js';
+import { msg, bind } from './i18n.js';
 import { append, clear, el, notify } from './dom.js';
 import { renderAdmin } from './admin.js';
 import { renderClassification } from './classification.js';
@@ -7,6 +7,7 @@ import { renderData } from './data.js';
 import { renderOverview } from './dashboard.js';
 import { loadMetadata, loadOptions, state } from './store.js';
 import { renderTransactions } from './transactions.js';
+import { initializeLanguagePicker } from './language-picker.js';
 import { initializeWorkspaces } from './workspaces.js';
 
 const SCOPE_STORAGE_KEY = 'dagoberd.gui-scope-v1';
@@ -246,13 +247,7 @@ for (const attribute of ['title', 'aria-label']) {
     bind(node, attribute, msg(node.getAttribute(`data-i18n-${attribute}`)));
   }
 }
-const languagePicker = document.querySelector('#language');
-for (const [code, label] of Object.entries(languages)) {
-  languagePicker.append(el('option', { value: code }, label));
-}
-languagePicker.value = getLanguage();
-bind(languagePicker, 'aria-label', msg('language.label'));
-languagePicker.addEventListener('change', () => setLanguage(languagePicker.value));
+initializeLanguagePicker();
 
 restoreView();
 for (const button of document.querySelectorAll('[data-tab], #account-scope, #refresh')) button.disabled = true;

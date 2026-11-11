@@ -125,7 +125,9 @@ The GUI binds only to loopback. Its URL carries an ephemeral fragment token, imm
 
 Five areas cover overview, transactions, administration, data and classification. Scope and area survive reload through the URL. Overview and transactions share all enabled accounts, a group or a custom selection. The grid fetches 200-row pages; click or `F2` edits a cell, `Enter` saves, `Escape` cancels and `Tab` moves between editable cells. Conflicts reload the affected row. Details include splits, source, documents, classification, status and relations; the bulk inspector uses preview/fingerprint/version protection.
 
-The language picker offers English, German and Spanish. First use is English; selection is stored locally. Switching updates existing text, accessible names and number/date formatting without reloading, losing drafts or repeating operations. Central catalogs use semantic keys, named parameters and plural variants; a new language adds a catalog and registry entry. User labels and source data are not automatically translated.
+The compact language menu at the right of the header offers English, German and Spanish. Its closed button shows the current flag and language code; the menu shows native language names and marks the current choice. The locally embedded SVG flags (UK, Germany and Spain) indicate language presentation, not nationality or the date/number region. They are decorative for screen readers, which receive the language name. Enter/Space and arrow keys open the menu; arrows and Home/End move between languages. Escape returns focus, Tab continues through the page, and clicking outside dismisses the menu.
+
+First use is English; selection is stored locally. Switching updates existing text, accessible names and number/date formatting without reloading, losing drafts or repeating operations. Central catalogs use semantic keys, named parameters and plural variants; a new language adds a catalog and registry entry. User labels and source data are not automatically translated.
 
 ### Preferred file workflow
 

@@ -7,6 +7,7 @@ import time
 
 import pytest
 import uvicorn
+from language_controls import rebind_language
 from playwright.sync_api import sync_playwright
 
 from dagoberd.gui.workspaces import create_workspace_app
@@ -103,7 +104,7 @@ def test_workspace_selection_parallel_tabs_and_repository_initialization(tmp_pat
                 ("es", "Inicializar carpeta local", "Estado de sincronización de instantáneas"),
                 ("en", "Initialize local folder", "Snapshot synchronization status"),
             ):
-                first.locator("#language").select_option(language)
+                rebind_language(first, language)
                 dialog.locator("#workspace-management-group").select_option("local")
                 assert dialog.locator('option[value="init"]').text_content() == local_init
                 dialog.locator("#workspace-management-group").select_option("snapshots")

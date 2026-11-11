@@ -637,5 +637,6 @@ export default {
   "management.effect.cloud-preview": "Previsualiza el traslado de documentos e informes conservando los originales.",
   "management.recovered": "Recuperación completada",
   "management.cloud_preserved": "Copias en la nube conservadas",
-  "management.cloud_root": "Raíz compartida de nube"
+  "management.cloud_root": "Raíz compartida de nube",
+  "language.current": "Idioma: {name}"
 };

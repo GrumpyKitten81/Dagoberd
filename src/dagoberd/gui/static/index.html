@@ -10,14 +10,13 @@
     <link rel="stylesheet" href="__DAGOBERD_ASSETS__/dashboard.css" />
     <link rel="stylesheet" href="__DAGOBERD_ASSETS__/grid.css" />
     <link rel="stylesheet" href="__DAGOBERD_ASSETS__/workspace-management.css" />
+    <link rel="stylesheet" href="__DAGOBERD_ASSETS__/language-picker.css" />
   </head>
   <body>
     <header class="app-header">
       <strong class="brand">Dagoberd</strong>
       <button id="account-scope" class="scope-button" type="button" data-i18n="ui.all_accounts">All accounts</button>
       <button id="refresh" class="icon-button" type="button" title="Refresh view" data-i18n-title="ui.refresh_view" aria-label="Refresh view" data-i18n-aria-label="ui.refresh_view">↻</button>
-      <label for="language" data-i18n="language.label">Language</label>
-      <select id="language" aria-label="Language"></select>
       <nav>
         <button type="button" data-tab="overview" data-i18n="ui.overview">Overview</button>
         <button type="button" data-tab="transactions" data-i18n="ui.transactions">Transactions</button>
@@ -25,6 +24,7 @@
         <button type="button" data-tab="data" data-i18n="ui.data">Data</button>
         <button type="button" data-tab="classification" data-i18n="ui.classification">Classification</button>
       </nav>
+      <button id="language-switcher" class="language-switcher" type="button" disabled aria-label="Language" data-i18n-aria-label="language.label" aria-haspopup="menu" aria-expanded="false" aria-controls="language-menu"></button>
     </header>
     <div id="notice" hidden></div>
     <main id="app"></main>

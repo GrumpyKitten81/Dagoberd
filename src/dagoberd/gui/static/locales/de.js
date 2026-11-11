@@ -637,5 +637,6 @@ export default {
   "management.effect.cloud-preview": "Verlagerung verwalteter Dokumente und Berichte vorschauen; Originale bleiben erhalten.",
   "management.recovered": "Wiederherstellung abgeschlossen",
   "management.cloud_preserved": "Cloud-Kopien erhalten",
-  "management.cloud_root": "Gemeinsames Cloud-Verzeichnis"
+  "management.cloud_root": "Gemeinsames Cloud-Verzeichnis",
+  "language.current": "Sprache: {name}"
 };
