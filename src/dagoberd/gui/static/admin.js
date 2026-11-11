@@ -1,214 +1,219 @@
-import { builtinLabel, msg, joinMessages } from './i18n.js';
-import { append, clear, el, notify } from './dom.js';
-import { account, api, loadMetadata, loadOptions, state } from './store.js';
+import { bind, builtinLabel, joinMessages, msg } from './i18n.js';
+import { append, clear, el } from './dom.js';
+import { account, api, state } from './store.js';
 import { dimensionsPanel } from './dimensions.js';
+import { addForm, adminController, card, editorForm, failureMessage, feedback, inputField, message, retainListPosition } from './admin-ui.js';
 
-export async function renderAdmin(root) {
+export function renderAdmin(root, hooks = {}) {
+  const shell = el('div', { className: 'admin-page' });
   clear(root);
-  append(root, createPanel(), dimensionsPanel(() => renderAdmin(root)));
-  if (!state.accountId) {
-    append(root, el('p', {}, msg("ui.select_an_account_above_to_configure_its_options")));
-    return;
-  }
-  append(root, accountPanel(), await columnsPanel(), await optionsPanel());
-}
-
-async function columnsPanel() {
-  const selected = await api(`/accounts/${state.accountId}/columns`);
-  const chosen = selected.length ? selected.map((item) => item.code) : state.metadata.dimensions.map((item) => item.code);
-  const list = el('div', { className: 'option-picker' });
-  const render = () => {
-    list.replaceChildren(...chosen.map((code, index) => {
-      const dimension = state.metadata.dimensions.find((item) => item.code === code);
-      const enabled = el('input', { type: 'checkbox', checked: true, onchange: (event) => {
-        if (!event.target.checked) chosen.splice(index, 1);
-        render();
-      } });
-      return el('div', { className: 'toolbar' }, [enabled, builtinLabel(dimension.code, dimension.name),
-        el('button', { type: 'button', disabled: index === 0, onclick: () => { [chosen[index - 1], chosen[index]] = [chosen[index], chosen[index - 1]]; render(); } }, '▲'),
-        el('button', { type: 'button', disabled: index === chosen.length - 1, onclick: () => { [chosen[index + 1], chosen[index]] = [chosen[index], chosen[index + 1]]; render(); } }, '▼'),
-      ]);
-    }));
-    for (const dimension of state.metadata.dimensions.filter((item) => !chosen.includes(item.code))) {
-      append(list, el('label', {}, [el('input', { type: 'checkbox', onchange: (event) => { if (event.target.checked) chosen.push(dimension.code); render(); } }), ` ${dimension.name}`]));
+  append(root, shell);
+  const controller = adminController(shell, hooks);
+  append(shell, el('header', { className: 'admin-heading' }, [
+    el('p', { className: 'eyebrow' }, msg('ui.administration')),
+    el('h1', {}, msg('admin.heading')),
+    el('p', {}, msg('admin.intro')),
+  ]));
+  const accountRegion = el('section', { id: 'admin-account-region', 'aria-label': msg('admin.account_settings') });
+  let renderedAccount = null;
+  const renderAccount = () => {
+    if (renderedAccount === state.accountId) return;
+    renderedAccount = state.accountId;
+    clear(accountRegion);
+    append(accountRegion, el('h2', {}, msg('admin.account_settings')));
+    if (!state.accountId) {
+      append(accountRegion, card(msg('admin.choose_account'), msg('admin.account_help'), 'admin-account-gate'));
+      append(accountRegion.lastChild, el('button', { type: 'button', onclick: () => hooks.onSelectAccount?.() }, msg('admin.choose_account')));
+    } else {
+      const id = state.accountId;
+      append(accountRegion, accountPanel(controller, id), columnsPanel(controller, id), optionsPanel(controller, id));
     }
   };
-  render();
-  return el('section', { className: 'ui-card panel' }, [
-    el('h2', {}, msg("ui.columns_for_this_account")),
-    el('p', {}, msg("ui.without_a_selection_all_active_dimensions_are_shown")), list,
-    el('button', { type: 'button', onclick: async () => {
-      try {
-        await api(`/accounts/${state.accountId}/columns`, { method: 'PUT', body: JSON.stringify({ dimension_codes: chosen }) });
-        await loadOptions();
-        notify(msg("ui.columns_saved"));
-      } catch (error) { notify(error.message, 'error'); }
-    } }, msg("ui.save")),
-  ]);
+  controller.onRefresh(renderAccount);
+  renderAccount();
+  append(shell, accountRegion, referencePanel(controller), dimensionsPanel(controller));
 }
 
-function accountPanel() {
-  const current = account(state.accountId);
-  const name = el('input', { value: current.display_name });
-  const enabled = el('input', { type: 'checkbox', checked: Boolean(current.enabled) });
-  const save = el('button', {
-    type: 'button',
-    onclick: async () => {
-      try {
-        await api(`/accounts/${current.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({
-            display_name: name.value,
-            enabled: enabled.checked,
-            expected_version: current.version,
-          }),
-        });
-        await loadMetadata();
-        notify(msg("ui.account_saved"));
-      } catch (error) {
-        notify(error.message, 'error');
-      }
-    },
-  }, msg("ui.save_account"));
-  return el('section', { className: 'ui-card panel' }, [
-    el('h2', {}, msg("ui.account")),
-    el('div', { className: 'toolbar' }, [
-      el('label', {}, [msg("ui.display_name"), name]),
-      el('label', {}, [enabled, msg("ui.active")]),
-      save,
-    ]),
-  ]);
-}
-
-async function optionsPanel() {
-  const selected = await api(`/accounts/${state.accountId}/options/selected`);
-  const panel = el('section', { className: 'ui-card panel' }, [
-    el('h2', {}, msg("ui.available_values_for_this_account")),
-    el('p', {}, msg("ui.an_empty_selection_allows_all_values")),
-  ]);
-  append(panel,
-    picker('category', msg("ui.categories"), categoryUniverse(), selected.category),
-    picker('tag', msg("ui.tags"), tagUniverse(), selected.tag),
-    picker('dimension_value', msg("ui.dimension_values"), dimensionUniverse(), selected.dimension_value),
-  );
+function referencePanel(controller) {
+  const panel = card(msg('admin.reference'), msg('admin.reference_help'), 'admin-reference');
+  for (const [kind, title, help] of [
+    ['tag', msg('ui.tags'), msg('admin.tags_help')],
+    ['merchant', msg('admin.merchants'), msg('admin.merchants_help')],
+  ]) {
+    const section = el('section', { className: 'admin-reference-kind', id: `admin-${kind}s` });
+    const list = el('ul', { className: 'admin-reference-list' });
+    const count = el('p', { className: 'muted' });
+    const sync = () => {
+      const entries = kind === 'tag' ? state.metadata.tags : state.metadata.merchants;
+      bind(count, 'textContent', msg('admin.entry_count', { count: entries.length }));
+      clear(list);
+      append(list, entries.length ? entries.map((entry) => el('li', {}, entry.name || entry.canonical_name)) : el('li', {}, msg('admin.empty_reference')));
+    };
+    append(section, el('h3', {}, title), el('p', {}, help), count, list, addForm(controller, {
+      id: `admin-add-${kind}`, title: msg(kind === 'tag' ? 'ui.tag' : 'ui.merchant'),
+      request: (payload) => api(`/${kind}s`, { method: 'POST', body: JSON.stringify(payload) }),
+    }));
+    append(panel, section);
+    controller.onRefresh(sync);
+    sync();
+  }
   return panel;
 }
 
-function categoryUniverse() {
-  return Object.entries(state.metadata.profiles).flatMap(([profile, categories]) =>
-    categories.map((category) => ({
-      code: `${profile}:${category.code}`,
-      label: joinMessages([profile, builtinLabel(category.code, category.name)], ' · '),
-    })),
-  );
-}
-
-function tagUniverse() {
-  return state.metadata.tags.map((tag) => ({ code: tag.name, label: tag.name }));
-}
-
-function dimensionUniverse() {
-  return state.metadata.dimensions.flatMap((dimension) =>
-    dimension.values.map((value) => ({
-      code: `${dimension.code}:${value.code}`,
-      label: joinMessages([builtinLabel(dimension.code, dimension.name), value.name], ' · '),
-    })),
-  );
-}
-
-function picker(fieldKind, title, universe, chosen) {
-  const selection = new Set(chosen);
-  const list = el('div', { className: 'option-picker' });
-  for (const entry of universe) {
-    const box = el('input', {
-      type: 'checkbox',
-      checked: selection.has(entry.code),
-      onchange: (event) => {
-        if (event.target.checked) {
-          selection.add(entry.code);
-        } else {
-          selection.delete(entry.code);
-        }
-      },
+function accountPanel(controller, id) {
+  let model = account(id);
+  let dirty = false;
+  const panel = card(msg('ui.account'), msg('admin.account_edit_help'), 'admin-account');
+  const name = inputField('admin-account-name', msg('ui.display_name'), msg('admin.account_name_help'), model.display_name);
+  const enabled = el('input', { id: 'admin-account-active', type: 'checkbox', checked: Boolean(model.enabled) });
+  const editor = editorForm(controller, 'admin-account-form', [name], msg('ui.save_account'));
+  editor.actions.before(el('label', { htmlFor: enabled.id, className: 'admin-check' }, [enabled, msg('ui.active')]));
+  const sync = (next = account(id), force = false) => {
+    if (!next || (dirty && !force)) return;
+    model = next;
+    name.input.value = model.display_name;
+    enabled.checked = Boolean(model.enabled);
+    dirty = false;
+    editor.resetConflict();
+  };
+  editor.form.addEventListener('input', () => { dirty = true; });
+  editor.form.addEventListener('change', () => { dirty = true; });
+  editor.onReload = () => sync(account(id), true);
+  editor.submit = () => {
+    const payload = Object.freeze({ display_name: name.input.value.trim(), enabled: enabled.checked, expected_version: model.version });
+    controller.run(editor, () => api(`/accounts/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(payload) }), (result) => {
+      sync({ ...model, ...payload, version: result.version }, true);
     });
-    append(list, el('label', {}, [box, ' ', entry.label]));
-  }
-  const save = el('button', {
-    type: 'button',
-    onclick: async () => {
-      try {
-        await api(`/accounts/${state.accountId}/options`, {
-          method: 'PUT',
-          body: JSON.stringify({ field_kind: fieldKind, codes: [...selection] }),
-        });
-        await loadOptions();
-        notify(msg("ui.saved", { title: title }));
-      } catch (error) {
-        notify(error.message, 'error');
-      }
-    },
-  }, msg("ui.save"));
-  const reset = el('button', {
-    type: 'button',
-    onclick: async () => {
-      await api(`/accounts/${state.accountId}/options`, {
-        method: 'PUT',
-        body: JSON.stringify({ field_kind: fieldKind, codes: [] }),
-      });
-      await loadOptions();
-      notify(msg("ui.restriction_removed", { title: title }));
-      renderAdmin(document.querySelector('#app'));
-    },
-  }, msg("ui.allow_all"));
-  return el('details', { open: false }, [
-    el('summary', {}, msg("admin.selection_summary", { title: title, count: selection.size || msg('ui.all_time') })),
-    list,
-    el('div', { className: 'toolbar' }, [save, reset]),
-  ]);
+  };
+  controller.onRefresh(() => sync());
+  append(panel, editor.form);
+  return panel;
 }
 
-function createPanel() {
-  const forms = [
-    creator(msg("ui.tag"), [msg("ui.name")], async ([name]) => api('/tags', {
-      method: 'POST',
-      body: JSON.stringify({ name }),
-    })),
-    creator(msg("ui.dimension"), [msg("ui.code"), msg("ui.name")], async ([code, name]) => api('/dimensions', {
-      method: 'POST',
-      body: JSON.stringify({ code, name }),
-    })),
-    creator(msg("ui.dimension_value"), [msg("ui.dimension"), msg("ui.code"), msg("ui.name")], async ([dimension, code, name]) =>
-      api(`/dimensions/${dimension}/values`, {
-        method: 'POST',
-        body: JSON.stringify({ code, name }),
-      }),
-    ),
-    creator(msg("ui.merchant"), [msg("ui.name")], async ([name]) => api('/merchants', {
-      method: 'POST',
-      body: JSON.stringify({ name }),
-    })),
-  ];
-  return el('section', { className: 'ui-card panel' }, [el('h2', {}, msg("ui.create_reference_data")), ...forms]);
+function loadingCard(controller, title, help, id, load) {
+  const panel = card(title, help, id);
+  const content = el('div');
+  append(panel, content);
+  let loading = false;
+  const reload = async () => {
+    if (loading || !controller.current()) return;
+    loading = true;
+    message(content, msg('admin.loading'));
+    try {
+      const result = await load();
+      if (controller.current() && panel.isConnected) { clear(content); append(content, result); }
+    } catch (error) {
+      if (controller.current() && panel.isConnected) {
+        message(content, msg('admin.load_failed', { title, details: failureMessage(error) }), true);
+        append(content, el('button', { type: 'button', onclick: reload }, msg('admin.retry_load')));
+      }
+    } finally { loading = false; }
+  };
+  // Start after the card has been attached, so stale response checks have a stable owner.
+  queueMicrotask(reload);
+  return panel;
 }
 
-function creator(title, fields, submit) {
-  const inputs = fields.map((placeholder) => el('input', { placeholder }));
-  const button = el('button', {
-    type: 'button',
-    onclick: async () => {
-      try {
-        await submit(inputs.map((input) => input.value.trim()));
-        await loadMetadata();
-        await loadOptions();
-        for (const input of inputs) {
-          input.value = '';
-        }
-        notify(msg("ui.created", { title: title }));
-        renderAdmin(document.querySelector('#app'));
-      } catch (error) {
-        notify(error.message, 'error');
+function columnsPanel(controller, id) {
+  return loadingCard(controller, msg('ui.columns_for_this_account'), msg('ui.without_a_selection_all_active_dimensions_are_shown'), 'admin-columns', async () => {
+    const selected = await api(`/accounts/${encodeURIComponent(id)}/columns`);
+    let chosen = selected.map((item) => item.code);
+    const editor = editorForm(controller, 'admin-columns-form', []);
+    const list = el('div', { className: 'admin-column-list' });
+    editor.actions.before(list);
+    const render = (focusCode, control = 'input') => {
+      const restore = retainListPosition(list);
+      clear(list);
+      const dimensions = state.metadata.dimensions;
+      const entries = [...chosen.map((code) => dimensions.find((item) => item.code === code)).filter(Boolean), ...dimensions.filter((item) => !chosen.includes(item.code))];
+      for (const dimension of entries) {
+        const index = chosen.indexOf(dimension.code);
+        const label = joinMessages([builtinLabel(dimension.code, dimension.name), dimension.active ? '' : msg('admin.inactive_suffix')]);
+        const box = el('input', { type: 'checkbox', dataset: { optionCode: dimension.code }, checked: index >= 0, onchange: () => {
+          if (index >= 0) chosen = chosen.filter((code) => code !== dimension.code);
+          else chosen.push(dimension.code);
+          render(dimension.code);
+        } });
+        const row = el('div', { className: 'admin-column-row', dataset: { code: dimension.code } }, [el('label', { className: 'admin-check' }, [box, label])]);
+        for (const [delta, direction, glyph] of [[-1, 'up', '↑'], [1, 'down', '↓']]) append(row, el('button', {
+          type: 'button', dataset: { move: direction }, disabled: index < 0 || index + delta < 0 || index + delta >= chosen.length,
+          ariaLabel: msg(`admin.move_${direction}`, { name: label }), onclick: () => {
+            [chosen[index], chosen[index + delta]] = [chosen[index + delta], chosen[index]];
+            render(dimension.code, `[data-move="${direction}"]`);
+          },
+        }, glyph));
+        append(list, row);
       }
-    },
-  }, msg("ui.create", { title: title }));
-  return el('div', { className: 'toolbar' }, [...inputs, button]);
+      restore();
+      if (focusCode) {
+        const row = [...list.children].find((node) => node.dataset.code === focusCode);
+        const target = row?.querySelector(control);
+        (target && !target.disabled ? target : row?.querySelector('input'))?.focus();
+      }
+    };
+    controller.onRefresh(() => { if (editor.form.isConnected) render(); });
+    editor.submit = () => {
+      const payload = Object.freeze({ dimension_codes: Object.freeze([...chosen]) });
+      controller.run(editor, () => api(`/accounts/${encodeURIComponent(id)}/columns`, { method: 'PUT', body: JSON.stringify(payload) }));
+    };
+    render();
+    return editor.form;
+  });
+}
+
+function universes() {
+  return {
+    category: Object.entries(state.metadata.profiles).flatMap(([profile, categories]) => categories.map((category) => ({ code: `${profile}:${category.code}`, label: joinMessages([profile, builtinLabel(category.code, category.name)], ' · ') }))),
+    tag: state.metadata.tags.map((tag) => ({ code: tag.name, label: tag.name })),
+    dimension_value: state.metadata.dimensions.flatMap((dimension) => dimension.values.map((value) => ({ code: `${dimension.code}:${value.code}`, label: joinMessages([builtinLabel(dimension.code, dimension.name), ' · ', value.name, value.active && dimension.active ? '' : msg('admin.inactive_suffix')]) }))),
+  };
+}
+
+function optionsPanel(controller, id) {
+  return loadingCard(controller, msg('ui.available_values_for_this_account'), msg('ui.an_empty_selection_allows_all_values'), 'admin-options', async () => {
+    const selected = await api(`/accounts/${encodeURIComponent(id)}/options/selected`);
+    return el('div', {}, ['category', 'tag', 'dimension_value'].map((kind) => picker(controller, id, kind, selected[kind])));
+  });
+}
+
+function picker(controller, id, kind, chosen) {
+  const title = msg({ category: 'ui.categories', tag: 'ui.tags', dimension_value: 'ui.dimension_values' }[kind]);
+  const selection = new Set(chosen);
+  const details = el('details', { className: 'admin-picker', dataset: { kind } });
+  const summary = el('summary');
+  const editor = editorForm(controller, `admin-options-${kind}`, []);
+  const list = el('div', { className: 'option-picker' });
+  editor.actions.before(list);
+  const summaryText = () => bind(summary, 'textContent', selection.size ? msg('admin.selection_summary', { title, count: selection.size }) : msg('admin.all_allowed', { title }));
+  const render = () => {
+    const restore = retainListPosition(list);
+    clear(list);
+    const universe = universes()[kind];
+    // Preserve existing restrictions even if an entry disappeared from current metadata.
+    for (const code of selection) if (!universe.some((entry) => entry.code === code)) universe.push({ code, label: code });
+    for (const entry of universe) append(list, el('label', {}, [el('input', {
+      type: 'checkbox', dataset: { optionCode: entry.code }, checked: selection.has(entry.code), onchange: (event) => {
+        if (event.target.checked) selection.add(entry.code); else selection.delete(entry.code);
+        summaryText();
+      },
+    }), entry.label]));
+    restore();
+    summaryText();
+  };
+  const save = (codes) => {
+    const payload = Object.freeze({ field_kind: kind, codes: Object.freeze(codes) });
+    controller.run(editor, () => api(`/accounts/${encodeURIComponent(id)}/options`, { method: 'PUT', body: JSON.stringify(payload) }), () => {
+      selection.clear();
+      codes.forEach((code) => selection.add(code));
+      render();
+    });
+  };
+  editor.submit = () => save([...selection]);
+  const reset = el('button', { type: 'button', onclick: () => save([]) }, msg('ui.allow_all'));
+  controller.watch(() => { reset.disabled = controller.busy(); });
+  append(editor.actions, reset);
+  controller.onRefresh(() => { if (details.isConnected) render(); });
+  append(details, summary, editor.form);
+  render();
+  return details;
 }

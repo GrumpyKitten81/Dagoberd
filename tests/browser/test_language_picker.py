@@ -95,7 +95,8 @@ def test_keyboard_selection_dismissal_and_focus(page, gui):
 def test_language_changes_keep_drafts_url_and_requests_and_persist(page, gui):
     button, menu = open_gui(page, gui)
     page.locator('[data-tab="admin"]').click()
-    draft = page.locator(".toolbar input[placeholder]").first
+    page.locator("#admin-add-tag > summary").click()
+    draft = page.locator("#admin-add-tag-name")
     draft.fill("Synthetic unsaved tag")
     original_url = page.url
     navigations, calls = [], []

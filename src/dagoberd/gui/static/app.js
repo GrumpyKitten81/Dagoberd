@@ -14,7 +14,15 @@ const SCOPE_STORAGE_KEY = 'dagoberd.gui-scope-v1';
 const TABS = {
   overview: renderOverview,
   transactions: renderTransactions,
-  admin: renderAdmin,
+  admin: (root) => renderAdmin(root, {
+    onSelectAccount: showScopeDialog,
+    onMetadata: () => {
+      restoreAccountSelection();
+      updateScopeButton();
+      fillDatalists();
+      rememberView();
+    },
+  }),
   data: renderData,
   classification: renderClassification,
 };
@@ -58,6 +66,10 @@ function syncSingleAccount() {
 async function render() {
   rememberView();
   try {
+    if (state.metadataLoadedRevision < state.metadataRevision) {
+      await refreshMetadata();
+      rememberView();
+    }
     return await TABS[state.tab](app);
   } catch (error) {
     notify(error.message, 'error');
@@ -190,11 +202,13 @@ function setActiveTab() {
 }
 
 async function refreshMetadata() {
+  const revision = state.metadataRevision;
   await loadMetadata();
   restoreAccountSelection();
   await loadOptions();
   updateScopeButton();
   fillDatalists();
+  state.metadataLoadedRevision = revision;
 }
 
 async function refreshPage() {

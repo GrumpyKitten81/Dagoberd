@@ -165,7 +165,8 @@ storage_dir = "documents"
             except Exception:
                 print("ADMIN ERRORS", page_errors, page.locator("body").inner_text())
                 raise
-            admin_draft = page.locator(".toolbar input[placeholder]").first
+            page.locator("#admin-add-tag > summary").click()
+            admin_draft = page.locator("#admin-add-tag-name")
             admin_draft.fill("Unsubmitted tag")
             for language, heading in [
                 ("de", "Spalten dieses Kontos"),

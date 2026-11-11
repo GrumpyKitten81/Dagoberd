@@ -174,7 +174,8 @@ def test_keyboard_modal_focus_and_management(page, gui):
 def test_cancelled_switch_preserves_input_then_confirmed_switch_reloads(page, gui):
     base, entries = gui
     page.goto(base + f"?workspace={entries[0]['id']}&tab=admin#t=picker-token")
-    field = page.locator("main input").first
+    page.locator("#admin-add-tag > summary").click()
+    field = page.locator("#admin-add-tag-name")
     field.fill("Unsaved synthetic input")
     previous = page.url
     page.once("dialog", lambda dialog: dialog.dismiss())

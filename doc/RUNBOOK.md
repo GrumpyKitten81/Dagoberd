@@ -129,6 +129,35 @@ The compact language menu at the right of the header offers English, German and 
 
 First use is English; selection is stored locally. Switching updates existing text, accessible names and number/date formatting without reloading, losing drafts or repeating operations. Central catalogs use semantic keys, named parameters and plural variants; a new language adds a catalog and registry entry. User labels and source data are not automatically translated.
 
+### Administration
+
+Administration separates account settings, workspace reference data, and dimensions.
+Choose exactly one account to edit its display name, active state, dimension-column
+order and allowed categories, tags or dimension values. With no single account
+selected, **Choose one account** opens the existing account-scope dialog. Deactivating
+the selected account preserves its bookings and removes it from the active scope.
+An empty column selection uses all active dimensions; an empty allowed-values
+selection removes that restriction. Checkboxes, counts and labelled reorder controls
+show the current draft; Save applies it.
+
+Tags label bookings; merchants provide consistent payee names. Their expandable
+forms show existing entries and retain input when collapsed. For additional booking
+attributes, create a dimension and add values inside its expandable card. Codes are
+stable technical identifiers, normalized by the server; display names can change.
+Inactive dimensions and values remain visible in management and are unavailable for
+new booking assignments. Deleting a dimension also removes its unused values;
+used entries must be deactivated instead. Cancelling confirmation sends no request.
+
+Saving refreshes affected data without discarding other forms or expanded cards.
+One administration write runs at a time; the submitted form is locked until it
+finishes. Inputs and requests stay bound to their original account. Errors appear
+in the affected form or section. Failed section loads can be retried independently.
+After a version conflict, **Reload this editor** asks before discarding only that
+editor's draft. No writes are automatically retried. If a write succeeds but a
+subsequent refresh fails, reload the view rather than repeating the write.
+Drafts last for the current administration view; navigating away or changing the
+account scope starts a new view.
+
 ### Preferred file workflow
 
 For the complete authorized first-run and follow-up agent journey, including a

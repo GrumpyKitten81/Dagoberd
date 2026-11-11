@@ -11,6 +11,8 @@ history.replaceState(null, '', location.pathname + location.search);
 export const state = {
   workspaceId: new URLSearchParams(location.search).get('workspace') || '',
   metadata: null,
+  metadataRevision: 0,
+  metadataLoadedRevision: 0,
   options: null,
   accountId: '',
   accountIds: [],
@@ -95,11 +97,13 @@ export async function loadMetadata() {
   return state.metadata;
 }
 
-export async function loadOptions() {
-  state.options = state.accountIds.length === 1
+export async function loadOptions(isCurrent = () => true) {
+  const accountId = state.accountId;
+  const options = state.accountIds.length === 1
     ? await api(`/accounts/${state.accountId}/options`)
     : globalOptions();
-  return state.options;
+  if (isCurrent() && state.accountId === accountId) state.options = options;
+  return options;
 }
 
 function globalOptions() {
