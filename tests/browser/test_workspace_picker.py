@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import socket
 import threading
@@ -80,7 +81,7 @@ def page() -> Iterator[Page]:
 
 
 @pytest.mark.parametrize("gui", ["empty", "one", "multiple", "legacy", "standalone"], indirect=True)
-def test_initial_states_require_explicit_registry_selection(page, gui, request):
+def test_initial_states_and_single_workspace_auto_selection(page, gui, request):
     base, entries = gui
     calls = []
     page.on(
@@ -88,13 +89,20 @@ def test_initial_states_require_explicit_registry_selection(page, gui, request):
     )
     page.goto(base + "#t=picker-token")
     mode = request.node.callspec.params["gui"]
-    if mode in {"legacy", "standalone"}:
+    if mode in {"legacy", "standalone", "one"}:
         expect(page.locator(".kpi-grid")).to_be_visible()
         expect(page.locator("#refresh")).to_be_enabled()
         if mode == "legacy":
             expect(page.locator("#workspace-switcher")).to_have_text("Local configuration⌄")
-        else:
+        elif mode == "standalone":
             expect(page.locator("#workspace-switcher")).to_have_count(0)
+        else:
+            assert f"workspace={entries[0]['id']}" in page.url
+            expect(page.locator("#workspace-switcher")).to_contain_text("First workspace")
+            assert all(
+                url.endswith("/api/workspaces") or f"/workspaces/{entries[0]['id']}/" in url
+                for url in calls
+            )
     else:
         expect(page.locator("main h1")).to_have_text("Choose workspace")
         expect(page.locator("#refresh")).to_be_disabled()
@@ -102,57 +110,62 @@ def test_initial_states_require_explicit_registry_selection(page, gui, request):
         expect(page.locator("#workspace-switcher")).to_contain_text("Choose workspace")
         page.locator("#workspace-switcher").click()
         expect(page.get_by_role("menuitemradio")).to_have_count(len(entries))
-        expect(page.get_by_role("menuitem", name="Manage workspaces")).to_be_visible()
+        expect(
+            page.locator("#workspace-picker").get_by_role("button", name="Manage workspaces")
+        ).to_be_visible()
 
 
-@pytest.mark.parametrize("fallback", [False, True])
-def test_keyboard_toggle_focus_and_management(page, gui, fallback):
+def test_keyboard_modal_focus_and_management(page, gui):
     base, entries = gui
-    if fallback:
-        page.add_init_script("HTMLElement.prototype.showPopover = undefined")
     page.goto(base + f"?workspace={entries[0]['id']}#t=picker-token")
     expect(page.locator(".kpi-grid")).to_be_visible()
     switcher = page.locator("#workspace-switcher")
+    expect(switcher).to_have_attribute("aria-haspopup", "dialog")
     expect(switcher).to_contain_text("First workspace")
     switcher.focus()
     page.keyboard.press("ArrowDown")
-    first = page.get_by_role("menuitemradio", name="First workspace", exact=True)
-    second = page.get_by_role("menuitemradio", name="Second workspace", exact=True)
-    manage = page.get_by_role("menuitem", name="Manage workspaces", exact=True)
+    panel = page.get_by_role("dialog", name="Choose workspace", exact=True)
+    expect(panel).to_be_visible()
+    first = panel.get_by_role("menuitemradio", name="First workspace", exact=True)
+    second = panel.get_by_role("menuitemradio", name="Second workspace", exact=True)
+    manage = panel.get_by_role("button", name="Manage workspaces", exact=True)
+    close = panel.get_by_role("button", name="Close", exact=True)
     expect(first).to_be_focused()
     expect(first).to_have_attribute("aria-checked", "true")
     page.keyboard.press("ArrowDown")
     expect(second).to_be_focused()
-    page.keyboard.press("End")
-    expect(manage).to_be_focused()
     page.keyboard.press("ArrowDown")
     expect(first).to_be_focused()
-    page.keyboard.press("ArrowUp")
-    expect(manage).to_be_focused()
+    page.keyboard.press("End")
+    expect(second).to_be_focused()
     page.keyboard.press("Home")
+    expect(first).to_be_focused()
+    page.keyboard.press("End")
+    page.keyboard.press("Tab")
+    expect(manage).to_be_focused()
+    page.keyboard.press("Tab")
+    expect(close).to_be_focused()
+    page.keyboard.press("Tab")
     expect(first).to_be_focused()
     page.keyboard.press("Escape")
     expect(switcher).to_be_focused()
     expect(switcher).to_have_attribute("aria-expanded", "false")
     switcher.click()
-    expect(switcher).to_have_attribute("aria-expanded", "true")
-    if not fallback:
-        switcher.click()
-        expect(switcher).to_have_attribute("aria-expanded", "false")
-        switcher.click()
     first.click()
     expect(switcher).to_have_attribute("aria-expanded", "false")
     assert f"workspace={entries[0]['id']}" in page.url
     switcher.press("Space")
-    expect(manage).to_be_visible()
     manage.click()
-    dialog = page.locator("dialog.modal")
+    dialog = page.locator("dialog.modal[open]")
     expect(dialog).to_be_visible()
     expect(switcher).to_have_attribute("aria-expanded", "false")
     dialog.get_by_role("button", name="Close", exact=True).click()
     expect(switcher).to_be_focused()
     switcher.press("Enter")
     expect(first).to_be_visible()
+    close.click()
+    expect(switcher).to_be_focused()
+    switcher.click()
     page.mouse.click(1, 1)
     expect(switcher).to_have_attribute("aria-expanded", "false")
 
@@ -196,12 +209,9 @@ def test_unknown_workspace_gates_data_and_offers_recovery(page, gui):
 
 
 @pytest.mark.parametrize("gui", ["duplicates"], indirect=True)
-@pytest.mark.parametrize("fallback", [False, True])
-def test_long_duplicate_names_mobile_layout_and_languages(page, gui, fallback):
+def test_long_duplicate_names_mobile_layout_and_languages(page, gui):
     base, entries = gui
     page.set_viewport_size({"width": 320, "height": 640})
-    if fallback:
-        page.add_init_script("HTMLElement.prototype.showPopover = undefined")
     page.goto(base + f"?workspace={entries[0]['id']}#t=picker-token")
     expect(page.locator(".kpi-grid")).to_be_visible()
     switcher = page.locator("#workspace-switcher")
@@ -221,7 +231,9 @@ def test_long_duplicate_names_mobile_layout_and_languages(page, gui, fallback):
             language,
         )
         expect(page.locator("#workspace-picker-title")).to_have_text(title)
-        expect(page.get_by_role("menuitem", name=management, exact=True)).to_be_visible()
+        expect(
+            page.locator("#workspace-picker").get_by_role("button", name=management, exact=True)
+        ).to_be_visible()
     bounds = page.locator("#workspace-picker").bounding_box()
     assert bounds["x"] >= 0 and bounds["x"] + bounds["width"] <= 320
     assert bounds["y"] >= 0 and bounds["y"] + bounds["height"] <= 640
@@ -229,11 +241,8 @@ def test_long_duplicate_names_mobile_layout_and_languages(page, gui, fallback):
     assert str(base) not in page.locator("#workspace-picker").inner_text()
 
 
-@pytest.mark.parametrize("fallback", [False, True])
-def test_many_workspaces_scroll_and_keep_keyboard_actions_reachable(page, gui, fallback):
+def test_many_workspaces_scroll_and_keep_keyboard_actions_reachable(page, gui):
     base, entries = gui
-    if fallback:
-        page.add_init_script("HTMLElement.prototype.showPopover = undefined")
     page.set_viewport_size({"width": 320, "height": 480})
     page.route(
         "**/api/workspaces",
@@ -260,11 +269,45 @@ def test_many_workspaces_scroll_and_keep_keyboard_actions_reachable(page, gui, f
     panel = page.locator("#workspace-picker")
     expect(page.get_by_role("menuitemradio")).to_have_count(42)
     page.keyboard.press("End")
-    expect(page.get_by_role("menuitem", name="Manage workspaces")).to_be_focused()
-    assert panel.evaluate("node => node.scrollHeight > node.clientHeight && node.scrollTop > 0")
+    expect(page.get_by_role("menuitemradio").last).to_be_focused()
+    assert panel.locator(".workspace-list").evaluate(
+        "node => node.scrollHeight > node.clientHeight && node.scrollTop > 0"
+    )
     bounds = panel.bounding_box()
     assert bounds["y"] >= 0 and bounds["y"] + bounds["height"] <= 480
     page.keyboard.press("Home")
     expect(page.get_by_role("menuitemradio", name="First workspace", exact=True)).to_be_focused()
     page.keyboard.press("Tab")
-    expect(page.locator("#workspace-switcher")).to_have_attribute("aria-expanded", "false")
+    expect(page.locator("#workspace-switcher")).to_have_attribute("aria-expanded", "true")
+    assert panel.evaluate("node => node.contains(document.activeElement)")
+    panel.get_by_role("button", name="Close", exact=True).click()
+    expect(page.locator("#workspace-switcher")).to_be_focused()
+
+
+@pytest.mark.parametrize("gui", ["one"], indirect=True)
+def test_auto_selection_preserves_view_and_uses_workspace_preferences(page, gui):
+    base, entries = gui
+    workspace = entries[0]["id"]
+    preference_key = json.dumps(f"dagoberd.dashboard-period-v1.workspace.{workspace}")
+    page.add_init_script(
+        "localStorage.setItem('dagoberd.dashboard-period-v1', '3m');"
+        f"localStorage.setItem({preference_key}, 'ytd');"
+    )
+    confirmations = []
+    page.on("dialog", lambda dialog: (confirmations.append(dialog.message), dialog.dismiss()))
+    page.goto(base + "?tab=transactions&scope=all#t=picker-token")
+    expect(page.locator("#transaction-body")).to_be_attached()
+    assert f"workspace={workspace}" in page.url
+    assert "tab=transactions" in page.url and "scope=all" in page.url
+    assert confirmations == []
+    page.locator('[data-tab="overview"]').click()
+    expect(page.locator('.period-switch button[aria-pressed="true"]')).to_have_text("This year")
+
+
+@pytest.mark.parametrize("gui", ["one"], indirect=True)
+def test_explicit_unknown_workspace_is_not_replaced_by_the_only_entry(page, gui):
+    base, _ = gui
+    page.goto(base + "?workspace=missing#t=picker-token")
+    expect(page.locator("main [role=alert]")).to_contain_text("not registered")
+    assert "workspace=missing" in page.url
+    expect(page.locator("#refresh")).to_be_disabled()

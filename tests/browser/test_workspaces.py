@@ -96,8 +96,8 @@ def test_workspace_selection_parallel_tabs_and_repository_initialization(tmp_pat
             first.get_by_text("Business Cash", exact=True).wait_for()
             first.keyboard.press("Escape")
             first.locator("#workspace-switcher").click()
-            first.get_by_role("menuitem", name="Manage workspaces", exact=True).click()
-            dialog = first.locator("dialog")
+            first.get_by_role("button", name="Manage workspaces", exact=True).click()
+            dialog = first.locator("dialog[open]")
             for language, local_init, snapshot_status in (
                 ("de", "Lokalen Ordner initialisieren", "Status der Snapshot-Synchronisierung"),
                 ("es", "Inicializar carpeta local", "Estado de sincronización de instantáneas"),

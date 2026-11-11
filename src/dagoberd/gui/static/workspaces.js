@@ -101,6 +101,12 @@ export async function initializeWorkspaces(app) {
     if (error.status === 404) return true;
     throw error;
   }
+  if (!legacy && !state.workspaceId && entries.length === 1) {
+    const parameters = new URLSearchParams(location.search);
+    parameters.set('workspace', entries[0].id);
+    location.replace(`${location.pathname}?${parameters}`);
+    return false;
+  }
   const active = entries.find((entry) => entry.id === state.workspaceId);
   const standalone = legacy && !state.workspaceId;
   const label = standalone ? msg('workspace.standalone') : active ? workspaceLabel(active, entries)

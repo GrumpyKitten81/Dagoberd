@@ -44,14 +44,10 @@
   color: var(--text);
 }
 
-.workspace-picker[popover] {
-  position: fixed;
-  inset: auto;
-  margin: 0;
-}
-
-dialog.workspace-picker::backdrop {
-  background: var(--backdrop);
+.workspace-list {
+  display: grid;
+  max-height: 50dvh;
+  overflow: auto;
 }
 
 .workspace-picker h2 {
@@ -80,10 +76,7 @@ dialog.workspace-picker::backdrop {
   background: var(--accent-soft);
 }
 
-.workspace-manage {
-  margin-top: var(--space-2);
-  border-top-color: var(--border);
-}
+
 
 .brand {
   color: var(--text);
