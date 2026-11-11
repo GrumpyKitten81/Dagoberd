@@ -528,5 +528,20 @@ export default {
   "workspace.snapshot_root": "Carpeta privada sincronizada de instantáneas",
   "workspace.snapshot": "Archivo de revisión de instantánea (.json)",
   "workspace.fingerprint": "Huella de la inspección de instantánea",
-  "workspace.confirm_snapshot": "¿Confirmar la operación mostrada? Las instantáneas contienen datos financieros sensibles. Usa almacenamiento privado. La restauración sustituye los datos locales tras comprobar conflictos; no se sincroniza la base de datos activa."
+  "workspace.confirm_snapshot": "¿Confirmar la operación mostrada? Las instantáneas contienen datos financieros sensibles. Usa almacenamiento privado. La restauración sustituye los datos locales tras comprobar conflictos; no se sincroniza la base de datos activa.",
+  "error.network": "No se puede conectar con el servidor local de la interfaz.",
+  "error.invalid_response": "El servidor ha devuelto una respuesta ilegible o incompleta.",
+  "error.http": "La solicitud ha fallado (HTTP {status}).",
+  "error.unknown": "La operación ha fallado.",
+  "error.unauthorized": "La sesión de la interfaz ya no es válida.",
+  "error.workspace_required": "Elige un espacio de trabajo para continuar.",
+  "error.invalid_workspace": "El espacio de trabajo seleccionado no está disponible.",
+  "dashboard.retry": "Reintentar",
+  "dashboard.network_hint": "Comprueba que el servidor local de Dagoberd está en ejecución y vuelve a intentarlo.",
+  "dashboard.reopen_hint": "Abre la interfaz con el nuevo enlace de inicio que aparece en el terminal.",
+  "dashboard.workspace_hint": "Elige un espacio de trabajo disponible mediante el selector. Recarga la página si es necesario.",
+  "dashboard.retry_hint": "Vuelve a intentarlo. Si el problema persiste, comprueba el servidor local de la interfaz.",
+  "dashboard.render_error": "No se pudieron mostrar los datos del resumen.",
+  "dashboard.diagnostics": "Detalles técnicos",
+  "dashboard.request_details": "{endpoint} · HTTP {status} · Código: {code}"
 };

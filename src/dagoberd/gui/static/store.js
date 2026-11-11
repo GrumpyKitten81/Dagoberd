@@ -18,21 +18,56 @@ export const state = {
   transactionFilters: null,
 };
 
+export class ApiError extends Error {
+  constructor(kind, { status = null, code = null, details = null, message = null } = {}) {
+    super();
+    this.name = 'ApiError';
+    this.kind = kind;
+    this.status = status;
+    this.code = code;
+    this.details = details;
+    this.message = message || msg(`error.${kind}`, { status });
+  }
+}
+
+async function request(path, options) {
+  const prefix = options.management ? '' : state.workspaceId ? `/workspaces/${encodeURIComponent(state.workspaceId)}` : '';
+  try {
+    return await fetch(`/api${prefix}${path}`, options);
+  } catch {
+    throw new ApiError('network');
+  }
+}
+
+async function readPayload(response) {
+  try {
+    return await response.json();
+  } catch {
+    throw new ApiError(response.ok ? 'invalid_response' : 'http', { status: response.status });
+  }
+}
+
+function responseError(response, payload) {
+  const error = payload?.error;
+  const code = typeof error?.code === 'string' ? error.code : null;
+  return new ApiError('http', {
+    status: response.status,
+    code,
+    details: error?.details,
+    message: code ? errorMessage(code, typeof error.message === 'string' ? error.message : '') : null,
+  });
+}
+
 export async function api(path, options = {}) {
   const headers = { 'X-Dagoberd-Token': token, ...(options.headers || {}) };
   if (options.body && !(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
-  const prefix = options.management ? '' : state.workspaceId ? `/workspaces/${encodeURIComponent(state.workspaceId)}` : '';
-  const response = await fetch(`/api${prefix}${path}`, { ...options, headers });
-  const payload = await response.json();
-  if (!response.ok) {
-    const error = new Error(payload.error?.message || response.statusText);
-    error.message = errorMessage(payload.error?.code, payload.error?.message || response.statusText);
-    error.code = payload.error?.code;
-    error.status = response.status;
-    error.details = payload.error?.details;
-    throw error;
+  const response = await request(path, { ...options, headers });
+  const payload = await readPayload(response);
+  if (!response.ok || payload?.ok === false) throw responseError(response, payload);
+  if (payload?.ok !== true || !Object.hasOwn(payload, 'data')) {
+    throw new ApiError('invalid_response', { status: response.status });
   }
   return payload.data;
 }
@@ -44,14 +79,15 @@ export async function apiUpload(path, file) {
 }
 
 export async function apiBlob(path) {
-  const prefix = state.workspaceId ? `/workspaces/${encodeURIComponent(state.workspaceId)}` : '';
-  const response = await fetch(`/api${prefix}${path}`, { headers: { 'X-Dagoberd-Token': token } });
+  const response = await request(path, { headers: { 'X-Dagoberd-Token': token } });
   if (!response.ok) {
-    const error = new Error();
-    error.message = msg('ui.file_could_not_be_loaded', {status: response.status});
-    throw error;
+    throw responseError(response, await readPayload(response));
   }
-  return response.blob();
+  try {
+    return await response.blob();
+  } catch {
+    throw new ApiError('network', { status: response.status });
+  }
 }
 
 export async function loadMetadata() {

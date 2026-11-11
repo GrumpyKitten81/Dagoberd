@@ -117,5 +117,5 @@ export function diagnostic(value) {
 
 export function errorMessage(code, details) {
   const key = `error.${code}`;
-  return msg(Object.hasOwn(en, key) ? key : 'error.generic', {details});
+  return msg(Object.hasOwn(en, key) ? key : 'error.unknown', {details});
 }

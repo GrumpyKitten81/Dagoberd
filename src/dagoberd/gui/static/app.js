@@ -57,9 +57,10 @@ function syncSingleAccount() {
 async function render() {
   rememberView();
   try {
-    await TABS[state.tab](app);
+    return await TABS[state.tab](app);
   } catch (error) {
     notify(error.message, 'error');
+    return false;
   }
 }
 
@@ -201,8 +202,7 @@ async function refreshPage() {
   try {
     await refreshMetadata();
     setActiveTab();
-    await render();
-    notify(msg("ui.view_refreshed"));
+    if (await render() !== false) notify(msg("ui.view_refreshed"));
   } catch (error) {
     notify(error.message, 'error');
   } finally {

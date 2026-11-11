@@ -1,7 +1,7 @@
 import { readPreference, writePreference } from './browser-storage.js';
 import { msg, joinMessages, number, date } from './i18n.js';
-import { append, clear, el, formatAmount, notify, svg } from './dom.js';
-import { api, state } from './store.js';
+import { append, clear, el, formatAmount, svg } from './dom.js';
+import { api, ApiError, state } from './store.js';
 
 const PERIOD_STORAGE_KEY = 'dagoberd.dashboard-period-v1';
 const PERIODS = [
@@ -10,7 +10,8 @@ const PERIODS = [
   ['12m', msg("ui.12_months")],
   ['all', msg("ui.all_time")],
 ];
-let selectedPeriod = readPreference(PERIOD_STORAGE_KEY) || '12m';
+const storedPeriod = readPreference(PERIOD_STORAGE_KEY);
+let selectedPeriod = PERIODS.some(([value]) => value === storedPeriod) ? storedPeriod : '12m';
 
 export async function renderOverview(root) {
   clear(root);
@@ -23,6 +24,7 @@ export async function renderOverview(root) {
     const parameters = new URLSearchParams({ period: selectedPeriod });
     state.accountIds.forEach((id) => parameters.append('account_id', id));
     const data = await api(`/dashboard?${parameters}`);
+    if (!shell.isConnected) return false;
     shell.ariaBusy = 'false';
     shell.replaceChildren(
       el('div', { className: 'overview-topline' }, [
@@ -59,11 +61,47 @@ export async function renderOverview(root) {
         ]),
       ]),
     );
+    return true;
   } catch (error) {
+    if (!shell.isConnected) return false;
     shell.ariaBusy = 'false';
-    notify(error.message, 'error');
-    append(shell, el('p', { className: 'empty-state' }, msg("ui.the_overview_could_not_be_loaded")));
+    shell.replaceChildren(overviewHeader(), overviewError(error, root));
+    return false;
   }
+}
+
+function overviewError(error, root) {
+  const isApiError = error instanceof ApiError;
+  const hint = error.code === 'unauthorized' || error.status === 401
+    ? 'dashboard.reopen_hint'
+    : ['workspace_required', 'invalid_workspace'].includes(error.code)
+      ? 'dashboard.workspace_hint'
+      : isApiError && error.kind === 'network'
+        ? 'dashboard.network_hint'
+        : 'dashboard.retry_hint';
+  const panel = el('section', { className: 'panel overview-error', role: 'alert' }, [
+    el('h2', {}, msg('ui.the_overview_could_not_be_loaded')),
+    el('p', {}, isApiError ? error.message : msg('dashboard.render_error')),
+    el('p', {}, msg(hint)),
+    el('button', {
+      type: 'button',
+      className: 'primary',
+      onclick: (event) => {
+        event.currentTarget.disabled = true;
+        renderOverview(root);
+      },
+    }, msg('dashboard.retry')),
+  ]);
+  if (isApiError) {
+    append(panel, el('details', {}, [
+      el('summary', {}, msg('dashboard.diagnostics')),
+      el('p', {}, msg('dashboard.request_details', {
+        endpoint: 'GET /api/dashboard', status: error.status ?? '—',
+        code: error.code && /^[a-z][a-z0-9_]{0,63}$/.test(error.code) ? error.code : error.kind,
+      })),
+    ]));
+  }
+  return panel;
 }
 
 function overviewHeader() {

@@ -528,5 +528,20 @@ export default {
   "workspace.snapshot_root": "Privater synchronisierter Snapshot-Ordner",
   "workspace.snapshot": "Snapshot-Revisionsdatei (.json)",
   "workspace.fingerprint": "Fingerprint aus der Snapshot-Prüfung",
-  "workspace.confirm_snapshot": "Angezeigten Snapshot-Vorgang bestätigen? Snapshots enthalten sensible Finanzdaten. Nur privaten Speicher verwenden. Eine Wiederherstellung ersetzt lokale Daten erst nach Konfliktprüfung; die aktive Datenbank wird nicht synchronisiert."
+  "workspace.confirm_snapshot": "Angezeigten Snapshot-Vorgang bestätigen? Snapshots enthalten sensible Finanzdaten. Nur privaten Speicher verwenden. Eine Wiederherstellung ersetzt lokale Daten erst nach Konfliktprüfung; die aktive Datenbank wird nicht synchronisiert.",
+  "error.network": "Der lokale GUI-Server ist nicht erreichbar.",
+  "error.invalid_response": "Der Server hat eine unlesbare oder unvollständige Antwort geliefert.",
+  "error.http": "Die Anfrage ist fehlgeschlagen (HTTP {status}).",
+  "error.unknown": "Der Vorgang ist fehlgeschlagen.",
+  "error.unauthorized": "Die GUI-Sitzung ist nicht mehr gültig.",
+  "error.workspace_required": "Wähle einen Arbeitsbereich, um fortzufahren.",
+  "error.invalid_workspace": "Der gewählte Arbeitsbereich ist nicht verfügbar.",
+  "dashboard.retry": "Erneut versuchen",
+  "dashboard.network_hint": "Prüfe, ob der lokale Dagoberd-GUI-Server läuft, und versuche es erneut.",
+  "dashboard.reopen_hint": "Öffne die GUI über den neuen Startlink aus dem Terminal.",
+  "dashboard.workspace_hint": "Wähle einen verfügbaren Arbeitsbereich über die Arbeitsbereichsauswahl. Lade bei Bedarf die Seite neu.",
+  "dashboard.retry_hint": "Versuche es erneut. Prüfe bei anhaltenden Problemen den lokalen GUI-Server.",
+  "dashboard.render_error": "Die Übersichtsdaten konnten nicht dargestellt werden.",
+  "dashboard.diagnostics": "Technische Details",
+  "dashboard.request_details": "{endpoint} · HTTP {status} · Code: {code}"
 };

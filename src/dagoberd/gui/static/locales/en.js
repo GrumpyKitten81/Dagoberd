@@ -528,5 +528,20 @@ export default {
   "workspace.snapshot_root": "Private synchronized snapshot folder",
   "workspace.snapshot": "Snapshot revision file (.json)",
   "workspace.fingerprint": "Fingerprint from snapshot inspection",
-  "workspace.confirm_snapshot": "Confirm the displayed snapshot operation? Snapshots contain sensitive financial data. Use private storage. Restoring replaces local data only after conflict checks; no live database is synchronized."
+  "workspace.confirm_snapshot": "Confirm the displayed snapshot operation? Snapshots contain sensitive financial data. Use private storage. Restoring replaces local data only after conflict checks; no live database is synchronized.",
+  "error.network": "The local GUI server could not be reached.",
+  "error.invalid_response": "The server returned an unreadable or incomplete response.",
+  "error.http": "The request failed (HTTP {status}).",
+  "error.unknown": "The operation failed.",
+  "error.unauthorized": "The GUI session is no longer valid.",
+  "error.workspace_required": "Choose a workspace before continuing.",
+  "error.invalid_workspace": "The selected workspace is unavailable.",
+  "dashboard.retry": "Try again",
+  "dashboard.network_hint": "Check that the local Dagoberd GUI server is running, then try again.",
+  "dashboard.reopen_hint": "Reopen the GUI using the new start link printed in the terminal.",
+  "dashboard.workspace_hint": "Choose an available workspace using the workspace control. Reload the page if necessary.",
+  "dashboard.retry_hint": "Try again. If the problem persists, check the local GUI server.",
+  "dashboard.render_error": "The overview data could not be displayed.",
+  "dashboard.diagnostics": "Technical details",
+  "dashboard.request_details": "{endpoint} · HTTP {status} · Code: {code}"
 };

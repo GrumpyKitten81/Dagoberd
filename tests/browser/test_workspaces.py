@@ -64,8 +64,19 @@ def test_workspace_selection_parallel_tabs_and_repository_initialization(tmp_pat
             second.on("pageerror", lambda error: errors.append(error.stack))
             first.on("dialog", lambda dialog: dialog.accept())
             base = f"http://127.0.0.1:{port}/"
+            dashboard_requests = []
+            first.on(
+                "request",
+                lambda request: (
+                    dashboard_requests.append(request.url)
+                    if "/api/" in request.url and "/dashboard" in request.url
+                    else None
+                ),
+            )
             first.goto(base + "#t=browser-token")
             first.get_by_role("heading", name="Choose workspace").wait_for()
+            assert dashboard_requests == []
+            assert first.locator("#refresh").is_disabled()
             first.get_by_role("combobox", name="Choose workspace").select_option(entries[0]["id"])
             first.wait_for_url(f"**workspace={entries[0]['id']}")
             first.locator("#account-scope").click()
