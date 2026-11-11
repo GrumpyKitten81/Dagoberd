@@ -1,5 +1,5 @@
 import { el, append, svg } from './dom.js';
-import { msg } from './i18n.js';
+import { bind, msg } from './i18n.js';
 
 export function workspaceLabel(entry, entries) {
   return entries.filter((item) => item.display_name === entry.display_name).length > 1
@@ -24,28 +24,40 @@ export function createWorkspacePicker({ entries, activeId, label, onSelect, onMa
   ]);
   const menu = el('div', { className: 'workspace-list', role: 'menu', ariaLabel: msg('workspace.choose') });
   const close = () => { panel.close(); button.ariaExpanded = 'false'; };
-  for (const entry of entries) {
-    const active = entry.id === activeId;
-    append(menu, el('button', {
-      type: 'button', role: 'menuitemradio', ariaChecked: String(active),
-      className: 'workspace-menu-item',
-      onclick: () => {
-        close();
-        if (!active) onSelect(entry.id);
-      },
-    }, [
-      el('span', { className: 'workspace-entry-label' }, workspaceLabel(entry, entries)),
-      active ? el('span', { 'aria-hidden': 'true' }, '✓') : null,
-    ]));
-  }
+  let items = [];
+  const empty = el('p', { className: 'muted' }, msg('workspace.empty'));
+  const update = (nextEntries, nextActiveId, nextLabel) => {
+    entries = nextEntries;
+    activeId = nextActiveId;
+    bind(button.querySelector('.workspace-button-label'), 'textContent', nextLabel);
+    bind(button, 'ariaLabel', msg('workspace.current', { name: nextLabel }));
+    bind(button, 'title', nextLabel);
+    menu.replaceChildren();
+    empty.hidden = entries.length > 0;
+    for (const entry of entries) {
+      const active = entry.id === activeId;
+      append(menu, el('button', {
+        type: 'button', role: 'menuitemradio', ariaChecked: String(active),
+        className: 'workspace-menu-item',
+        onclick: () => {
+          close();
+          if (!active) onSelect(entry.id);
+        },
+      }, [
+        el('span', { className: 'workspace-entry-label' }, workspaceLabel(entry, entries)),
+        active ? el('span', { 'aria-hidden': 'true' }, '✓') : null,
+      ]));
+    }
+    items = [...menu.querySelectorAll('button')];
+  };
   const manage = el('button', {
     type: 'button', onclick: () => { close(); onManage(button); },
   }, msg('workspace.manage'));
   append(panel, el('h2', { id: 'workspace-picker-title' }, msg('workspace.choose')),
-    !entries.length ? el('p', { className: 'muted' }, msg('workspace.empty')) : null,
+    empty,
     menu, el('footer', {}, [manage, el('button', { type: 'button', onclick: close }, msg('workspace.close'))]));
   document.body.append(panel);
-  const items = [...menu.querySelectorAll('button')];
+  update(entries, activeId, label);
   const open = (last = false) => {
     panel.showModal();
     button.ariaExpanded = 'true';
@@ -89,5 +101,5 @@ export function createWorkspacePicker({ entries, activeId, label, onSelect, onMa
     if (event.target === panel && (event.clientX < rect.left || event.clientX > rect.right
       || event.clientY < rect.top || event.clientY > rect.bottom)) close();
   });
-  return button;
+  return { button, update };
 }

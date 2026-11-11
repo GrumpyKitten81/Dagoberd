@@ -1,6 +1,6 @@
 import { msg, bind, isMessage, amount } from './i18n.js';
-// HINT: `list` is a read-only property on HTMLInputElement and must be set as an attribute.
-const ATTRIBUTE_ONLY = new Set(['list']);
+// HINT: native form/list associations are read-only properties; set their attributes.
+const ATTRIBUTE_ONLY = new Set(['list', 'form']);
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
 // DESIGN: every value reaches the DOM as text or as a property, never as parsed HTML.

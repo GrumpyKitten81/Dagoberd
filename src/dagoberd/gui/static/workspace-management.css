@@ -1,0 +1,51 @@
+.workspace-management {
+  width: 42rem;
+}
+
+.workspace-management[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace-management > header,
+.workspace-management > footer {
+  flex-shrink: 0;
+}
+
+.workspace-management > header h2 { margin: 0 0 var(--space-2); }
+.workspace-management > header p { margin: 0 0 var(--space-4); }
+.workspace-management > footer { flex-wrap: wrap; }
+
+.workspace-management-body {
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-1);
+}
+
+.workspace-management fieldset {
+  min-width: 0;
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}
+
+.workspace-management legend { padding-inline: var(--space-1); font-weight: var(--weight-semibold); }
+.workspace-management label { display: grid; gap: var(--space-1); margin-block: var(--space-2); }
+.workspace-management input, .workspace-management select, .workspace-management textarea { width: 100%; min-width: 0; }
+.workspace-management textarea { resize: vertical; }
+.workspace-management .field-hint { white-space: normal; font-weight: var(--weight-normal); }
+.workspace-management :is(h2, h3, p, dd, li, pre, code) { overflow-wrap: anywhere; }
+.workspace-management pre { white-space: pre-wrap; }
+.workspace-result { padding: var(--space-3); background: var(--surface-muted); border-radius: var(--radius-card); }
+.workspace-result h3 { margin-top: 0; }
+.workspace-result-facts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--space-2); }
+.workspace-result-facts dt { color: var(--muted); }
+.workspace-result-facts dd { margin: 0; min-width: 0; }
+.workspace-file-list { padding-left: var(--space-4); }
+.workspace-file-list li { margin-bottom: var(--space-2); }
+.workspace-file-list li > * { display: block; }
+.workspace-technical { margin-top: var(--space-3); }
+
+.workspace-field { display: grid; gap: var(--space-1); margin-block: var(--space-2); }
+.workspace-management .workspace-field label { margin: 0; }

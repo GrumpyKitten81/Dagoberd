@@ -42,6 +42,22 @@ Selection stays in each tab's URL. With no selection, exactly one registered wor
 
 Switching reloads the page after confirmation and discards unsaved input; cancelling preserves the current workspace and input. Running jobs remain in their original workspace. The workspace management dialog provides initialization, registration, cloning, credential adoption, cloud relocation and Git previews. Workspace lifecycle actions belong in the header control; **Administration** manages accounts and reference data within the active workspace. Existing previews and confirmations still apply.
 
+Management groups all 24 actions into Local, optional Git, optional Snapshots,
+optional Cloud storage, and Credentials. Choose a category and action, then fill
+the labelled fields. Existing targets use registered workspace identities; new
+workspaces have a separate name field. Each action retains its inputs for the
+dialog session. Requests lock the form and prevent closing until a response arrives.
+
+Results stay visible with a short summary and expandable technical details.
+Previews show destination paths and affected files directly. Changing any input,
+target or action invalidates a preview. An execution consumes its preview even
+when the request fails; check status and prepare a fresh preview before retrying.
+Creation, initialization, registration, cloning and snapshot adoption refresh the
+selection without navigating. Use **Open workspace** to confirm the switch.
+Removing the active registration clears the underlying view while preserving
+files. After changes to active data or configuration, such as pulling, restoring
+a snapshot or relocating cloud files, closing management reloads the view.
+
 MCP `list_workspaces` returns local entries. Domain tools accept `workspace_id`; selection is required when multiple workspaces are registered. Bind one server explicitly with `DAGOBERD_WORKSPACE` or `DAGOBERD_CONFIG`. Tool selectors cannot override that binding. Data URLs use `/api/workspaces/<uuid>/...`; unscoped data URLs are available only in standalone mode. Public contracts are CLI v3, GUI v5 and MCP v2.
 
 Keyring services use `dagoberd.workspace.<uuid>`. Workspace-local `.env` files are read without modifying process environment. Registered workspaces do not fall back to global environment credentials or the legacy keyring. Store secrets through the selected workspace:

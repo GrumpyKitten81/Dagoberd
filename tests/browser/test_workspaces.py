@@ -104,20 +104,24 @@ def test_workspace_selection_parallel_tabs_and_repository_initialization(tmp_pat
                 ("en", "Initialize local folder", "Snapshot synchronization status"),
             ):
                 first.locator("#language").select_option(language)
+                dialog.locator("#workspace-management-group").select_option("local")
                 assert dialog.locator('option[value="init"]').text_content() == local_init
+                dialog.locator("#workspace-management-group").select_option("snapshots")
                 assert (
                     dialog.locator('option[value="sync-status"]').text_content() == snapshot_status
                 )
+                dialog.locator("#workspace-management-group").select_option("git")
                 assert dialog.locator('option[value="git-init"]').count() == 1
-            dialog.locator("select").select_option("status")
-            dialog.get_by_role("button", name="Apply / preview", exact=True).click()
-            dialog.get_by_text('"storage": "local"', exact=False).wait_for()
-            dialog.locator("select").select_option("init")
+            dialog.locator("#workspace-management-group").select_option("local")
+            dialog.locator("#workspace-management-action").select_option("status")
+            dialog.get_by_role("button", name="Apply", exact=True).click()
+            dialog.get_by_text("Local directory", exact=True).wait_for()
+            dialog.locator("#workspace-management-action").select_option("init")
             dialog.get_by_label("Name", exact=True).fill("association")
-            dialog.get_by_label("Configuration file / target directory", exact=True).fill(
-                str(tmp_path / "provided")
-            )
-            dialog.get_by_role("button", name="Apply / preview", exact=True).click()
+            dialog.get_by_label("Workspace directory", exact=True).fill(str(tmp_path / "provided"))
+            dialog.get_by_role("button", name="Apply", exact=True).click()
+            dialog.get_by_role("button", name="Open workspace", exact=True).wait_for()
+            dialog.get_by_role("button", name="Close", exact=True).click()
             first.locator("#workspace-switcher").click()
             first.get_by_role("menuitemradio", name="association", exact=True).wait_for()
             assert (tmp_path / "provided" / "dagoberd.toml").is_file()
