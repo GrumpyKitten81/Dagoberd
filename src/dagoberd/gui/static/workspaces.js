@@ -1,5 +1,6 @@
 import { el, clear, notify } from './dom.js';
-import { msg, bind } from './i18n.js';
+import { msg } from './i18n.js';
+import { createWorkspacePicker, workspaceLabel } from './workspace-picker.js';
 import { api, state } from './store.js';
 
 function navigateWorkspace(id) {
@@ -9,7 +10,7 @@ function navigateWorkspace(id) {
   location.assign(`${location.pathname}?${parameters}`);
 }
 
-function managementDialog(entries) {
+function managementDialog(entries, returnFocus) {
   const dialog = el('dialog', { className: 'modal' });
   const action = el('select');
   for (const code of ['create', 'init', 'add', 'status', 'remove', 'sync-status', 'sync-configure', 'sync-disconnect', 'sync-publish', 'sync-restore', 'snapshot-inspect', 'snapshot-adopt', 'git-init', 'git-status', 'git-remote', 'git-disconnect', 'git-trust', 'git-pull', 'git-commit', 'git-push', 'clone', 'adopt-credentials', 'cloud-preview', 'cloud-recover']) {
@@ -82,7 +83,7 @@ function managementDialog(entries) {
   } }, msg('workspace.apply'));
   dialog.append(el('h2', {}, msg('workspace.manage')), el('p', {}, msg('workspace.local_first')), action, fields, submit, run, output,
     el('button', { type: 'button', onclick: () => dialog.close() }, msg('workspace.close')));
-  dialog.addEventListener('close', () => dialog.remove());
+  dialog.addEventListener('close', () => { dialog.remove(); returnFocus?.focus(); });
   document.body.append(dialog);
   renderFields();
   dialog.showModal();
@@ -100,18 +101,27 @@ export async function initializeWorkspaces(app) {
     if (error.status === 404) return true;
     throw error;
   }
-  const picker = el('select', { onchange: () => navigateWorkspace(picker.value) });
-  bind(picker, 'aria-label', msg('workspace.choose'));
-  picker.append(el('option', { value: '' }, msg('workspace.choose')));
-  for (const entry of entries) picker.append(el('option', { value: entry.id }, entry.display_name));
-  picker.value = state.workspaceId;
-  document.querySelector('.app-header').prepend(picker,
-    el('button', { type: 'button', onclick: () => managementDialog(entries) }, msg('workspace.manage')));
-  if (legacy || (state.workspaceId && entries.some((entry) => entry.id === state.workspaceId))) return true;
+  const active = entries.find((entry) => entry.id === state.workspaceId);
+  const standalone = legacy && !state.workspaceId;
+  const label = standalone ? msg('workspace.standalone') : active ? workspaceLabel(active, entries)
+    : state.workspaceId ? msg('workspace.unavailable') : msg('workspace.choose');
+  const picker = createWorkspacePicker({
+    entries, activeId: active?.id, label,
+    onSelect: navigateWorkspace,
+    onManage: (trigger) => managementDialog(entries, trigger),
+  });
+  document.querySelector('.brand').insertAdjacentElement('afterend', picker);
+  if (standalone || active) return true;
   clear(app);
   app.append(el('h1', {}, msg('workspace.choose')));
-  for (const entry of entries) app.append(el('button', { type: 'button', onclick: () => navigateWorkspace(entry.id) }, entry.display_name));
-  app.append(el('button', { type: 'button', onclick: () => managementDialog(entries) }, msg('workspace.manage')));
+  if (state.workspaceId) app.append(el('p', { role: 'alert' }, msg('workspace.unavailable_hint')));
+  if (!entries.length) app.append(el('p', {}, msg('workspace.empty')));
+  for (const entry of entries) app.append(el('button', {
+    type: 'button', onclick: () => navigateWorkspace(entry.id),
+  }, workspaceLabel(entry, entries)));
+  app.append(el('button', {
+    type: 'button', onclick: () => managementDialog(entries, picker),
+  }, msg('workspace.manage')));
   for (const button of document.querySelectorAll('[data-tab], #account-scope, #refresh')) button.disabled = true;
   return false;
 }

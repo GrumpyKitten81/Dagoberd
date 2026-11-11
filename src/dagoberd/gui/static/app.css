@@ -102,6 +102,82 @@ tr:focus-visible {
   backdrop-filter: blur(12px);
 }
 
+
+.workspace-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  max-width: min(18rem, 100%);
+}
+
+.workspace-button-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-icon {
+  flex: 0 0 1.15rem;
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.workspace-picker {
+  width: min(24rem, calc(100vw - 1.5rem));
+  max-height: calc(100dvh - 1.5rem);
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  padding: 0.6rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-md);
+}
+
+.workspace-picker[popover] {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+}
+
+dialog.workspace-picker::backdrop {
+  background: rgb(15 23 42 / 0.35);
+}
+
+.workspace-picker h2 {
+  margin: 0.25rem 0.4rem 0.6rem;
+  font-size: 1rem;
+}
+
+.workspace-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  white-space: normal;
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.workspace-entry-label {
+  min-width: 0;
+}
+
+.workspace-menu-item[aria-checked="true"] {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.workspace-manage {
+  margin-top: 0.5rem;
+  border-top-color: var(--border);
+}
+
 .brand {
   color: #122143;
   font-size: 1.05rem;

@@ -543,5 +543,10 @@ export default {
   "dashboard.retry_hint": "Vuelve a intentarlo. Si el problema persiste, comprueba el servidor local de la interfaz.",
   "dashboard.render_error": "No se pudieron mostrar los datos del resumen.",
   "dashboard.diagnostics": "Detalles técnicos",
-  "dashboard.request_details": "{endpoint} · HTTP {status} · Código: {code}"
+  "dashboard.request_details": "{endpoint} · HTTP {status} · Código: {code}",
+  "workspace.current": "Espacio de trabajo: {name}",
+  "workspace.standalone": "Configuración local",
+  "workspace.unavailable": "Espacio de trabajo no disponible",
+  "workspace.unavailable_hint": "El espacio de trabajo de este enlace no está registrado. Elige uno disponible a continuación o gestiona los registros.",
+  "workspace.empty": "No hay espacios de trabajo registrados. Usa Gestionar espacios de trabajo para crear uno local o registrar uno existente."
 };

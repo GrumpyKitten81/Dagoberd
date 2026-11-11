@@ -543,5 +543,10 @@ export default {
   "dashboard.retry_hint": "Versuche es erneut. Prüfe bei anhaltenden Problemen den lokalen GUI-Server.",
   "dashboard.render_error": "Die Übersichtsdaten konnten nicht dargestellt werden.",
   "dashboard.diagnostics": "Technische Details",
-  "dashboard.request_details": "{endpoint} · HTTP {status} · Code: {code}"
+  "dashboard.request_details": "{endpoint} · HTTP {status} · Code: {code}",
+  "workspace.current": "Arbeitsbereich: {name}",
+  "workspace.standalone": "Lokale Konfiguration",
+  "workspace.unavailable": "Arbeitsbereich nicht verfügbar",
+  "workspace.unavailable_hint": "Der Arbeitsbereich aus diesem Link ist nicht registriert. Wähle unten einen verfügbaren Arbeitsbereich oder verwalte die Registrierungen.",
+  "workspace.empty": "Es sind keine Arbeitsbereiche registriert. Über Arbeitsbereiche verwalten kannst du einen lokalen Arbeitsbereich erstellen oder einen vorhandenen registrieren."
 };

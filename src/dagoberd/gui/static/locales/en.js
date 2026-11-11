@@ -543,5 +543,10 @@ export default {
   "dashboard.retry_hint": "Try again. If the problem persists, check the local GUI server.",
   "dashboard.render_error": "The overview data could not be displayed.",
   "dashboard.diagnostics": "Technical details",
-  "dashboard.request_details": "{endpoint} · HTTP {status} · Code: {code}"
+  "dashboard.request_details": "{endpoint} · HTTP {status} · Code: {code}",
+  "workspace.current": "Workspace: {name}",
+  "workspace.standalone": "Local configuration",
+  "workspace.unavailable": "Workspace unavailable",
+  "workspace.unavailable_hint": "The workspace in this link is not registered. Choose an available workspace below or manage registrations.",
+  "workspace.empty": "No workspaces are registered. Use Manage workspaces to create a local workspace or register an existing one."
 };

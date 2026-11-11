@@ -77,7 +77,8 @@ def test_workspace_selection_parallel_tabs_and_repository_initialization(tmp_pat
             first.get_by_role("heading", name="Choose workspace").wait_for()
             assert dashboard_requests == []
             assert first.locator("#refresh").is_disabled()
-            first.get_by_role("combobox", name="Choose workspace").select_option(entries[0]["id"])
+            first.locator("#workspace-switcher").click()
+            first.get_by_role("menuitemradio", name=entries[0]["display_name"], exact=True).click()
             first.wait_for_url(f"**workspace={entries[0]['id']}")
             first.locator("#account-scope").click()
             first.get_by_text("Private Cash", exact=True).wait_for()
@@ -88,12 +89,14 @@ def test_workspace_selection_parallel_tabs_and_repository_initialization(tmp_pat
             second.get_by_text("Business Cash", exact=True).wait_for()
             assert second.get_by_text("Private Cash", exact=True).count() == 0
             second.keyboard.press("Escape")
-            first.get_by_role("combobox", name="Choose workspace").select_option(entries[1]["id"])
+            first.locator("#workspace-switcher").click()
+            first.get_by_role("menuitemradio", name=entries[1]["display_name"], exact=True).click()
             first.wait_for_url(f"**workspace={entries[1]['id']}")
             first.locator("#account-scope").click()
             first.get_by_text("Business Cash", exact=True).wait_for()
             first.keyboard.press("Escape")
-            first.get_by_role("button", name="Manage workspaces", exact=True).click()
+            first.locator("#workspace-switcher").click()
+            first.get_by_role("menuitem", name="Manage workspaces", exact=True).click()
             dialog = first.locator("dialog")
             for language, local_init, snapshot_status in (
                 ("de", "Lokalen Ordner initialisieren", "Status der Snapshot-Synchronisierung"),
@@ -115,7 +118,8 @@ def test_workspace_selection_parallel_tabs_and_repository_initialization(tmp_pat
                 str(tmp_path / "provided")
             )
             dialog.get_by_role("button", name="Apply / preview", exact=True).click()
-            first.get_by_role("option", name="association", exact=True).wait_for(state="attached")
+            first.locator("#workspace-switcher").click()
+            first.get_by_role("menuitemradio", name="association", exact=True).wait_for()
             assert (tmp_path / "provided" / "dagoberd.toml").is_file()
             assert not (tmp_path / "provided" / ".git").exists()
             assert not errors
