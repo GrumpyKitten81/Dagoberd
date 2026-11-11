@@ -46,7 +46,7 @@ export async function renderTransactions(root) {
     activeFilters(),
     selectionBar(),
     el('div', { className: 'transaction-workspace compact-workspace' }, [
-      el('section', { id: 'transaction-result', className: 'transaction-results compact-results' }, [
+      el('section', { id: 'transaction-result', className: 'ui-card transaction-results compact-results' }, [
         el('div', { id: 'transaction-summary', className: 'summary' }, msg("ui.loading_transactions")),
         el('div', { id: 'transaction-table-wrap', className: 'table-wrap' }, [
           tableShell(),
@@ -128,7 +128,7 @@ function advancedFilters() {
   const documentStatus = simpleSelect('f-document', [['matched', statusLabel('matched')], ['unmatched', statusLabel('open')]], view.filters.document_status || '');
   return el('details', { className: 'filter-popover' }, [
     el('summary', {}, msg("ui.more_filters")),
-    el('div', { className: 'filter-popover-content' }, [
+    el('div', { className: 'ui-card filter-popover-content' }, [
       labelled(msg("ui.minimum_amount"), el('input', { id: 'f-amount-min', type: 'number', step: '0.01', value: view.filters.amount_min || '' })),
       labelled(msg("ui.maximum_amount"), el('input', { id: 'f-amount-max', type: 'number', step: '0.01', value: view.filters.amount_max || '' })),
       labelled(msg("ui.merchant"), el('input', { id: 'f-merchant', value: view.filters.merchant || '' })),
@@ -155,7 +155,7 @@ function activeFilters() {
     if (!value) continue;
     append(node, el('button', {
       type: 'button',
-      className: 'filter-chip',
+      className: 'ui-chip filter-chip',
       title: msg("filters.remove", { label: labels[key] || key }),
       onclick: () => {
         delete view.filters[key];
@@ -178,7 +178,7 @@ function selectionBar() {
 function tableShell() {
   const columns = visibleColumns(state, preferences);
   const head = el('tr', {}, [selectionHeader(), ...columns.map(headerCell)]);
-  return el('table', { className: 'transactions compact-grid', ariaLabel: msg("ui.transactions") }, [
+  return el('table', { className: 'ui-table transactions compact-grid', ariaLabel: msg("ui.transactions") }, [
     el('thead', {}, head), el('tbody', { id: 'transaction-body' }),
   ]);
 }
@@ -584,7 +584,7 @@ function showRowMenu(item, event) {
   event.preventDefault();
   document.querySelector('.row-context-menu')?.remove();
   const menu = el('div', {
-    className: 'row-context-menu',
+    className: 'ui-card row-context-menu',
     style: `left:${Math.min(event.clientX, window.innerWidth - 210)}px;top:${Math.min(event.clientY, window.innerHeight - 160)}px`,
   }, [
     el('button', { type: 'button', onclick: () => { menu.remove(); showDetail(item.id); } }, msg("ui.open_details")),
@@ -603,7 +603,7 @@ function showRowMenu(item, event) {
 }
 
 function detailPanel() {
-  return el('aside', { id: 'detail', className: 'detail-panel compact-inspector', hidden: true, ariaLive: 'polite' });
+  return el('aside', { id: 'detail', className: 'ui-card detail-panel compact-inspector', hidden: true, ariaLive: 'polite' });
 }
 
 async function showDetail(transactionId, { keepSelection = false } = {}) {

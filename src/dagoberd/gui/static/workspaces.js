@@ -11,7 +11,7 @@ function navigateWorkspace(id) {
 }
 
 function managementDialog(entries, returnFocus) {
-  const dialog = el('dialog', { className: 'modal' });
+  const dialog = el('dialog', { className: 'ui-dialog modal' });
   const action = el('select');
   for (const code of ['create', 'init', 'add', 'status', 'remove', 'sync-status', 'sync-configure', 'sync-disconnect', 'sync-publish', 'sync-restore', 'snapshot-inspect', 'snapshot-adopt', 'git-init', 'git-status', 'git-remote', 'git-disconnect', 'git-trust', 'git-pull', 'git-commit', 'git-push', 'clone', 'adopt-credentials', 'cloud-preview', 'cloud-recover']) {
     action.append(el('option', { value: code }, msg(`workspace.action.${code}`)));

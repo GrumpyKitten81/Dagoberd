@@ -79,7 +79,7 @@ function overviewError(error, root) {
       : isApiError && error.kind === 'network'
         ? 'dashboard.network_hint'
         : 'dashboard.retry_hint';
-  const panel = el('section', { className: 'panel overview-error', role: 'alert' }, [
+  const panel = el('section', { className: 'ui-card panel overview-error', role: 'alert' }, [
     el('h2', {}, msg('ui.the_overview_could_not_be_loaded')),
     el('p', {}, isApiError ? error.message : msg('dashboard.render_error')),
     el('p', {}, msg(hint)),
@@ -147,7 +147,7 @@ function kpis(summary, quality) {
   const pendingNote = quality.pending_transaction_count
     ? msg("ui.pending", { count: quality.pending_transaction_count })
     : '';
-  return el('section', { className: 'kpi-grid', ariaLabel: msg("ui.financial_indicators") }, [
+  return el('section', { className: 'ui-card kpi-grid', ariaLabel: msg("ui.financial_indicators") }, [
     kpi(msg("ui.net_worth"), summary.net_worth_minor, currency, summary.complete),
     kpi(msg("ui.assets"), summary.assets_minor, currency, summary.complete, 'positive'),
     kpi(msg("ui.liabilities"), summary.liabilities_minor, currency, summary.complete, 'negative'),
@@ -171,7 +171,7 @@ function kpi(label, value, currency, complete, tone = '', note = '') {
 }
 
 function chartPanel(title, description, chart, table, className = '') {
-  return el('section', { className: `chart-panel panel ${className}` }, [
+  return el('section', { className: `ui-card chart-panel panel ${className}` }, [
     el('header', {}, [el('h2', {}, title), el('p', {}, description)]),
     chart,
     el('details', { className: 'chart-data' }, [
@@ -280,14 +280,14 @@ function compositionChart(items) {
 
 function accountOverview(accounts, displayCurrency) {
   const labels = { assets: msg("ui.assets"), liabilities: msg("ui.liabilities"), missing: msg("ui.no_current_balance") };
-  return el('section', { className: 'accounts-panel panel' }, [
+  return el('section', { className: 'ui-card accounts-panel panel' }, [
     el('header', {}, [el('h2', {}, msg("ui.accounts")), el('p', {}, msg("ui.in_scope", { count: accounts.length }))]),
     el('div', { className: 'account-groups' }, Object.entries(labels).map(([section, label]) => {
       const rows = accounts.filter((item) => item.section === section);
       if (!rows.length) return null;
       return el('section', { className: 'account-section' }, [
         el('h3', {}, [label, el('span', {}, String(rows.length))]),
-        el('table', { className: 'account-table' }, [
+        el('table', { className: 'ui-table account-table' }, [
           el('thead', {}, el('tr', {}, [
             el('th', {}, msg("ui.account")), el('th', {}, msg("ui.balance")), el('th', {}, msg("ui.balance_date")), el('th', {}, msg("ui.period_change")),
           ])),
@@ -297,7 +297,7 @@ function accountOverview(accounts, displayCurrency) {
               onclick: () => openAccount(item.account_id),
             }, item.account_name)),
             el('td', { className: item.section === 'liabilities' ? 'negative amount' : 'amount' }, item.balance_minor === null ? '—' : formatOptional(Math.abs(item.balance_minor), item.currency)),
-            el('td', {}, item.balance_date ? [date(item.balance_date), item.stale ? el('span', { className: 'stale', title: msg("ui.days_old", { count: item.age_days }) }, msg("ui.stale")) : null] : '—'),
+            el('td', {}, item.balance_date ? [date(item.balance_date), item.stale ? el('span', { className: 'ui-badge warning stale', title: msg("ui.days_old", { count: item.age_days }) }, msg("ui.stale")) : null] : '—'),
             el('td', { className: 'amount' }, item.period_change_minor === null ? '—' : formatOptional(item.period_change_minor, displayCurrency)),
           ]))),
         ]),
@@ -336,7 +336,7 @@ function compositionTable(items) {
 }
 
 function simpleDataTable(headers, rows) {
-  return el('table', { className: 'data-table' }, [
+  return el('table', { className: 'ui-table data-table' }, [
     el('thead', {}, el('tr', {}, headers.map((header) => el('th', {}, header)))),
     el('tbody', {}, rows.map((row) => el('tr', {}, row.map((value) => el('td', {}, value))))),
   ]);

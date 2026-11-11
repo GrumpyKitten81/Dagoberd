@@ -41,7 +41,7 @@ Install the `dagoberd` distribution and use `dagoberd` or `dagoberd-mcp`. Python
 
 Run `poetry run pre-commit install` once after cloning. The unfiltered Quality workflow checks formatting, lint, types, the complete test suite and package builds on pull requests and pushes to `main`.
 
-- [Product requirements](doc/PRD.md) and [Runbook](doc/RUNBOOK.md)
+- [Product requirements](doc/PRD.md), [Runbook](doc/RUNBOOK.md) and [Design system](doc/DESIGN_SYSTEM.md)
 - [CI and release checks](doc/GITHUB_ACTIONS.md), [Changelog](CHANGELOG.md) and [Contributing](CONTRIBUTING.md)
 - [Agent guidance](AGENTS.md), [shared coding guidance](.agents/guidance/) and [Dagoberd skill](.agents/skills/dagoberd/SKILL.md)
 - [Security](SECURITY.md), [Privacy](doc/PRIVACY.md), [Threat model](doc/THREAT_MODEL.md) and [Support](SUPPORT.md)

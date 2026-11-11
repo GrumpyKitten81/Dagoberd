@@ -45,7 +45,7 @@ function availableProfileCodes(configuredCodes) {
 function profilePanel(configuredProfiles) {
   const configured = configuredProfiles.length > 0;
   const codes = configured ? configuredProfiles.map((profile) => profile.code) : [];
-  const panel = el('section', { className: 'panel' }, [el('h2', {}, msg("ui.profiles_for_this_account"))]);
+  const panel = el('section', { className: 'ui-card panel' }, [el('h2', {}, msg("ui.profiles_for_this_account"))]);
   const list = el('div', { className: 'option-picker' });
   let custom = configured;
   const render = () => {
@@ -100,7 +100,7 @@ function profilePanel(configuredProfiles) {
 }
 
 function annotationPanel(items) {
-  return el('section', { className: 'panel' }, [
+  return el('section', { className: 'ui-card panel' }, [
     el('h2', {}, msg("ui.0_import_annotations")),
     el('p', {}, msg("ui.read_only_edit_dagoberd_local_toml_to")),
     ...items.map((item) => el(
@@ -112,7 +112,7 @@ function annotationPanel(items) {
 }
 
 function historyPanel(enabled) {
-  return el('section', { className: 'panel' }, [
+  return el('section', { className: 'ui-card panel' }, [
     stageSwitch(msg("ui.2_history"), 'history', enabled),
     el(
       'p',
@@ -124,7 +124,7 @@ function historyPanel(enabled) {
 }
 
 function stagePanel(number, title, stage, enabled, items, kind, activeProfiles) {
-  const panel = el('section', { className: 'panel' }, [stageSwitch(msg("classification.stage_title", { number: number, title: title }), stage, enabled)]);
+  const panel = el('section', { className: 'ui-card panel' }, [stageSwitch(msg("classification.stage_title", { number: number, title: title }), stage, enabled)]);
   const description = kind === 'rule'
     ? msg("ui.checks_only_the_purpose_lower_rank_first")
     : msg("ui.checks_purpose_counterparty_and_reference");
@@ -149,7 +149,7 @@ function stagePanel(number, title, stage, enabled, items, kind, activeProfiles) 
   append(panel, el('div', { className: 'toolbar' }, [
     el('label', {}, [msg("ui.profile"), profileFilter]),
     el('label', {}, [scopedOnly, msg("ui.this_account_only")]),
-  ]), el('table', { className: 'transactions' }, [
+  ]), el('div', { className: 'table-wrap' }, el('table', { className: 'ui-table transactions' }, [
     el(
       'thead',
       {},
@@ -162,7 +162,7 @@ function stagePanel(number, title, stage, enabled, items, kind, activeProfiles) 
       ),
     ),
     body,
-  ]), actionButton(msg("classification.add_item", { kind: kind === 'rule' ? msg("ui.rule") : msg("ui.hint") }), () => editItem(null, kind, activeProfiles)));
+  ])), actionButton(msg("classification.add_item", { kind: kind === 'rule' ? msg("ui.rule") : msg("ui.hint") }), () => editItem(null, kind, activeProfiles)));
   refresh();
   return panel;
 }
@@ -273,7 +273,7 @@ function editItem(item, kind, activeProfiles) {
 
 function llmPanel(enabled, llm, activeProfiles) {
   const profile = profileSelect(activeProfiles);
-  return el('section', { className: 'panel' }, [
+  return el('section', { className: 'ui-card panel' }, [
     stageSwitch(msg("ui.4_llm"), 'llm', enabled),
     el('p', {}, msg("ui.key_from", { mode: llm.mode, provider: llm.provider, model: llm.model || msg("ui.no_model"), secret: llm.api_key_secret })),
     el('p', {}, msg("ui.optional_classifier_with_separate_configuration_independent_of_the")),
@@ -321,7 +321,7 @@ function explainPanel(activeProfiles) {
   const transaction = el('input', { placeholder: msg("ui.transaction_id") });
   const profile = profileSelect(activeProfiles);
   const output = el('div');
-  return el('section', { className: 'panel' }, [el('h2', {}, msg("ui.explain_classification")), transaction, profile,
+  return el('section', { className: 'ui-card panel' }, [el('h2', {}, msg("ui.explain_classification")), transaction, profile,
     actionButton(msg("ui.explain"), async () => renderExplanation(output, await explain(transaction.value, profile.value))), output]);
 }
 

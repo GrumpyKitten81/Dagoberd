@@ -8,7 +8,7 @@ const JOB_STORAGE_KEY = `dagoberd.sync-job.${state.workspaceId || 'legacy'}`;
 
 export async function renderData(root) {
   clear(root);
-  const documents = el('section', { className: 'panel' });
+  const documents = el('section', { className: 'ui-card panel' });
   append(root, importPanel(), syncPanel(), classificationPanel(), documents);
   await renderDocuments(documents);
 }
@@ -46,7 +46,7 @@ function importPanel() {
       }
     },
   }, msg("ui.upload_and_preview"));
-  return el('section', { className: 'panel' }, [
+  return el('section', { className: 'ui-card panel' }, [
     el('h2', {}, msg("ui.file_import")),
     el('p', { className: 'bank-support-note' }, msg('bank.experimental')),
     el('p', {}, msg("ui.the_account_selected_above_is_the_import_target")),
@@ -101,7 +101,7 @@ function renderPreview(target, preview) {
 
 function syncPanel() {
   if (!state.metadata.comdirect_connections.length) {
-    return el('section', { className: 'panel' }, [
+    return el('section', { className: 'ui-card panel' }, [
       el('h2', {}, msg("ui.comdirect_sync_experimental")),
       el('p', { className: 'bank-support-note' }, msg('bank.experimental')),
       el('p', {}, msg("ui.no_comdirect_connection_configured")),
@@ -119,7 +119,7 @@ function syncPanel() {
     type: 'button',
     onclick: () => startSync(connection.value, from.value, to.value, status),
   }, msg("ui.synchronize"));
-  return el('section', { className: 'panel' }, [
+  return el('section', { className: 'ui-card panel' }, [
     el('h2', {}, msg("ui.comdirect_sync_experimental")),
       el('p', { className: 'bank-support-note' }, msg('bank.experimental')),
     el('div', { className: 'toolbar' }, [
@@ -242,7 +242,7 @@ function classificationPanel() {
         }
       },
     }, label);
-  return el('section', { className: 'panel' }, [
+  return el('section', { className: 'ui-card panel' }, [
     el('h2', {}, msg("ui.classification")),
     el('div', { className: 'toolbar' }, [
       profile,

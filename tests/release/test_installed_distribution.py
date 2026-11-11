@@ -177,3 +177,39 @@ def test_real_stdio_mcp_process_lists_safe_tools(tmp_path: Path) -> None:
             assert status.isError is False
 
     asyncio.run(scenario())
+
+
+def test_shared_design_assets_and_standalone_html_renderers() -> None:
+    import pandas as pd
+    from fastapi.testclient import TestClient
+
+    from dagoberd.gui import create_app
+    from dagoberd.reporting.analysis_html import render_analysis_html
+    from dagoberd.reporting.html_report import render_profile_report_html
+    from dagoberd.ui import report_styles
+
+    styles = report_styles()
+    assert "--accent: #0b6b63" in styles
+    client = TestClient(create_app(None, "artifact-test-token"))
+    index = client.get("/")
+    asset_base = f"/assets/{client.app.state.asset_version}"
+    for name in ("tokens.css", "components.css"):
+        assert f"{asset_base}/design/{name}" in index.text
+        response = client.get(f"{asset_base}/design/{name}")
+        assert response.status_code == 200
+        assert response.text in styles
+    empty = pd.DataFrame()
+    profile = render_profile_report_html(
+        title="Synthetic report",
+        metadata={},
+        categories=empty,
+        months=empty,
+        accounts=empty,
+        open_items=empty,
+        transactions=empty,
+    )
+    analysis = render_analysis_html({}, {"Synthetic table": empty})
+    for content in (profile, analysis):
+        assert styles in content
+        assert "<link" not in content
+        assert "@import" not in content

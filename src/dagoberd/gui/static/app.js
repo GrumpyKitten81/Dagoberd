@@ -94,7 +94,7 @@ function showScopeDialog() {
   const selected = new Set(
     state.accountIds.length ? state.accountIds : activeAccountIds,
   );
-  const node = el('dialog', { className: 'modal scope-dialog' });
+  const node = el('dialog', { className: 'ui-dialog modal scope-dialog' });
   const accountList = el('div', { className: 'scope-list' });
   const applyButton = el('button', {
     type: 'button',

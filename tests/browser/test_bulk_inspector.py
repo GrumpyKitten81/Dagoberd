@@ -206,7 +206,7 @@ storage_dir = "documents"
                 page.locator("#language").select_option(language)
                 page.get_by_role("heading", name=heading, exact=True).wait_for()
             asset_base = (
-                page.locator('link[rel="stylesheet"]').first.get_attribute("href").rsplit("/", 1)[0]
+                page.locator('link[href$="/app.css"]').first.get_attribute("href").rsplit("/", 1)[0]
             )
             result = page.evaluate(
                 """async base => {

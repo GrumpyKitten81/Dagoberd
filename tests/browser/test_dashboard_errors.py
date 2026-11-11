@@ -159,7 +159,7 @@ def test_error_language_updates_and_api_contracts(page, gui_url):
         ),
     )
     result = page.evaluate("""async () => {
-        const base = document.querySelector('link[rel="stylesheet"]').href;
+        const base = document.querySelector('link[href$="/app.css"]').href;
         const {api, apiBlob} = await import(new URL('./store.js', base));
         const errors = [];
         for (const load of [api, apiBlob]) {
@@ -235,7 +235,7 @@ def test_api_helpers_normalize_failures_without_repeating_writes(page, gui_url):
 
         page.route("**/api/test-error", fail)
         result = page.evaluate("""async () => {
-            const base = document.querySelector('link[rel="stylesheet"]').href;
+            const base = document.querySelector('link[href$="/app.css"]').href;
             const {api, apiBlob, apiUpload} = await import(new URL('./store.js', base));
             const errors = [];
             for (const load of [() => api('/test-error', {method:'POST', body:'{}'}),
@@ -259,7 +259,7 @@ def test_api_helpers_normalize_failures_without_repeating_writes(page, gui_url):
     )
     assert (
         page.evaluate("""async () => {
-        const base = document.querySelector('link[rel="stylesheet"]').href;
+        const base = document.querySelector('link[href$="/app.css"]').href;
         const {apiBlob} = await import(new URL('./store.js', base));
         return (await apiBlob('/test-blob')).text();
     }""")

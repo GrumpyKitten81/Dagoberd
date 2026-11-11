@@ -58,7 +58,7 @@ export function tagEditor(item, row, reload) {
   const cell = el('div', { className: 'tags' });
   for (const tag of item.tags) {
     append(cell,
-      el('span', { className: 'chip' }, [
+      el('span', { className: 'ui-chip chip' }, [
         tag,
         el(
           'button',

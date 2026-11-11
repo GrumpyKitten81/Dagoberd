@@ -9,6 +9,8 @@ from typing import Any
 
 import pandas as pd
 
+from dagoberd.ui import report_styles
+
 PROFILE_TITLES: dict[str, str] = {
     "rental": "Rental report",
     "household": "Household ledger",
@@ -117,7 +119,7 @@ def _kpi_cards(metadata: dict[str, Any], accounts: pd.DataFrame) -> str:
         ("Balance", balance),
     ]
     items = "".join(
-        f'<article class="kpi-card"><span class="kpi-label">{_escape(label)}</span>'
+        f'<article class="kpi-card ui-card"><span class="kpi-label">{_escape(label)}</span>'
         f'<strong class="kpi-value">{_escape(value)}</strong></article>'
         for label, value in cards
     )
@@ -144,7 +146,7 @@ def _simple_table(frame: pd.DataFrame) -> str:
         cells = "".join(f"<td>{_escape(value)}</td>" for value in row)
         body_rows.append(f"<tr>{cells}</tr>")
     return (
-        '<div class="table-wrap"><table class="data-table">'
+        '<div class="table-wrap"><table class="data-table ui-table">'
         f"<thead><tr>{headers}</tr></thead>"
         f"<tbody>{''.join(body_rows)}</tbody>"
         "</table></div>"
@@ -166,7 +168,7 @@ def _filterable_transactions_table(frame: pd.DataFrame) -> str:
         body_rows.append(f"<tr>{cells}</tr>")
     return (
         '<div class="table-wrap">'
-        '<table class="data-table filterable-table" id="transactions-table">'
+        '<table class="data-table ui-table filterable-table" id="transactions-table">'
         f'<thead><tr>{headers}</tr><tr class="filter-row">{filters}</tr></thead>'
         f"<tbody>{''.join(body_rows)}</tbody>"
         "</table>"
@@ -177,7 +179,7 @@ def _filterable_transactions_table(frame: pd.DataFrame) -> str:
 
 def _details_section(section_id: str, title: str, preview: str, body: str) -> str:
     return (
-        f'<details class="report-section" id="{section_id}">'
+        f'<details class="report-section ui-card" id="{section_id}">'
         f'<summary><span class="section-title">{_escape(title)}</span>'
         f'<span class="section-preview">{_escape(preview)}</span></summary>'
         f'<div class="section-body">{body}</div>'
@@ -244,162 +246,12 @@ def render_profile_report_html(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{_escape(title)}</title>
   <style>
-    :root {{
-      --bg: #f5f6f8;
-      --surface: #ffffff;
-      --text: #1f2933;
-      --muted: #5f6b7a;
-      --border: #d9dee7;
-      --accent: #245bdb;
-      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-    }}
-    * {{ box-sizing: border-box; }}
-    body {{
-      margin: 0;
-      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-    }}
-    .page {{
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 32px 20px 48px;
-    }}
-    .hero {{
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-      padding: 24px;
-      margin-bottom: 20px;
-    }}
-    h1 {{
-      margin: 0 0 8px;
-      font-size: 1.8rem;
-      font-weight: 650;
-    }}
-    .subtitle {{
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }}
-    .kpi-grid {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-      margin-top: 20px;
-    }}
-    .kpi-card {{
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 16px;
-    }}
-    .kpi-label {{
-      display: block;
-      color: var(--muted);
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 6px;
-    }}
-    .kpi-value {{
-      font-size: 1.2rem;
-      font-variant-numeric: tabular-nums;
-    }}
-    .report-section {{
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      margin-bottom: 12px;
-      overflow: hidden;
-    }}
-    .report-section > summary {{
-      list-style: none;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: center;
-      padding: 16px 18px;
-      font-weight: 600;
-    }}
-    .report-section > summary::-webkit-details-marker {{
-      display: none;
-    }}
-    .report-section > summary::before {{
-      content: "▸";
-      color: var(--accent);
-      margin-right: 10px;
-      transition: transform 0.15s ease;
-    }}
-    .report-section[open] > summary::before {{
-      transform: rotate(90deg);
-    }}
-    .section-preview {{
-      color: var(--muted);
-      font-weight: 500;
-      font-size: 0.9rem;
-    }}
-    .section-body {{
-      padding: 0 18px 18px;
-      border-top: 1px solid var(--border);
-    }}
-    .table-wrap {{
-      overflow-x: auto;
-      margin-top: 14px;
-    }}
-    .data-table {{
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.92rem;
-    }}
-    .data-table th,
-    .data-table td {{
-      border-bottom: 1px solid var(--border);
-      padding: 10px 12px;
-      text-align: left;
-      vertical-align: top;
-    }}
-    .data-table th {{
-      background: #f8fafc;
-      font-weight: 600;
-      white-space: nowrap;
-    }}
-    .data-table tbody tr:hover {{
-      background: #f8fafc;
-    }}
-    .filter-row input {{
-      width: 100%;
-      min-width: 90px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 6px 8px;
-      font: inherit;
-      background: #fff;
-    }}
-    .table-meta {{
-      margin: 10px 2px 0;
-      color: var(--muted);
-      font-size: 0.85rem;
-    }}
-    .empty {{
-      margin: 14px 0 0;
-      color: var(--muted);
-    }}
-    @media (max-width: 720px) {{
-      .page {{ padding: 20px 12px 32px; }}
-      .report-section > summary {{
-        flex-direction: column;
-        align-items: flex-start;
-      }}
-    }}
+{report_styles()}
   </style>
 </head>
 <body>
   <div class="page">
-    <header class="hero">
+    <header class="hero ui-card">
       <h1>{_escape(title)}</h1>
       <p class="subtitle">Generated at {_escape(metadata.get("generated_at", ""))}</p>
       {_kpi_cards(metadata, accounts)}

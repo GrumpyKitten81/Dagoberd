@@ -109,7 +109,7 @@ export function notify(message, kind = 'info') {
 }
 
 export function dialog(title, content, actions = []) {
-  const node = el('dialog', { className: 'modal' }, [
+  const node = el('dialog', { className: 'ui-dialog modal' }, [
     el('h3', {}, title),
     content,
     el('footer', {}, [

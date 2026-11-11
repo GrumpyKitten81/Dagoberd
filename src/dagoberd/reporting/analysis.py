@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from dagoberd.accounts import AccountScope
 from dagoberd.ledger.migrations import CURRENT_SCHEMA_VERSION
 from dagoberd.ledger.repository import LedgerRepository, VersionConflictError
+from dagoberd.reporting.analysis_html import render_analysis_html
 
 ANALYSIS_CONTRACT_VERSION = "dagoberd-analysis-v1"
 AnalysisSection = Literal[
@@ -1126,18 +1127,7 @@ class AnalysisService:
             paths.append(path)
         if "html" in formats:
             path = base.with_suffix(".html")
-            embedded = json.dumps(result, ensure_ascii=False).replace("</", "<\\/")
-            parts = [
-                "<html><body><h1>Dagoberd Analysis</h1>",
-                '<script id="dagoberd-analysis" type="application/json">',
-                embedded,
-                "</script>",
-            ]
-            for name, frame in tables.items():
-                parts.append(f"<h2>{name}</h2>")
-                parts.append(frame.to_html(index=False, escape=True))
-            parts.append("</body></html>")
-            path.write_text("".join(parts), encoding="utf-8")
+            path.write_text(render_analysis_html(result, tables), encoding="utf-8")
             paths.append(path)
         return paths
 

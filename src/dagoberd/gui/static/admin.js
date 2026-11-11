@@ -34,7 +34,7 @@ async function columnsPanel() {
     }
   };
   render();
-  return el('section', { className: 'panel' }, [
+  return el('section', { className: 'ui-card panel' }, [
     el('h2', {}, msg("ui.columns_for_this_account")),
     el('p', {}, msg("ui.without_a_selection_all_active_dimensions_are_shown")), list,
     el('button', { type: 'button', onclick: async () => {
@@ -70,7 +70,7 @@ function accountPanel() {
       }
     },
   }, msg("ui.save_account"));
-  return el('section', { className: 'panel' }, [
+  return el('section', { className: 'ui-card panel' }, [
     el('h2', {}, msg("ui.account")),
     el('div', { className: 'toolbar' }, [
       el('label', {}, [msg("ui.display_name"), name]),
@@ -82,7 +82,7 @@ function accountPanel() {
 
 async function optionsPanel() {
   const selected = await api(`/accounts/${state.accountId}/options/selected`);
-  const panel = el('section', { className: 'panel' }, [
+  const panel = el('section', { className: 'ui-card panel' }, [
     el('h2', {}, msg("ui.available_values_for_this_account")),
     el('p', {}, msg("ui.an_empty_selection_allows_all_values")),
   ]);
@@ -188,7 +188,7 @@ function createPanel() {
       body: JSON.stringify({ name }),
     })),
   ];
-  return el('section', { className: 'panel' }, [el('h2', {}, msg("ui.create_reference_data")), ...forms]);
+  return el('section', { className: 'ui-card panel' }, [el('h2', {}, msg("ui.create_reference_data")), ...forms]);
 }
 
 function creator(title, fields, submit) {

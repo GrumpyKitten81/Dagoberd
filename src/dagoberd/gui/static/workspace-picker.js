@@ -9,7 +9,7 @@ export function workspaceLabel(entry, entries) {
 export function createWorkspacePicker({ entries, activeId, label, onSelect, onManage }) {
   const nativePopover = typeof HTMLElement.prototype.showPopover === 'function';
   const panel = el(nativePopover ? 'div' : 'dialog', {
-    id: 'workspace-picker', className: 'workspace-picker',
+    id: 'workspace-picker', className: nativePopover ? 'ui-card workspace-picker' : 'ui-dialog workspace-picker',
     'aria-labelledby': 'workspace-picker-title',
   });
   if (nativePopover) panel.setAttribute('popover', 'auto');

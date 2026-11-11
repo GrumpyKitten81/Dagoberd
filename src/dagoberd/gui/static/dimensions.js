@@ -3,7 +3,7 @@ import { el, notify, append } from './dom.js';
 import { api, loadMetadata, loadOptions, state } from './store.js';
 
 export function dimensionsPanel(reload) {
-  const panel = el('section', { className: 'panel' }, [
+  const panel = el('section', { className: 'ui-card panel' }, [
     el('h2', {}, msg("ui.dimensions_and_values")),
     el('p', {}, msg("ui.inactive_values_are_no_longer_offered_for_new")),
   ]);

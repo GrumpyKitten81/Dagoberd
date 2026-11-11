@@ -24,12 +24,14 @@ from dagoberd.gui.routes import (
 )
 from dagoberd.gui.security import StaticAssetCacheMiddleware, TokenMiddleware
 from dagoberd.gui.workspace_context import WorkspaceContextMiddleware
+from dagoberd.ui import styles_directory
 from dagoberd.workspaces import workspace_operation
 
 
 def create_app(loaded: LoadedConfig | None, token: str) -> FastAPI:
     static_directory = Path(__file__).with_name("static")
-    asset_version = _static_asset_version(static_directory)
+    design_directory = styles_directory()
+    asset_version = _static_asset_version(static_directory, design_directory)
     asset_base = f"/assets/{asset_version}"
     index = (
         (static_directory / "index.html")
@@ -62,16 +64,17 @@ def create_app(loaded: LoadedConfig | None, token: str) -> FastAPI:
     def gui_index() -> HTMLResponse:
         return HTMLResponse(index)
 
+    app.mount(f"{asset_base}/design", StaticFiles(directory=design_directory), name="design")
     app.mount(asset_base, StaticFiles(directory=static_directory), name="static")
     return app
 
 
-def _static_asset_version(static_directory: Path) -> str:
+def _static_asset_version(*directories: Path) -> str:
     """Return a stable URL namespace for the exact frontend source tree."""
     digest = hashlib.sha256()
-    for path in sorted(
-        candidate for candidate in static_directory.rglob("*") if candidate.is_file()
-    ):
-        digest.update(path.relative_to(static_directory).as_posix().encode())
-        digest.update(path.read_bytes())
+    for directory in directories:
+        digest.update(directory.name.encode())
+        for path in sorted(candidate for candidate in directory.rglob("*") if candidate.is_file()):
+            digest.update(path.relative_to(directory).as_posix().encode())
+            digest.update(path.read_bytes())
     return digest.hexdigest()[:16]
