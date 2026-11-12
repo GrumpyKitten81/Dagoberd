@@ -6,6 +6,7 @@ import argparse
 import getpass
 import json
 import sys
+from contextvars import ContextVar
 from dataclasses import asdict
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
@@ -22,6 +23,7 @@ from dagoberd.config import (
     masked_config,
 )
 from dagoberd.contracts import ExitCode, failure, success, versions
+from dagoberd.date_display import DatePresentation, resolve_display
 from dagoberd.doctor import run_diagnostics
 from dagoberd.documents.batch import DocumentBatchService
 from dagoberd.documents.extraction import create_local_ocr_provider
@@ -940,19 +942,22 @@ def _print_json(value: Any) -> None:
 
 
 _OUTPUT_MODE = "legacy-json"
+_DISPLAY: ContextVar[DatePresentation | None] = ContextVar("cli_date_display", default=None)
 
 
 def _human_line(value: Any) -> str:
+    value = (_DISPLAY.get() or resolve_display()).record(value)
     if isinstance(value, dict):
         return " | ".join(f"{key}: {item}" for key, item in value.items())
     return str(value)
 
 
 def _loaded(args: argparse.Namespace) -> LoadedConfig:
-    if current := CURRENT_WORKSPACE.get():
-        return current
     overrides = {"database": {"path": args.db}} if args.db else None
-    return load_config(args.config, overrides=overrides)
+    loaded = CURRENT_WORKSPACE.get() or load_config(args.config, overrides=overrides)
+    if _OUTPUT_MODE == "human":
+        _DISPLAY.set(resolve_display(loaded.config.display))
+    return loaded
 
 
 def _handle_project_commands(
@@ -1618,7 +1623,7 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
                 organization.execute_bulk_preview(args.preview_id, fingerprint=args.fingerprint)
             )
         return 0
-    analysis_service = AnalysisService(repo)
+    analysis_service = AnalysisService(repo, display=loaded.config.display)
     if args.command == "rates":
         if args.rates_command == "add":
             _print_json(
@@ -1987,7 +1992,10 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
         scope = _account_scope(repo, args.accounts, args.group)
         formats = tuple(args.formats or loaded.config.reporting.default_formats)
         for path in LedgerReportGenerator(
-            repo, output, extensions=loaded.config.reporting.extensions
+            repo,
+            output,
+            extensions=loaded.config.reporting.extensions,
+            display=loaded.config.display,
         ).generate(
             args.profile,
             formats,
@@ -2524,6 +2532,7 @@ def _handle_portability_commands(
 
 def main(argv: list[str] | None = None) -> int:
     """Run the CLI with stable machine-readable errors and exit codes."""
+    token = _DISPLAY.set(None)
     try:
         return _run(argv)
     except RestoreError as error:
@@ -2551,6 +2560,9 @@ def main(argv: list[str] | None = None) -> int:
             type(error).__name__,
             ExitCode.OPERATION_FAILED,
         )
+
+    finally:
+        _DISPLAY.reset(token)
 
 
 def _render_failure(code: str, message: str, exit_code: ExitCode, *, details: Any = None) -> int:

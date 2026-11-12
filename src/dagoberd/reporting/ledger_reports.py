@@ -12,9 +12,11 @@ import pandas as pd
 
 from dagoberd.accounts import AccountScope
 from dagoberd.config import ReportExtensionConfig
+from dagoberd.date_display import DisplayConfig, resolve_display
 from dagoberd.ledger.migrations import CURRENT_SCHEMA_VERSION
 from dagoberd.ledger.models import from_minor_units
 from dagoberd.ledger.repository import LedgerRepository
+from dagoberd.reporting.display import write_excel_table
 from dagoberd.reporting.extensions import (
     REPORT_EXTENSION_API_VERSION,
     ReportContext,
@@ -31,8 +33,10 @@ class LedgerReportGenerator:
         output_dir: str | Path,
         *,
         extensions: dict[str, ReportExtensionConfig] | None = None,
+        display: DisplayConfig | None = None,
     ) -> None:
         self.repository = repository
+        self.display = display or DisplayConfig()
         self.extensions = extensions or {}
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -135,6 +139,7 @@ class LedgerReportGenerator:
         monthly = self._monthly_summary(frame)
         accounts = self._account_summary(frame)
         open_items = self._open_items(frame)
+        presentation = resolve_display(self.display)
         paths: list[Path] = []
         if "json" in formats:
             path = self.output_dir / f"{prefix}-report.json"
@@ -158,19 +163,21 @@ class LedgerReportGenerator:
         if "xlsx" in formats:
             path = self.output_dir / f"{prefix}-report.xlsx"
             with pd.ExcelWriter(path, engine="openpyxl") as writer:
-                frame.to_excel(writer, sheet_name="Transactions", index=False)
-                _display_table(summary).to_excel(
-                    writer, sheet_name="Cashflow categories", index=False
-                )
-                _display_table(monthly).to_excel(writer, sheet_name="Months", index=False)
-                _display_table(accounts).to_excel(writer, sheet_name="Accounts", index=False)
-                open_items.to_excel(writer, sheet_name="Open items", index=False)
-                pd.DataFrame([metadata]).to_excel(writer, sheet_name="Metadata", index=False)
+                for sheet, table in {
+                    "Transactions": frame,
+                    "Cashflow categories": _display_table(summary),
+                    "Months": _display_table(monthly),
+                    "Accounts": _display_table(accounts),
+                    "Open items": open_items,
+                    "Metadata": pd.DataFrame([metadata]),
+                }.items():
+                    write_excel_table(table, writer, sheet, presentation)
             paths.append(path)
         if "html" in formats:
             path = self.output_dir / f"{prefix}-report.html"
             path.write_text(
                 render_profile_report_html(
+                    display=presentation,
                     title=profile_report_title(profile_code),
                     metadata=metadata,
                     categories=_display_table(summary),

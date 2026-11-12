@@ -8,10 +8,18 @@ from typing import Any
 
 import pandas as pd
 
+from dagoberd.date_display import DatePresentation, resolve_display
+from dagoberd.reporting.display import display_frame
 from dagoberd.ui import report_styles
 
 
-def render_analysis_html(result: dict[str, Any], tables: dict[str, pd.DataFrame]) -> str:
+def render_analysis_html(
+    result: dict[str, Any],
+    tables: dict[str, pd.DataFrame],
+    *,
+    display: DatePresentation | None = None,
+) -> str:
+    display = display or resolve_display()
     embedded = json.dumps(result, ensure_ascii=False).replace("</", "<\\/")
     parts = [
         '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">',
@@ -29,7 +37,7 @@ def render_analysis_html(result: dict[str, Any], tables: dict[str, pd.DataFrame]
             [
                 f'<section class="report-section ui-card"><h2>{html.escape(name)}</h2>',
                 '<div class="table-wrap">',
-                frame.to_html(
+                display_frame(frame, display).to_html(
                     index=False, escape=True, classes=["ui-table", "data-table"], border=0
                 ),
                 "</div></section>",

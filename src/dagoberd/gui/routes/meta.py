@@ -28,6 +28,7 @@ def meta(request: Request) -> dict:
     return success(
         {
             "versions": versions(),
+            "display": context.loaded.config.display.gui_settings(),
             "accounts": context.repository().list_accounts(),
             "account_groups": context.repository().list_account_groups(),
             "profiles": organization.list_profile_categories(),

@@ -1,6 +1,12 @@
 # Dagoberd project configuration (no secrets)
 # Machine-specific overrides: dagoberd.local.toml (gitignored; copy patterns from below)
 
+[display]
+# Calendar-date presentation only; import date_formats remain parsing settings.
+# locale = "de-DE" # Otherwise use browser/system locale; fallback: DD.MM.YYYY.
+date_format = "locale" # locale, iso, dmy-dot, dmy-slash, mdy-slash, ymd-slash
+# date_format = "%d.%m.%Y" # Custom numeric pattern: %d, %m and %Y exactly once.
+
 [database]
 path = "output/dagoberd.db"
 

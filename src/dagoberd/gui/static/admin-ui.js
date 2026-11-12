@@ -1,6 +1,6 @@
 import { append, clear, el } from './dom.js';
 import { bind, msg } from './i18n.js';
-import { api, ApiError, loadOptions, state } from './store.js';
+import { api, ApiError, loadOptions, publishMetadata, state } from './store.js';
 
 let pendingWrite = false;
 const controllers = new Set();
@@ -60,7 +60,7 @@ export function adminController(root, hooks) {
       const revision = state.metadataRevision;
       const metadata = await api('/meta');
       if (!current()) return;
-      state.metadata = metadata;
+      publishMetadata(metadata);
       hooks.onMetadata?.();
       scope = state.accountIds.join('|');
       await loadOptions(current);

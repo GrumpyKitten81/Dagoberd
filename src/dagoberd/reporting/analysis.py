@@ -16,9 +16,11 @@ import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from dagoberd.accounts import AccountScope
+from dagoberd.date_display import DisplayConfig, resolve_display
 from dagoberd.ledger.migrations import CURRENT_SCHEMA_VERSION
 from dagoberd.ledger.repository import LedgerRepository, VersionConflictError
 from dagoberd.reporting.analysis_html import render_analysis_html
+from dagoberd.reporting.display import write_excel_table
 
 ANALYSIS_CONTRACT_VERSION = "dagoberd-analysis-v1"
 AnalysisSection = Literal[
@@ -130,8 +132,11 @@ class AnalysisDefinition(BaseModel):
 class AnalysisService:
     """Canonical analysis engine shared by CLI, MCP and all file formats."""
 
-    def __init__(self, repository: LedgerRepository) -> None:
+    def __init__(
+        self, repository: LedgerRepository, *, display: DisplayConfig | None = None
+    ) -> None:
         self.repository = repository
+        self.display = display or DisplayConfig()
 
     @staticmethod
     def _clean(value: str, label: str) -> str:
@@ -1111,6 +1116,7 @@ class AnalysisService:
         stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
         base = target / f"{prefix}-{stamp}-analysis"
         tables = self._tables(result)
+        presentation = resolve_display(self.display)
         paths: list[Path] = []
         if "json" in formats:
             path = base.with_suffix(".json")
@@ -1123,11 +1129,14 @@ class AnalysisService:
             path = base.with_suffix(".xlsx")
             with pd.ExcelWriter(path, engine="openpyxl") as writer:
                 for name, frame in tables.items():
-                    frame.to_excel(writer, sheet_name=name[:31], index=False)
+                    write_excel_table(frame, writer, name[:31], presentation)
             paths.append(path)
         if "html" in formats:
             path = base.with_suffix(".html")
-            path.write_text(render_analysis_html(result, tables), encoding="utf-8")
+            path.write_text(
+                render_analysis_html(result, tables, display=presentation),
+                encoding="utf-8",
+            )
             paths.append(path)
         return paths
 

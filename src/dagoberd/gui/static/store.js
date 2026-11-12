@@ -1,3 +1,4 @@
+import { configureDateDisplay } from './date-display.js';
 import { readSession, writeSession } from './browser-storage.js';
 import { errorMessage, msg } from './i18n.js';
 const TOKEN_STORAGE_KEY = 'dagoberd.gui-token';
@@ -92,8 +93,13 @@ export async function apiBlob(path) {
   }
 }
 
+export function publishMetadata(metadata) {
+  state.metadata = metadata;
+  configureDateDisplay(metadata.display);
+}
+
 export async function loadMetadata() {
-  state.metadata = await api('/meta');
+  publishMetadata(await api('/meta'));
   return state.metadata;
 }
 

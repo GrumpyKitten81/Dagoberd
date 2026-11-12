@@ -1127,7 +1127,7 @@ class MCPService:
     def _execute_once(self, name: str, arguments: dict[str, Any]) -> Any:
         repo = self.repository
         organization = OrganizationService(repo)
-        analysis = AnalysisService(repo)
+        analysis = AnalysisService(repo, display=self.loaded.config.display)
         if name == "get_status":
             return {
                 "diagnostics": [
@@ -1729,6 +1729,7 @@ class MCPService:
                 repo,
                 self.loaded.config.reporting.output_dir,
                 extensions=self.loaded.config.reporting.extensions,
+                display=self.loaded.config.display,
             ).generate(
                 arguments.get("profile"),
                 tuple(arguments.get("formats") or self.loaded.config.reporting.default_formats),

@@ -9,6 +9,8 @@ from typing import Any
 
 import pandas as pd
 
+from dagoberd.date_display import DatePresentation, resolve_display
+from dagoberd.reporting.display import display_frame
 from dagoberd.ui import report_styles
 
 PROFILE_TITLES: dict[str, str] = {
@@ -63,7 +65,9 @@ def _tags_value(row: pd.Series) -> str:
     return ""
 
 
-def prepare_transactions_display(frame: pd.DataFrame) -> pd.DataFrame:
+def prepare_transactions_display(
+    frame: pd.DataFrame, display: DatePresentation | None = None
+) -> pd.DataFrame:
     if frame.empty:
         return pd.DataFrame(
             columns=[
@@ -81,9 +85,9 @@ def prepare_transactions_display(frame: pd.DataFrame) -> pd.DataFrame:
                 "Tags",
             ]
         )
-    display = pd.DataFrame(
+    result = pd.DataFrame(
         {
-            "Date": frame["booking_date"].dt.strftime("%Y-%m-%d"),
+            "Date": frame["booking_date"].map((display or resolve_display()).date),
             "Purpose": frame["purpose"].fillna(""),
             "Counterparty": frame.get("counterparty", pd.Series([""] * len(frame))).fillna(""),
             "Amount": frame["amount"].map(_format_amount),
@@ -97,7 +101,7 @@ def prepare_transactions_display(frame: pd.DataFrame) -> pd.DataFrame:
             "Tags": frame.apply(_tags_value, axis=1),
         }
     )
-    return display
+    return result
 
 
 def _kpi_cards(metadata: dict[str, Any], accounts: pd.DataFrame) -> str:
@@ -196,8 +200,13 @@ def render_profile_report_html(
     accounts: pd.DataFrame,
     open_items: pd.DataFrame,
     transactions: pd.DataFrame,
+    display: DatePresentation | None = None,
 ) -> str:
-    transactions_display = prepare_transactions_display(transactions)
+    display = display or resolve_display()
+    metadata = display.record(metadata)
+    open_items = display_frame(open_items, display)
+    accounts = display_frame(accounts, display)
+    transactions_display = prepare_transactions_display(transactions, display)
     metadata_table = _simple_table(
         pd.DataFrame(_metadata_rows(metadata), columns=["Field", "Value"])
     )

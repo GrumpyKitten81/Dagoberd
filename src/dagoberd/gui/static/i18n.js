@@ -1,3 +1,4 @@
+import { formatDateDisplay } from './date-display.js';
 import { builtinLabels } from './builtin-labels.js';
 import en from './locales/en.js';
 import de from './locales/de.js';
@@ -56,11 +57,7 @@ export function amount(value, currency) {
 }
 
 export function date(value, options = {}) {
-  return new Message(() => {
-    if (!value) return '—';
-    const parsed = new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T12:00:00` : value);
-    return Number.isNaN(parsed.valueOf()) ? String(value) : new Intl.DateTimeFormat(language, options).format(parsed);
-  });
+  return new Message(() => formatDateDisplay(value, options, language));
 }
 
 const bindings = new WeakMap();
@@ -84,13 +81,15 @@ export function bind(node, property, value) {
 
 export function isMessage(value) { return value instanceof Message; }
 
-document.addEventListener('dagoberd:language', () => {
+function rebindMessages() {
   const visit = (node) => {
     for (const apply of bindings.get(node)?.values() || []) apply();
     for (const child of node.childNodes) visit(child);
   };
   visit(document.body);
-});
+}
+document.addEventListener('dagoberd:language', rebindMessages);
+document.addEventListener('dagoberd:date-display', rebindMessages);
 document.documentElement.lang = language;
 
 export function builtinLabel(code, name) {

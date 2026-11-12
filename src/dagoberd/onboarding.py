@@ -434,9 +434,9 @@ def create_demo_workspace(destination: str | Path, *, force: bool = False) -> di
         merchant="Demo Software Ltd",
         reference="DEMO-INVOICE-1",
     )
-    report_paths = LedgerReportGenerator(repository, loaded.config.reporting.output_dir).generate(
-        formats=("json", "xlsx", "html")
-    )
+    report_paths = LedgerReportGenerator(
+        repository, loaded.config.reporting.output_dir, display=loaded.config.display
+    ).generate(formats=("json", "xlsx", "html"))
     return {
         "workspace": str(root),
         "configuration": str(config_path),

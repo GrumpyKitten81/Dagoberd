@@ -127,7 +127,49 @@ Five areas cover overview, transactions, administration, data and classification
 
 The compact language menu at the right of the header offers English, German and Spanish. Its closed button shows the current flag and language code; the menu shows native language names and marks the current choice. The locally embedded SVG flags (UK, Germany and Spain) indicate language presentation, not nationality or the date/number region. They are decorative for screen readers, which receive the language name. Enter/Space and arrow keys open the menu; arrows and Home/End move between languages. Escape returns focus, Tab continues through the page, and clicking outside dismisses the menu.
 
-First use is English; selection is stored locally. Switching updates existing text, accessible names and number/date formatting without reloading, losing drafts or repeating operations. Central catalogs use semantic keys, named parameters and plural variants; a new language adds a catalog and registry entry. User labels and source data are not automatically translated.
+First use is English; selection is stored locally. Switching updates existing text, accessible names and number formatting without reloading, losing drafts or repeating operations. Central catalogs use semantic keys, named parameters and plural variants; a new language adds a catalog and registry entry. User labels and source data are not automatically translated.
+
+### Date presentation
+
+Date display is independent of the interface language and import parsing. Configure
+it per workspace in `dagoberd.toml`, or override it in `dagoberd.local.toml`:
+
+```toml
+[display]
+# Optional locale override; otherwise GUI uses the browser and CLI/reports the OS.
+# locale = "de-DE"
+date_format = "locale"
+# date_format = "%d.%m.%Y"
+```
+
+Supported presets are `locale` (the locale's short date), `iso` (`2026-07-01`),
+`dmy-dot` (`01.07.2026`), `dmy-slash` (`01/07/2026`), `mdy-slash` (`07/01/2026`)
+and `ymd-slash` (`2026/07/01`). A custom numeric pattern must contain `%d`, `%m`
+and `%Y` exactly once, with only dots, slashes, hyphens, underscores or spaces
+as separators. Other directives and unsupported locale tags fail configuration
+validation. Use supported language/region tags such as `de-DE` or `en-GB`;
+POSIX encoding strings belong to system settings, not `display.locale`.
+
+An explicit pattern/preset takes precedence over locale. Otherwise, configured
+locale takes precedence over browser/system detection. The GUI checks browser
+language preferences followed by its primary language. CLI and report generation
+check `LC_ALL`, `LC_TIME` and `LANG`, then the active/native OS locale without
+changing process-wide locale state. C/POSIX, encoding-only settings and failed
+recognition use `DD.MM.YYYY`. Numeric dates use the Gregorian calendar; the locale
+short format may use a two-digit year. Use a preset/custom pattern for a stable
+four-digit year across platforms. Different machines may have different defaults;
+an explicit pattern standardizes shared reports and screenshots.
+
+Only human CLI output and visible GUI/HTML/Excel dates change. Calendar dates never
+shift with time zones. Visible timestamp date parts follow the setting; existing
+clock times and offsets remain intact (the GUI continues its existing local-time
+rendering). HTML reports freeze their display at generation and work offline.
+Excel keeps real date cells with matching number formats; timestamp offsets remain
+in formatted text rather than being silently removed. JSON, Legacy-JSON, API data,
+embedded analysis JSON, native date-input values, month identifiers, filenames and
+extension inputs remain unchanged. Existing reports are not rewritten. Import
+`date_formats` still controls parsing only. Restart the GUI after configuration
+changes; a metadata refresh applies the settings supplied by the server.
 
 ### Administration
 

@@ -13,6 +13,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from dagoberd.date_display import DisplayConfig
 from dagoberd.llm_endpoint import validate_llm_endpoint
 
 PROJECT_CONFIG_NAME = "dagoberd.toml"
@@ -373,6 +374,7 @@ class ImportProfileConfig(StrictModel):
 
 
 class AppConfig(StrictModel):
+    display: DisplayConfig = Field(default_factory=DisplayConfig)
     workspace: WorkspaceConfig = Field(default_factory=WorkspaceConfig)
     data: DataConfig = Field(default_factory=DataConfig)
     cloud: CloudConfig = Field(default_factory=CloudConfig)
@@ -400,6 +402,12 @@ class LoadedConfig:
 
 DEFAULT_CONFIG_TOML = """# Dagoberd project configuration (no secrets)
 # Machine-specific overrides: dagoberd.local.toml (gitignored; copy patterns from below)
+
+[display]
+# Calendar-date presentation only; import date_formats remain parsing settings.
+# locale = "de-DE" # Otherwise use browser/system locale; fallback: DD.MM.YYYY.
+date_format = "locale" # locale, iso, dmy-dot, dmy-slash, mdy-slash, ymd-slash
+# date_format = "%d.%m.%Y" # Custom numeric pattern: %d, %m and %Y exactly once.
 
 [database]
 path = "output/dagoberd.db"
