@@ -354,3 +354,203 @@ def test_snapshot_record_change_and_missing_ancestry_are_rejected(local_registry
         sync.run(preview["preview_id"], preview["fingerprint"], yes=True)
     assert loaded.config.database.path.read_bytes() == before
     assert not (root / "active").exists()
+
+
+@pytest.mark.parametrize("failure", ["restore", "state", "registration"])
+def test_failed_adoption_does_not_reserve_workspace_identity(
+    local_registry, tmp_path, monkeypatch, failure
+):
+    from dagoberd.services.portability import PortabilityService
+    from dagoberd.workspace_sync import atomic_text
+
+    populate(local_registry, tmp_path / "local")
+    sync = WorkspaceSync(local_registry, "local")
+    sync.configure(str(tmp_path / "cloud"), yes=True)
+    exchange(sync, "publish")
+    record = next((tmp_path / "cloud").rglob("*.json"))
+    inspected = inspect_snapshot(record)
+    registry = WorkspaceRegistry(tmp_path / "other-settings" / "workspaces.toml")
+    original_restore = PortabilityService.restore
+
+    def restore(service, *args, **kwargs):
+        assert registry.list() == []
+        if failure == "restore":
+            raise OSError("Synthetic adoption failure")
+        return original_restore(service, *args, **kwargs)
+
+    def write(path, content):
+        if path.name == "sync-state.json" and failure == "state":
+            raise OSError("Synthetic adoption failure")
+        atomic_text(path, content)
+
+    def register(*args, **kwargs):
+        assert registry.list() == []
+        raise OSError("Synthetic adoption failure")
+
+    target = tmp_path / "failed-adoption"
+    with monkeypatch.context() as patch:
+        patch.setattr(PortabilityService, "restore", restore)
+        patch.setattr("dagoberd.workspace_sync.atomic_text", write)
+        if failure == "registration":
+            patch.setattr(registry, "add", register)
+        with pytest.raises(OSError, match="Synthetic adoption failure"):
+            adopt_snapshot(
+                registry, "copy", str(target), str(record), inspected["fingerprint"], yes=True
+            )
+    assert registry.list() == []
+    assert (target / "dagoberd.toml").is_file()
+    preserved = (target / "dagoberd.toml").read_bytes()
+    with pytest.raises(ValueError, match="new or empty"):
+        adopt_snapshot(
+            registry, "copy", str(target), str(record), inspected["fingerprint"], yes=True
+        )
+    assert (target / "dagoberd.toml").read_bytes() == preserved
+    result = adopt_snapshot(
+        registry,
+        "copy",
+        str(tmp_path / "successful-adoption"),
+        str(record),
+        inspected["fingerprint"],
+        yes=True,
+    )
+    assert result["workspace_id"] == inspected["workspace_id"]
+    assert registry.entry("copy").sync_root == tmp_path / "cloud"
+    assert WorkspaceSync(registry, "copy").status()["local_revision"] == inspected["revision"]
+
+
+@pytest.mark.parametrize(
+    ("action", "failure"),
+    [
+        ("publish", "state"),
+        ("restore", "state"),
+        ("publish", "checkpoint"),
+        ("restore", "checkpoint"),
+        ("publish", "publication"),
+    ],
+)
+@pytest.mark.parametrize("later_changes", [False, True])
+def test_completed_exchange_survives_status_write_failure(
+    local_registry, tmp_path, monkeypatch, action, later_changes, failure
+):
+    from dagoberd.safe_files import prepared_new_file
+    from dagoberd.services.restore_files import RestoreError
+    from dagoberd.workspace_sync import atomic_text
+
+    loaded = populate(local_registry, tmp_path / "local")
+    sync = WorkspaceSync(local_registry, "local")
+    root = tmp_path / "cloud"
+    sync.configure(str(root), yes=True)
+    if action == "restore":
+        exchange(sync, "publish")
+        record = next(root.rglob("*.json"))
+        inspected = inspect_snapshot(record)
+        registry_b = WorkspaceRegistry(tmp_path / "other-settings" / "workspaces.toml")
+        adopt_snapshot(
+            registry_b,
+            "copy",
+            str(tmp_path / "copy"),
+            str(record),
+            inspected["fingerprint"],
+            yes=True,
+        )
+        copy = registry_b.load("copy")
+        (copy.config.documents.storage_dir / "synthetic.txt").write_text("Remote receipt")
+        exchange(WorkspaceSync(registry_b, "copy"), "publish")
+
+    before = sync._local_digest()
+    checkpoint = sync.state_path.with_name("sync-completed.json")
+
+    def write(path, content):
+        if path == (checkpoint if failure == "checkpoint" else sync.state_path):
+            raise OSError("Synthetic status write failure")
+        atomic_text(path, content)
+
+    def publish(path):
+        if path.suffix == ".json":
+            raise OSError("Synthetic revision publication failure")
+        return prepared_new_file(path)
+
+    preview = sync.preview(action)
+    with monkeypatch.context() as patch:
+        if failure == "publication":
+            patch.setattr("dagoberd.workspace_sync.prepared_new_file", publish)
+        else:
+            patch.setattr("dagoberd.workspace_sync.atomic_text", write)
+        expected = RestoreError if failure == "checkpoint" and action == "restore" else OSError
+        with pytest.raises(expected):
+            sync.run(preview["preview_id"], preview["fingerprint"], yes=True)
+    if failure != "state":
+        assert sync._local_digest() == before
+        if action == "restore":
+            assert sync._state()["revision"] != sync._head()["revision"]
+            assert (
+                loaded.config.documents.storage_dir / "synthetic.txt"
+            ).read_text() == "Synthetic receipt"
+        else:
+            assert sync._state() == {}
+        assert workspace_status(local_registry, "local")["valid"]
+        # A fresh preview must remain executable after a preparation failure.
+        exchange(sync, action)
+    assert not (sync.state_path.parent / "sync-previews" / f"{preview['preview_id']}.json").exists()
+    revisions = sorted(root.rglob("*.json"))
+    assert len(revisions) == (1 if action == "publish" else 2)
+    if action == "restore":
+        assert (
+            loaded.config.documents.storage_dir / "synthetic.txt"
+        ).read_text() == "Remote receipt"
+    baseline = sync._local_digest()
+    if later_changes:
+        (loaded.config.documents.storage_dir / "synthetic.txt").write_text("Later local receipt")
+    restarted = WorkspaceSync(local_registry, "local")
+    status = restarted.status()
+    assert status["available"]
+    assert status["local_revision"] == status["remote_revision"]
+    assert restarted._state()["local_digest"] == baseline
+    assert sorted(root.rglob("*.json")) == revisions
+    if later_changes:
+        with pytest.raises(ValueError, match="Local changes conflict"):
+            restarted.preview("restore")
+    else:
+        assert restarted.preview("restore")["base"] == status["remote_revision"]
+    assert restarted.preview("publish")["base"] == status["remote_revision"]
+    assert workspace_status(local_registry, "local")["valid"]
+    exchange(restarted, "publish")
+    assert not restarted.state_path.with_name("sync-completed.json").exists()
+    assert restarted._state()["local_digest"] == restarted._local_digest()
+    assert len(list(root.rglob("*.json"))) == len(revisions) + 1
+
+
+def test_unpublished_checkpoint_keeps_previous_completion(local_registry, tmp_path, monkeypatch):
+    from dagoberd.safe_files import prepared_new_file
+    from dagoberd.workspace_sync import atomic_text
+
+    populate(local_registry, tmp_path / "local")
+    sync = WorkspaceSync(local_registry, "local")
+    sync.configure(str(tmp_path / "cloud"), yes=True)
+
+    def write(path, content):
+        if path == sync.state_path:
+            raise OSError("Synthetic status failure")
+        atomic_text(path, content)
+
+    with monkeypatch.context() as patch:
+        patch.setattr("dagoberd.workspace_sync.atomic_text", write)
+        with pytest.raises(OSError, match="status failure"):
+            exchange(sync, "publish")
+    completed = sync._state()
+    assert completed["revision"] == sync.status()["remote_revision"]
+
+    def publish(path):
+        if path.suffix == ".json":
+            raise OSError("Synthetic publication failure")
+        return prepared_new_file(path)
+
+    with monkeypatch.context() as patch:
+        patch.setattr("dagoberd.workspace_sync.prepared_new_file", publish)
+        with pytest.raises(OSError, match="publication failure"):
+            exchange(sync, "publish")
+    restarted = WorkspaceSync(local_registry, "local")
+    assert restarted._state() == completed
+    assert restarted.preview("restore")["base"] == completed["revision"]
+    exchange(restarted, "publish")
+    assert restarted.status()["local_revision"] != completed["revision"]

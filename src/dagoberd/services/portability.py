@@ -10,6 +10,7 @@ import sqlite3
 import struct
 import tempfile
 import zipfile
+from collections.abc import Callable
 from contextlib import ExitStack, closing
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
@@ -176,7 +177,13 @@ class PortabilityService:
                 "bundle_sha256": self._hash(source),
             }
 
-    def restore(self, source: str | Path, *, password: str | None = None) -> dict:
+    def restore(
+        self,
+        source: str | Path,
+        *,
+        password: str | None = None,
+        on_restored: Callable[[set[Path]], None] | None = None,
+    ) -> dict:
         pending = sorted((self.metadata_dir / "restore-recovery").glob("restore-*"))
         if pending:
             raise RestoreError(
@@ -233,7 +240,7 @@ class PortabilityService:
                 if not staged_database.integrity_check()["valid"]:
                     raise ValueError("Prepared restore database failed integrity checks")
                 rollback = self._apply_prepared_restore(
-                    archive, ledger_staged, destinations, current_files
+                    archive, ledger_staged, destinations, current_files, on_restored=on_restored
                 )
         return {
             "restored": True,
@@ -249,6 +256,8 @@ class PortabilityService:
         ledger_staged: Path,
         destinations: list[tuple[str, Path]],
         current_files: set[Path],
+        *,
+        on_restored: Callable[[set[Path]], None] | None = None,
     ) -> Path | None:
         rollback = None
         if self.database.path.is_file():
@@ -297,6 +306,9 @@ class PortabilityService:
                 if not self.database.integrity_check()["valid"]:
                     raise RuntimeError("Restored database failed post-restore integrity check")
                 files.verify()
+                if on_restored is not None:
+                    # Persist completion before releasing rollback copies; exclude them from hashes.
+                    on_restored(set(files.previous.values()))
             except (OSError, sqlite3.Error, ValueError, RuntimeError, KeyboardInterrupt) as error:
                 restore_error = error
                 failures = files.rollback()

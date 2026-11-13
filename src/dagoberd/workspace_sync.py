@@ -20,14 +20,13 @@ from uuid import UUID, uuid4
 import tomlkit
 from pydantic import Field
 
-from dagoberd.config import DEFAULT_CONFIG_TOML, StrictModel
+from dagoberd.config import DEFAULT_CONFIG_TOML, LoadedConfig, StrictModel, load_config
 from dagoberd.safe_files import prepared_new_file
 from dagoberd.services.portability import PortabilityService
 from dagoberd.workspaces import (
+    IGNORE_RULES,
     WorkspaceRegistry,
     atomic_text,
-    overlaps,
-    storage_paths,
     workspace_operation,
 )
 
@@ -106,6 +105,44 @@ def inspect_snapshot(path: str | Path) -> dict[str, Any]:
     return {**record, "snapshot": str(source), "fingerprint": digest(record)}
 
 
+def local_digest(
+    loaded: LoadedConfig,
+    portability: PortabilityService,
+    *,
+    excluded_files: set[Path] | None = None,
+) -> str:
+    database = loaded.config.database.path
+    with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as connection:
+        connection.execute("BEGIN")
+        ledger_hash = hashlib.sha256()
+        for line in connection.iterdump():
+            ledger_hash.update(line.encode())
+            ledger_hash.update(b"\n")
+        ledger = ledger_hash.hexdigest()
+    members = portability._managed_members()
+    return digest(
+        {
+            "ledger": ledger,
+            "files": {
+                name: file_hash(path)
+                for name, path, _kind in members
+                if path not in (excluded_files or set())
+            },
+            "config": file_hash(loaded.project_path),
+            "local_config": file_hash(loaded.local_path) if loaded.local_path.is_file() else None,
+        }
+    )
+
+
+def save_sync_state(path: Path, state: dict[str, Any]) -> None:
+    # Retain the completed operation's baseline if replacing the main status fails.
+    checkpoint = path.with_name("sync-completed.json")
+    content = json.dumps(state)
+    atomic_text(checkpoint, content)
+    atomic_text(path, content)
+    checkpoint.unlink()
+
+
 class WorkspaceSync:
     def __init__(self, registry: WorkspaceRegistry, selector: str) -> None:
         self.registry = registry
@@ -129,20 +166,7 @@ class WorkspaceSync:
             raise ValueError("Confirm private snapshot storage or disconnection with --yes")
         target = Path(root).expanduser().resolve() if root else None
         if target:
-            namespace = target / "workspaces" / self.entry.id
-            if namespace.resolve() != namespace:
-                raise ValueError("Snapshot namespace cannot be redirected through links")
-            for entry in self.registry.read().workspaces:
-                loaded = self.registry.load(entry.id)
-                if any(
-                    overlaps(namespace, path)
-                    for path in (loaded.project_path.parent, *storage_paths(loaded))
-                ):
-                    raise ValueError("Snapshot folder overlaps local workspace storage")
-                if loaded.project_path.parent.resolve().is_relative_to(
-                    target
-                ) or loaded.config.database.path.resolve().is_relative_to(target):
-                    raise ValueError("Keep active workspaces outside the synchronized root")
+            self.registry.validate_sync_root(self.loaded, target)
             target.mkdir(parents=True, exist_ok=True)
         self.registry.configure_sync(self.entry.id, target)
         return WorkspaceSync(self.registry, self.entry.id).status()
@@ -190,41 +214,46 @@ class WorkspaceSync:
         return head
 
     def _state(self) -> dict[str, Any]:
+        checkpoint = self.state_path.with_name("sync-completed.json")
+        namespace = self._namespace()
+        if checkpoint.exists():
+            completed = json.loads(checkpoint.read_text())
+            if (
+                completed.get("namespace") == str(namespace)
+                and (namespace / f"{UUID(completed['revision'])}.json").is_file()
+            ):
+                return completed
         state = json.loads(self.state_path.read_text()) if self.state_path.exists() else {}
-        return state if state.get("namespace") == str(self._namespace()) else {}
+        return state if state.get("namespace") == str(namespace) else {}
 
     def _local_digest(self) -> str:
-        database = self.loaded.config.database.path
-        with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as connection:
-            connection.execute("BEGIN")
-            ledger_hash = hashlib.sha256()
-            for line in connection.iterdump():
-                ledger_hash.update(line.encode())
-                ledger_hash.update(b"\n")
-            ledger = ledger_hash.hexdigest()
-        members = self.portability._managed_members()
-        return digest(
-            {
-                "ledger": ledger,
-                "files": {name: file_hash(path) for name, path, _kind in members},
-                "config": file_hash(self.loaded.project_path),
-                "local_config": file_hash(self.loaded.local_path)
-                if self.loaded.local_path.is_file()
-                else None,
-            }
-        )
+        return local_digest(self.loaded, self.portability)
 
-    def _save_state(self, revision: str) -> None:
+    def _checkpoint(self, revision: str, excluded_files: set[Path] | None = None) -> None:
+        checkpoint = self.state_path.with_name("sync-completed.json")
+        if checkpoint.exists() and (previous := self._state()):
+            # Preserve a previous completion before replacing its fallback record.
+            atomic_text(self.state_path, json.dumps(previous))
         atomic_text(
-            self.state_path,
+            checkpoint,
             json.dumps(
                 {
                     "namespace": str(self._namespace()),
                     "revision": revision,
-                    "local_digest": self._local_digest(),
+                    "local_digest": local_digest(
+                        self.loaded, self.portability, excluded_files=excluded_files
+                    ),
                 }
             ),
         )
+
+    def _save_state(self, revision: str) -> None:
+        checkpoint = self.state_path.with_name("sync-completed.json")
+        state = json.loads(checkpoint.read_text())
+        if state["revision"] != revision:
+            raise ValueError("Snapshot completion belongs to another revision")
+        atomic_text(self.state_path, json.dumps(state))
+        checkpoint.unlink()
 
     def status(self) -> dict[str, Any]:
         self.entry = self.registry.entry(self.entry.id)
@@ -323,6 +352,7 @@ class WorkspaceSync:
                     "workspace_id": self.entry.id,
                     "sha256": checksum,
                 }
+                self._checkpoint(revision)
                 with prepared_new_file(namespace / f"{revision}.json") as staged:
                     staged.write_text(json.dumps(record), encoding="utf-8")
             else:
@@ -332,7 +362,9 @@ class WorkspaceSync:
                     shutil.copyfile(namespace / f"{revision}.aex", copy)
                     if file_hash(copy) != plan["head"]["sha256"]:
                         raise ValueError("Snapshot changed during restore; retry")
-                    self.portability.restore(copy)
+                    self.portability.restore(
+                        copy, on_restored=lambda excluded: self._checkpoint(revision, excluded)
+                    )
             self._save_state(revision)
         return self.status()
 
@@ -369,10 +401,25 @@ def adopt_snapshot(
         document = tomlkit.parse(DEFAULT_CONFIG_TOML)
         document["workspace"] = {"id": inspected["workspace_id"], "name": name}
         atomic_text(target / "dagoberd.toml", tomlkit.dumps(document))
-        entry = registry.initialize(name, target)
-        service = WorkspaceSync(registry, entry["id"])
-        service.configure(str(source.parent.parent.parent), yes=True)
-        with workspace_operation(service.loaded, registry, exclusive=True):
-            service.portability.restore(bundle)
-            service._save_state(inspected["revision"])
+        loaded = load_config(target / "dagoberd.toml", use_environment=False)
+        sync_root = source.parent.parent.parent
+        registry.validate_sync_root(loaded, sync_root)
+        with workspace_operation(loaded, registry, exclusive=True):
+            portability = PortabilityService(
+                loaded.config.database.path,
+                loaded.config.documents.storage_dir,
+                loaded.config.reporting.output_dir,
+                loaded.project_path,
+            )
+            portability.restore(bundle)
+            save_sync_state(
+                target / ".dagoberd" / "sync-state.json",
+                {
+                    "namespace": str(source.parent),
+                    "revision": inspected["revision"],
+                    "local_digest": local_digest(loaded, portability),
+                },
+            )
+            atomic_text(target / ".gitignore", "\n".join(IGNORE_RULES) + "\n")
+            entry = registry.add(name, loaded.project_path, sync_root=sync_root)
     return {"workspace_id": entry["id"], "adopted": True, "files_preserved": True}

@@ -167,7 +167,12 @@ class WorkspaceRegistry:
                 raise ValueError("Output destination overlaps another workspace")
 
     def add(
-        self, name: str, config_path: str | Path, *, display_name: str | None = None
+        self,
+        name: str,
+        config_path: str | Path,
+        *,
+        display_name: str | None = None,
+        sync_root: Path | None = None,
     ) -> dict[str, Any]:
         if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", name):
             raise ValueError("Workspace names must be lowercase slugs (up to 64 characters)")
@@ -195,12 +200,15 @@ class WorkspaceRegistry:
             if any(entry.id == identity for entry in data.workspaces):
                 raise ValueError("Workspace identity is already registered")
             self.validate(loaded)
+            if sync_root is not None:
+                self.validate_sync_root(loaded, sync_root)
             entry = WorkspaceEntry(
                 id=identity,
                 name=name,
                 display_name=display_name or loaded.config.workspace.name or name,
                 config_path=path,
                 storage_paths=storage_paths(loaded),
+                sync_root=sync_root,
             )
             if overrides is not None:
                 atomic_text(path, tomlkit.dumps(document))
@@ -227,11 +235,29 @@ class WorkspaceRegistry:
     def configure_sync(self, selector: str, root: Path | None) -> None:
         with file_lock(self.path.with_suffix(".lock"), exclusive=True):
             identity = self.entry(selector).id
+            if root is not None:
+                self.validate_sync_root(self.load(selector), root)
             data = self.read()
             for entry in data.workspaces:
                 if entry.id == identity:
                     entry.sync_root = root
             self._write(data)
+
+    def validate_sync_root(self, loaded: LoadedConfig, root: Path) -> None:
+        namespace = root / "workspaces" / str(loaded.config.workspace.id)
+        if namespace.resolve() != namespace:
+            raise ValueError("Snapshot namespace cannot be redirected through links")
+        workspaces = [loaded, *(self.load(entry.id) for entry in self.read().workspaces)]
+        for workspace in workspaces:
+            if any(
+                overlaps(namespace, path)
+                for path in (workspace.project_path.parent, *storage_paths(workspace))
+            ):
+                raise ValueError("Snapshot folder overlaps local workspace storage")
+            if workspace.project_path.parent.resolve().is_relative_to(
+                root
+            ) or workspace.config.database.path.resolve().is_relative_to(root):
+                raise ValueError("Keep active workspaces outside the synchronized root")
 
     def initialize(
         self,
