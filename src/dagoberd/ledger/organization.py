@@ -215,6 +215,7 @@ class OrganizationService:
         digest = self._key(idempotency_key, "manual-transaction")
         external_id = f"manual-transaction-{digest[:24]}"
         with self.repository.database.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
             account = connection.execute(
                 """SELECT a.*, p.kind AS provider_kind
                    FROM ledger_accounts a

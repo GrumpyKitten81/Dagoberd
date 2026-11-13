@@ -430,3 +430,22 @@ def test_late_section_response_cannot_replace_new_account_section(page, admin_gu
     held[0].fulfill(json={"ok": True, "data": [{"code": "project-code"}]})
     expect(page.locator("#admin-columns-form input:checked")).to_have_count(0)
     expect(page.locator("#admin-account-name")).to_have_value("Synthetic second")
+
+
+def test_deactivated_account_is_hidden_and_can_be_reactivated(page, admin_gui):
+    _, organization, accounts, _, _ = admin_gui
+    identifier = accounts[1]["id"]
+    organization.repository.set_account_enabled(identifier, False)
+    open_admin(page, admin_gui)
+    page.locator("#account-scope").click()
+    expect(page.locator(".scope-dialog")).to_be_visible()
+    expect(page.locator(".scope-dialog")).not_to_contain_text("Synthetic second")
+    page.locator(".scope-dialog").get_by_role("button", name="Cancel", exact=True).click()
+    panel = page.locator("#admin-inactive-accounts")
+    panel.locator("summary").click()
+    expect(panel).to_contain_text("Synthetic second")
+    panel.get_by_role("button", name="Reactivate", exact=True).click()
+    expect(panel).to_contain_text("No deactivated accounts.")
+    assert organization.repository.get_account(identifier)["enabled"]
+    page.locator("#account-scope").click()
+    expect(page.locator(".scope-dialog")).to_contain_text("Synthetic second")

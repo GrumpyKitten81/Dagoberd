@@ -107,3 +107,14 @@ an empty local folder without importing credentials or enabling private extensio
 Missing optional services do not block local workflows. Snapshot exchange is an
 explicit single-writer handover; it does not promise concurrent editing or automatic
 merging. See [workspace lifecycle](MULTIPLE_WORKSPACES.md).
+
+### Selective account retirement
+
+The local CLI supports fingerprint-bound previews for permanent account deletion
+and an explicitly selected deactivation fallback. Only disabled empty accounts or
+accounts with exclusively proven manual, reversed/void history are eligible for
+deletion. Imported provenance and confirmed cross-account relations remain
+protected. Optional reference cleanup is part of the reviewed plan. Deactivation
+preserves history, hides the account from normal selection and blocks new bookings.
+Audit and execution receipts survive account removal; MCP and GUI deletion are
+outside this workflow. See the account-retirement procedure in the runbook.

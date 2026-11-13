@@ -698,3 +698,14 @@ FROM ledger_splits s
 JOIN ledger_transactions t ON t.id = s.transaction_id
 JOIN ledger_accounts a ON a.id = t.account_id
 WHERE t.state = 'split_parent';
+
+CREATE TABLE IF NOT EXISTS ledger_account_deletions (
+    id TEXT PRIMARY KEY,
+    account_id TEXT NOT NULL,
+    plan_json TEXT NOT NULL,
+    fingerprint TEXT NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('prepared', 'executed')),
+    receipt_json TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    executed_at TEXT
+);

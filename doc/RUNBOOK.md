@@ -233,6 +233,60 @@ poetry run dagoberd source-reconciliation run --source-account <source-id> --tar
 
 Use fingerprint-bound reconciliation to connect an existing history to an additional source. For cash, create a manual account, import controlled history and use `manual add` afterward. Opening balances belong to the account, not the transaction list.
 
+### Retire or permanently delete one account
+
+Use the local CLI for account deletion. There is no MCP execution or preview tool.
+Deletion is restricted to disabled empty accounts or accounts containing only proven
+manual transactions whose booking status is `reversed` or whose state is `void`.
+Imported provenance remains protected, including imports into manual accounts.
+A zero balance or an offsetting transaction does not establish eligibility.
+
+```text
+dagoberd accounts delete-preview <account-id> --fallback disable
+dagoberd accounts delete-run <preview-id> --fingerprint <sha256> --yes
+```
+
+Review the returned `action`, `blockers`, `operations`, counts and fingerprint.
+`delete` removes the enumerated account-owned records. `disable` preserves all
+history and links, hides the account from normal selection and prevents new
+bookings and balance entries. `blocked` cannot execute. Without `--fallback disable`,
+ineligible deletion remains blocked. An active account first needs disabling;
+a new preview may then permit deletion. A changed scope always requires a new
+preview, even if a disable fallback was requested.
+
+`--cleanup-references` explicitly permits removal of document links and removal of
+the account from multi-account saved analyses. Documents/files remain intact.
+An analysis that would have no accounts left remains a blocker. Confirmed relations
+to other accounts, source routes, open reviews, executable operational previews
+and imported/synchronized history block deletion. Resolve reviews and active work
+explicitly; retain provenance through deactivation when deletion is unsuitable.
+The disable fallback never performs reference cleanup.
+
+Disabled accounts remain visible in `accounts list` for administration; use
+`accounts list --enabled-only` for the active list. The GUI excludes them from
+normal account selection and exposes **Deactivated accounts** in Administration
+for explicit reactivation. Existing `accounts enable <account-id> --version <n>`
+also remains available. Automatic imports cannot reactivate or replace a disabled
+identity. Existing source routing from a disabled source to an active canonical
+target remains supported; a disabled final target rejects booking.
+
+Deletion preserves audit history, historical report/analysis snapshots, files and
+hash-bound deletion previews. It is not comprehensive erasure from backups,
+exports, Git history or synchronized storage. The deletion preview stores a hash
+of the inspected financial state rather than a duplicate of source payloads.
+The durable execution receipt and audit event commit with the business changes.
+A restrictive receipt is also published under `.dagoberd/account-deletion-receipts/`.
+If file publication fails after commit, the response reports that the action
+committed. Repeat the exact execution command to recover the same receipt without
+repeating the action.
+
+A synthetic demonstration is covered by
+`tests/test_dagoberd/test_account_deletion.py`: a populated disposable workspace
+is disabled through the fallback, an eligible disabled account is deleted, and
+an intervening change rejects an old preview. Run it with
+`poetry run python -m pytest tests/test_dagoberd/test_account_deletion.py`.
+Never use real financial data for this demonstration.
+
 ### WISO tree mappings
 
 Category/tax trees need no personal mapping. Each supplied `--free-1`, `--free-2` or `--free-3` tree needs complete source-field/root-section mapping:

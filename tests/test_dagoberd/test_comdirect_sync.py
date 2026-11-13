@@ -369,3 +369,22 @@ def test_named_connections_isolate_identical_external_account_ids(repository):
     result = ComdirectSyncService(repository, private, "private").synchronize(interactive=False)
 
     assert result.synchronized_accounts == 0
+
+
+def test_disabled_sync_target_is_skipped_or_rejected_without_new_bookings(repository):
+    ComdirectSyncService(repository, FakeProvider([]), "private").synchronize(interactive=False)
+    account = repository.list_accounts()[0]
+    repository.set_account_enabled(account["id"], False)
+    page = TransactionPage("remote-1", 0, 1, (transaction("after-disable"),))
+    automatic = ComdirectSyncService(repository, FakeProvider([page]), "private").synchronize(
+        interactive=False
+    )
+    assert automatic.synchronized_accounts == 0
+    before = repository.list_balance_snapshots()
+    with pytest.raises(ValueError, match="disabled"):
+        ComdirectSyncService(repository, FakeProvider([page]), "private").synchronize(
+            account_ids=[account["id"]], interactive=False
+        )
+    assert repository.list_transactions() == []
+    assert repository.list_balance_snapshots() == before
+    assert repository.get_account(account["id"])["enabled"] == 0

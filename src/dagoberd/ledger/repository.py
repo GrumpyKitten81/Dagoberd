@@ -230,6 +230,27 @@ class LedgerRepository:
         ).fetchone()
         return str(route["target_account_id"]) if route else source_account_id
 
+    @staticmethod
+    def require_bookable_account(connection: sqlite3.Connection, account_id: str) -> None:
+        account = connection.execute(
+            "SELECT enabled FROM ledger_accounts WHERE id=?", (account_id,)
+        ).fetchone()
+        if account is None:
+            raise KeyError(f"Unknown account {account_id}")
+        if not account["enabled"]:
+            raise ValueError("Target account is disabled; explicitly enable it before booking")
+
+    @staticmethod
+    def require_no_disabled_identity(
+        connection: sqlite3.Connection, provider_kind: str, external_id: str
+    ) -> None:
+        if connection.execute(
+            """SELECT 1 FROM ledger_accounts a JOIN ledger_providers p ON p.id=a.provider_id
+               WHERE p.kind=? AND a.external_id=? AND a.enabled=0""",
+            (provider_kind, external_id),
+        ).fetchone():
+            raise ValueError("Matching account is disabled; select its intended route explicitly")
+
     def import_transactions(
         self,
         provider_kind: str,
@@ -250,6 +271,7 @@ class LedgerRepository:
         source_account_cache: dict[str, str] = {}
         transaction_cache: dict[tuple[str, str], str] = {}
         with self.database.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
             provider = connection.execute(
                 "SELECT id FROM ledger_providers WHERE kind=? AND display_name=?",
                 (provider_kind, provider_name),
@@ -280,6 +302,9 @@ class LedgerRepository:
                     if row:
                         source_account_id, created = row["id"], False
                     else:
+                        self.require_no_disabled_identity(
+                            connection, provider_kind, transaction.account_external_id
+                        )
                         source_account_id, created = self._id("account"), True
                         configured_type = account_type(
                             (account_types or {}).get(transaction.account_external_id, "checking")
@@ -318,6 +343,7 @@ class LedgerRepository:
                     source_account_cache[transaction.account_external_id] = source_account_id
                     accounts += int(created)
                 account_id = self._routed_account_id(connection, source_account_id)
+                self.require_bookable_account(connection, account_id)
                 account_cache[transaction.account_external_id] = account_id
                 raw_payload = json.dumps(
                     transaction.raw or {},
@@ -634,6 +660,9 @@ class LedgerRepository:
                     if row:
                         source_account_id = row["id"]
                     else:
+                        self.require_no_disabled_identity(
+                            connection, provider_kind, snapshot.account_external_id
+                        )
                         source_account_id = self._id("account")
                         configured_type = account_type(
                             (account_types or {}).get(snapshot.account_external_id, "checking")
@@ -658,6 +687,7 @@ class LedgerRepository:
                         accounts += 1
                     source_account_cache[snapshot.account_external_id] = source_account_id
                 account_id = self._routed_account_id(connection, source_account_id)
+                self.require_bookable_account(connection, account_id)
                 account_cache[snapshot.account_external_id] = account_id
                 created = self._record_imported_balance_snapshot(
                     connection,
@@ -2297,6 +2327,8 @@ class LedgerRepository:
         else:
             normalized_date = date.fromisoformat(balance_date).isoformat()
         with self.database.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            self.require_bookable_account(connection, account_id)
             account = connection.execute(
                 """SELECT id, currency, last_balance_minor,
                           last_balance_at, version

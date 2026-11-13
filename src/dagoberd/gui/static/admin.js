@@ -31,7 +31,28 @@ export function renderAdmin(root, hooks = {}) {
   };
   controller.onRefresh(renderAccount);
   renderAccount();
-  append(shell, accountRegion, referencePanel(controller), dimensionsPanel(controller));
+  append(shell, accountRegion, inactiveAccountsPanel(controller), referencePanel(controller), dimensionsPanel(controller));
+}
+
+function inactiveAccountsPanel(controller) {
+  const details = el('details', { id: 'admin-inactive-accounts', className: 'admin-picker' });
+  const list = el('div');
+  append(details, el('summary', {}, msg('admin.inactive_accounts')), el('p', {}, msg('admin.inactive_accounts_help')), list);
+  const render = () => {
+    clear(list);
+    for (const model of state.metadata.accounts.filter((entry) => !entry.enabled)) {
+      const editor = editorForm(controller, `admin-reactivate-${model.id}`, [], msg('admin.reactivate'));
+      editor.actions.before(el('p', {}, model.display_name));
+      editor.submit = () => controller.run(editor, () => api(`/accounts/${encodeURIComponent(model.id)}`, {
+        method: 'PATCH', body: JSON.stringify({ enabled: true, expected_version: model.version }),
+      }));
+      append(list, editor.form);
+    }
+    if (!list.children.length) append(list, el('p', {}, msg('admin.empty_inactive_accounts')));
+  };
+  controller.onRefresh(render);
+  render();
+  return details;
 }
 
 function referencePanel(controller) {

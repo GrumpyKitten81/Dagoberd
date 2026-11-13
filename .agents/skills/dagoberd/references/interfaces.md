@@ -42,3 +42,5 @@ then `snapshot-adopt` into an empty local folder with its inspected fingerprint 
 local confirmation. MCP `workspace_status`, `workspace_sync_status` and
 `workspace_sync_preview` expose inspection/preparation only. No live database is
 replicated and no conflicting branch is merged automatically.
+
+- Account retirement (local CLI only): `accounts delete-preview <account-id> [--cleanup-references] [--fallback disable]`, then the exact `accounts delete-run <preview-id> --fingerprint <sha256> --yes` after confirmation.

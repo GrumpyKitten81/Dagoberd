@@ -8,6 +8,7 @@ import sqlite3
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from .account_deletion_migration import migrate_account_deletions
 from .llm_preview_migration import migrate_llm_preview_context
 from .workspace_identity import migrate_workspace_identity
 
@@ -1155,6 +1156,12 @@ MIGRATIONS = (
         name="workspace_identity",
         signature="ledger_workspace_identity:v1",
         apply=migrate_workspace_identity,
+    ),
+    Migration(
+        version=21,
+        name="account_deletion",
+        signature="ledger_account_deletions:v1",
+        apply=migrate_account_deletions,
     ),
 )
 

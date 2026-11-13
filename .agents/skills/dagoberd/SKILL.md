@@ -46,6 +46,21 @@ For first-time onboarding and repeat updates, follow the [agent import journey](
 
 See [interfaces](references/interfaces.md) for command groups. Repository Issues are public: use the matching form and include no real financial files or secrets.
 
+## Retire an account (local CLI only)
+
+Use `accounts delete-preview <account-id> [--cleanup-references] [--fallback disable]`.
+Preview creation persists metadata and requires mutation authorization. Show the
+selected action, blockers, operations and fingerprint before obtaining confirmation
+for `accounts delete-run <preview-id> --fingerprint <sha256> --yes`. No MCP tool is
+provided. Execute only the exact reviewed action; changes require a fresh preview.
+Deletion requires a disabled account and empty or exclusively proven manual,
+reversed/void history. Imported provenance and confirmed cross-account relations
+remain protected. The disable fallback preserves every link/history item, hides the
+account from normal selection and prevents new bookings. Cleanup applies only to
+an eligible deletion. Historical audits, artifacts and backups are not erased.
+Retry the exact run to recover its durable receipt after a publication failure.
+Use `accounts list` to find deactivated accounts; reactivation requires explicit intent.
+
 ## Multiple workspaces
 
 List registered workspaces before selecting a user circle. Use CLI `--workspace <name>` or MCP `workspace_id`; never combine data from different workspaces. A server binding cannot be overridden by a tool call. Workspace identity, credential scope and cloud namespace must remain separate. Create ordinary local folders with `workspaces create` or initialize existing folders with `workspaces init`; Git, GitHub and a network service are not required. Registration alone must not mutate ledger data. Inspect optional capabilities with `workspaces status` / MCP `workspace_status`.

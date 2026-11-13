@@ -191,6 +191,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     account_list = account_commands.add_parser("list")
     account_list.add_argument("--enabled-only", action="store_true")
+    delete_preview = account_commands.add_parser("delete-preview")
+    delete_preview.add_argument("account_id")
+    delete_preview.add_argument("--cleanup-references", action="store_true")
+    delete_preview.add_argument("--fallback", choices=("disable",))
+    delete_run = account_commands.add_parser("delete-run")
+    delete_run.add_argument("preview_id")
+    delete_run.add_argument("--fingerprint", required=True)
+    delete_run.add_argument("--yes", action="store_true")
     account_show = account_commands.add_parser("show")
     account_show.add_argument("account_id")
     account_register = account_commands.add_parser("register")
@@ -1155,6 +1163,23 @@ def _handle_account_commands(
 ) -> int | None:
     if args.command != "accounts":
         return None
+    if args.accounts_command in {"delete-preview", "delete-run"}:
+        from dagoberd.services.account_deletion import AccountDeletionService
+
+        service = AccountDeletionService(repo, _loaded(args).project_path.parent / ".dagoberd")
+        if args.accounts_command == "delete-preview":
+            _print_json(
+                service.preview(
+                    args.account_id,
+                    cleanup_references=args.cleanup_references,
+                    fallback=args.fallback,
+                )
+            )
+        else:
+            if not args.yes:
+                raise ValueError("accounts delete-run requires --yes")
+            _print_json(service.execute(args.preview_id, args.fingerprint))
+        return 0
     if args.accounts_command == "list":
         _print_json(
             [
@@ -1311,6 +1336,7 @@ def _run(argv: list[str] | None = None) -> int:
     exclusive = (args.command == "database" and args.database_command == "restore") or (
         args.command == "portability" and args.portability_command == "restore"
     )
+    exclusive = exclusive or (args.command == "accounts" and args.accounts_command == "delete-run")
     with workspace_operation(loaded, registry, exclusive=exclusive):
         if output := getattr(args, "output", None):
             registry.validate_output(loaded, output)

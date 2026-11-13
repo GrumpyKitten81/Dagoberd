@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import Counter, defaultdict
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from decimal import Decimal
 from itertools import pairwise
 from pathlib import Path
@@ -13,7 +13,7 @@ from typing import Any
 
 from dagoberd.config import ImportAnnotationConfig
 from dagoberd.importers import get_importer
-from dagoberd.importers.base import FileImporter
+from dagoberd.importers.base import FileImporter, ImportBatch, ImportIssue
 from dagoberd.importers.tabular import TabularImporter
 from dagoberd.ledger.repository import LedgerRepository
 from dagoberd.services.import_annotations import ImportAnnotationService
@@ -152,6 +152,8 @@ class ImportService:
         )
         provider_kind, provider_name = self._provider_context(importer, account_id)
         batch = importer.inspect_transactions(file_path, account_external_id)
+        if not account_id:
+            batch = self._validate_automatic_targets(batch, provider_kind, provider_name)
         transactions = list(batch.transactions)
         warnings: list[str] = []
         if batch.unidentified_account:
@@ -445,6 +447,33 @@ class ImportService:
                     }
                 )
         return tuple(actions)
+
+    def _validate_automatic_targets(
+        self, batch: ImportBatch, provider_kind: str, provider_name: str
+    ) -> ImportBatch:
+        issues = list(batch.issues)
+        identities = {item.account_external_id for item in batch.transactions} | {
+            item.account_external_id for item in batch.balance_snapshots
+        }
+        with self.repository.database.connect() as connection:
+            for external_id in sorted(identities):
+                row = connection.execute(
+                    """SELECT a.id FROM ledger_accounts a
+                       JOIN ledger_providers p ON p.id=a.provider_id
+                       WHERE p.kind=? AND p.display_name=? AND a.external_id=?""",
+                    (provider_kind, provider_name, external_id),
+                ).fetchone()
+                try:
+                    if row:
+                        target = self.repository._routed_account_id(connection, row["id"])
+                        self.repository.require_bookable_account(connection, target)
+                    else:
+                        self.repository.require_no_disabled_identity(
+                            connection, provider_kind, external_id
+                        )
+                except ValueError as error:
+                    issues.append(ImportIssue(None, "account", "account_disabled", str(error)))
+        return replace(batch, issues=tuple(issues))
 
     def _account_metadata(self, profile: str | None) -> tuple[dict[str, str], dict[str, str]]:
         if not profile or profile not in self.profiles:
